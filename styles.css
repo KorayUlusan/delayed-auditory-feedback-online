@@ -55,6 +55,10 @@ button:hover {
     margin-bottom: 20px;
 }
 
+.theme-switch-wrapper em {
+    margin-right: 10px;
+}
+
 .theme-switch {
     display: inline-block;
     height: 34px;
@@ -114,7 +118,8 @@ input:checked + .slider:before {
 }
 
 label {
-    display: block;
+    display: flex;
+    justify-content: space-between;
     margin: 20px 0 10px;
     font-weight: bold;
 }
@@ -124,8 +129,6 @@ input[type="range"] {
 }
 
 #delayValue, #pitchValue, #boostValue, #noiseReductionValue {
-    display: inline-block;
-    margin-left: 10px;
     font-weight: bold;
 }
 

@@ -34,7 +34,7 @@ function startDAF() {
             delayNode.delayTime.value = document.getElementById('delaySlider').value / 1000; // Adjust delay time in seconds
             gainNode.gain.value = document.getElementById('boostSlider').value; // Adjust boost level
             pitchNode.frequency.value = document.getElementById('pitchSlider').value * 1000; // Adjust pitch change
-            noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000; // Adjust noise reduction
+            noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000 || 0; // Adjust noise reduction
             
             source.connect(delayNode);
             delayNode.connect(gainNode);
@@ -57,7 +57,7 @@ function stopDAF() {
 }
 
 function updateDelayTime(value) {
-    document.getElementById('delayValue').textContent = value;
+    document.getElementById('delayValue').textContent = `${value} ms`;
     const delaySlider = document.getElementById('delaySlider');
     delaySlider.setAttribute('aria-valuenow', value);
     delaySlider.setAttribute('aria-valuetext', `${value} milliseconds`);
@@ -67,30 +67,31 @@ function updateDelayTime(value) {
 }
 
 function updateBoostLevel(value) {
-    document.getElementById('boostValue').textContent = value;
+    document.getElementById('boostValue').textContent = `${value} dB`;
     const boostSlider = document.getElementById('boostSlider');
     boostSlider.setAttribute('aria-valuenow', value);
-    boostSlider.setAttribute('aria-valuetext', value);
+    boostSlider.setAttribute('aria-valuetext', `${value} dB`);
     if (gainNode) {
         gainNode.gain.value = value; // Adjust boost level
     }
 }
 
 function updatePitchChange(value) {
-    document.getElementById('pitchValue').textContent = value;
+    document.getElementById('pitchValue').textContent = `${value} Hz`;
     const pitchSlider = document.getElementById('pitchSlider');
     pitchSlider.setAttribute('aria-valuenow', value);
-    pitchSlider.setAttribute('aria-valuetext', value);
+    pitchSlider.setAttribute('aria-valuetext', `${value} Hz`);
     if (pitchNode) {
         pitchNode.frequency.value = value * 1000; // Adjust pitch change
     }
 }
 
 function updateNoiseReduction(value) {
-    document.getElementById('noiseReductionValue').textContent = value;
+    const percentage = Math.round(value * 100);
+    document.getElementById('noiseReductionValue').textContent = `${percentage}%`;
     const noiseReductionSlider = document.getElementById('noiseReductionSlider');
     noiseReductionSlider.setAttribute('aria-valuenow', value);
-    noiseReductionSlider.setAttribute('aria-valuetext', value);
+    noiseReductionSlider.setAttribute('aria-valuetext', `${percentage}%`);
     if (noiseReductionNode) {
         noiseReductionNode.frequency.value = value * 1000; // Adjust noise reduction
     }
