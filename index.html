@@ -27,9 +27,9 @@
         <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">200 ms</span></label>
         <input type="range" id="delaySlider" min="0" max="1000" step="1" value="200" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000"
             aria-valuenow="200" aria-valuetext="200 milliseconds">
-        <label for="pitchSlider">🎵 Pitch Change: <span id="pitchValue">1 Hz</span></label>
-        <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1" oninput="updatePitchChange(this.value)" aria-valuemin="0.5" aria-valuemax="2" aria-valuenow="1"
-            aria-valuetext="1">
+        <label for="pitchSlider">🎵 Pitch Change: <span id="pitchValue">0 semitones</span></label>
+        <input type="range" id="pitchSlider" min="-5" max="5" step="1" value="0" oninput="updatePitchChange(this.value)" aria-valuemin="-5" aria-valuemax="5" aria-valuenow="0"
+            aria-valuetext="0 semitones">
         <label for="boostSlider">🎤 Microphone Boost: <span id="boostValue">1 dB</span></label>
         <input type="range" id="boostSlider" min="0.2" max="3" step="0.1" value="1" oninput="updateBoostLevel(this.value)" aria-valuemin="0" aria-valuemax="2" aria-valuenow="1"
             aria-valuetext="1">
@@ -73,6 +73,20 @@
                 document.documentElement.setAttribute('data-theme', 'dark');
             } else {
                 document.documentElement.setAttribute('data-theme', 'light');
+            }
+        }
+
+        function updatePitchChange(value) {
+            document.getElementById('pitchValue').textContent = `${value} semitones`;
+            const pitchSlider = document.getElementById('pitchSlider');
+            pitchSlider.setAttribute('aria-valuenow', value);
+            pitchSlider.setAttribute('aria-valuetext', `${value} semitones`);
+
+            if (pitchNode) {
+                // Adjust the pitch based on semitone change
+                // 1 semitone is equal to a frequency multiplier of approximately 1.05946
+                let frequencyMultiplier = Math.pow(2, value / 12);  // Convert semitone to frequency multiplier
+                pitchNode.frequency.value = originalFrequency * frequencyMultiplier; // Apply pitch change
             }
         }
     </script>

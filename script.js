@@ -5,6 +5,7 @@ let gainNode;
 let pitchNode;
 let noiseReductionNode;
 let stream;
+let originalFrequency = 440; // Default frequency for pitch adjustment
 
 function toggleDAF(button) {
     if (button.textContent === 'Start DAF') {
@@ -77,13 +78,19 @@ function updateBoostLevel(value) {
 }
 
 function updatePitchChange(value) {
-    document.getElementById('pitchValue').textContent = `${value} Hz`;
+    document.getElementById('pitchValue').textContent = `${value} semitones`;
     const pitchSlider = document.getElementById('pitchSlider');
     pitchSlider.setAttribute('aria-valuenow', value);
-    pitchSlider.setAttribute('aria-valuetext', `${value} Hz`);
+    pitchSlider.setAttribute('aria-valuetext', `${value} semitones`);
+
     if (pitchNode) {
-        pitchNode.frequency.value = value * 1000; // Adjust pitch change
-    }
+        // Formula used: f = f0 * 2^(n/12), where:
+        //   f is the new frequency
+        //   f0 is the original frequency (reference frequency)
+        //   n is the number of semitones (value)
+        let frequencyMultiplier = Math.pow(2, value / 12);  // Convert semitone to frequency multiplier
+        pitchNode.frequency.value = originalFrequency * frequencyMultiplier; // Apply pitch change
+    }    
 }
 
 function updateNoiseReduction(value) {
