@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delayed Audio Feedback (DAF) Online</title>
+    <meta name="description" content="Explore the Delayed Audio Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
+    <meta name="keywords" content="DAF, Delayed Audio Feedback, DAF Online, Speech Therapy, Speech Fluency, Speech Disfluency, Stuttering, Speech Delay, Speech Feedback">
+    <meta name="author" content="Online DAF">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Delayed Audio Feedback (DAF) Online">
+    <meta property="og:description" content="Explore the Delayed Audio Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Delayed Audio Feedback (DAF) Online">
+    <meta property="og:locale" content="en_US">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <h1>Delayed Audio Feedback (DAF) Online</h1>
+    <p>Tip: This tool works best with headphones.</p>
+    <p><strong>Privacy Notice:</strong> All audio processing is performed locally in your browser. No audio data is sent to any server.</p>
+    <button id="dafButton" onclick="toggleDAF(this)" aria-pressed="false">Start DAF</button>
+    <div class="sliders">
+        <label for="delaySlider">⏱️ Delay Time (ms):</label>
+        <input type="range" id="delaySlider" min="0" max="1000" step="1" value="200" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000"
+            aria-valuenow="200" aria-valuetext="200 milliseconds">
+        <span id="delayValue">200</span>
+        <label for="pitchSlider">🎵 Pitch Change:</label>
+        <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1" oninput="updatePitchChange(this.value)" aria-valuemin="0.5" aria-valuemax="2" aria-valuenow="1"
+            aria-valuetext="1">
+        <span id="pitchValue">1</span>
+        <label for="boostSlider">🎤 Microphone Boost:</label>
+        <input type="range" id="boostSlider" min="0" max="2" step="0.1" value="1" oninput="updateBoostLevel(this.value)" aria-valuemin="0" aria-valuemax="2" aria-valuenow="1"
+            aria-valuetext="1">
+        <span id="boostValue">1</span>
+        <label for="noiseReductionSlider">🔇 Background Noise Reduction:</label>
+        <input type="range" id="noiseReductionSlider" min="0" max="1" step="0.1" value="0.5" oninput="updateNoiseReduction(this.value)" aria-valuemin="0" aria-valuemax="1"
+            aria-valuenow="0.5" aria-valuetext="0.5">
+        <span id="noiseReductionValue">0.5</span>
+    </div>
+    <hr />
+    <div id="infoBox">
+        <h2>About the DAF Online App</h2>
+        <p>
+            The Delayed Audio Feedback (DAF) Online App is an easy-to-use, web-based tool designed to assist users in improving speech fluency and managing speech-related challenges.
+            DAF technology works by playing back a user’s speech with a slight delay, which has been shown to help individuals who stutter or experience other speech disruptions.
+        </p>
+        <p>
+            This app allows users to customize the delay time to suit their needs, providing real-time feedback that can slow down speech patterns and promote clearer articulation.
+            With no need for downloads or installations, users can access the DAF system directly from their browser on desktops, tablets, or smartphones.
+    
+        </p>
+    </div>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" onchange="toggleTheme()">
+            <div class="slider round"></div>
+        </label>
+        <em>Toggle Dark Mode</em>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        window.onload = function () {
+            updateDelayTime(document.getElementById('delaySlider').value);
+            updateBoostLevel(document.getElementById('boostSlider').value);
+            updatePitchChange(document.getElementById('pitchSlider').value);
+            updateNoiseReduction(document.getElementById('noiseReductionSlider').value);
+        };
+
+        function toggleTheme() {
+            const checkbox = document.getElementById('checkbox');
+            if (checkbox.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        }
+    </script>
+</body>
+
+</html>

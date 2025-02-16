@@ -1,0 +1,146 @@
+:root {
+    --primary-color: #0056b3;
+    --primary-color-hover: #004494;
+    --background-color: #f9f9f9;
+    --text-color: #333;
+    --secondary-text-color: #666;
+    --box-background-color: white;
+    --box-shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    --primary-color: #90caf9;
+    --primary-color-hover: #64b5f6;
+    --background-color: #121212;
+    --text-color: #e0e0e0;
+    --secondary-text-color: #b0b0b0;
+    --box-background-color: #1e1e1e;
+    --box-shadow-color: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 700px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+h1 {
+    margin-top: 20px;
+    color: var(--primary-color);
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 20px;
+    cursor: pointer;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: var(--primary-color-hover);
+}
+
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 34px;
+    position: relative;
+    width: 60px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.slider {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: 0.4s;
+}
+
+.slider:before {
+    background-color: white;
+    bottom: 4px;
+    content: "";
+    height: 26px;
+    left: 4px;
+    position: absolute;
+    transition: 0.4s;
+    width: 26px;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.sliders {
+    text-align: left;
+    margin-top: 20px;
+    background-color: var(--box-background-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--box-shadow-color);
+}
+
+label {
+    display: block;
+    margin: 20px 0 10px;
+    font-weight: bold;
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+#delayValue, #pitchValue, #boostValue, #noiseReductionValue {
+    display: inline-block;
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+#infoBox {
+    text-align: left;
+    margin: 20px auto;
+    background-color: var(--box-background-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--box-shadow-color);
+}
+
+footer {
+    margin-top: 40px;
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+}
+
