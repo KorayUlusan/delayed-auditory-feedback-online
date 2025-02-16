@@ -16,6 +16,24 @@
     <meta property="og:site_name" content="Delayed Audio Feedback (DAF) Online">
     <meta property="og:locale" content="en_US">
     <link rel="stylesheet" href="styles.css">
+    <!-- favicon -->
+    <link rel="apple-touch-icon" sizes="57x57" href="favicon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="favicon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="favicon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="favicon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="favicon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="favicon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="favicon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="favicon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/manifest.json">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="theme-color" content="#ffffff">
 </head>
 
 <body>
@@ -69,24 +87,13 @@
 
         function toggleTheme() {
             const checkbox = document.getElementById('checkbox');
+            const themeColorMeta = document.querySelector('meta[name="theme-color"]');
             if (checkbox.checked) {
                 document.documentElement.setAttribute('data-theme', 'dark');
+                themeColorMeta.setAttribute('content', '#121212');
             } else {
                 document.documentElement.setAttribute('data-theme', 'light');
-            }
-        }
-
-        function updatePitchChange(value) {
-            document.getElementById('pitchValue').textContent = `${value} semitones`;
-            const pitchSlider = document.getElementById('pitchSlider');
-            pitchSlider.setAttribute('aria-valuenow', value);
-            pitchSlider.setAttribute('aria-valuetext', `${value} semitones`);
-
-            if (pitchNode) {
-                // Adjust the pitch based on semitone change
-                // 1 semitone is equal to a frequency multiplier of approximately 1.05946
-                let frequencyMultiplier = Math.pow(2, value / 12);  // Convert semitone to frequency multiplier
-                pitchNode.frequency.value = originalFrequency * frequencyMultiplier; // Apply pitch change
+                themeColorMeta.setAttribute('content', '#ffffff');
             }
         }
     </script>

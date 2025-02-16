@@ -34,7 +34,7 @@ function startDAF() {
             
             delayNode.delayTime.value = document.getElementById('delaySlider').value / 1000; // Adjust delay time in seconds
             gainNode.gain.value = document.getElementById('boostSlider').value; // Adjust boost level
-            pitchNode.frequency.value = document.getElementById('pitchSlider').value * 1000; // Adjust pitch change
+            pitchNode.frequency.value = originalFrequency; // Set initial pitch frequency
             noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000 || 0; // Adjust noise reduction
             
             source.connect(delayNode);
@@ -84,13 +84,9 @@ function updatePitchChange(value) {
     pitchSlider.setAttribute('aria-valuetext', `${value} semitones`);
 
     if (pitchNode) {
-        // Formula used: f = f0 * 2^(n/12), where:
-        //   f is the new frequency
-        //   f0 is the original frequency (reference frequency)
-        //   n is the number of semitones (value)
         let frequencyMultiplier = Math.pow(2, value / 12);  // Convert semitone to frequency multiplier
         pitchNode.frequency.value = originalFrequency * frequencyMultiplier; // Apply pitch change
-    }    
+    }
 }
 
 function updateNoiseReduction(value) {
