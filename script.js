@@ -2,10 +2,9 @@ let audioContext;
 let source;
 let delayNode;
 let gainNode;
-let pitchNode;
+let pitchProcessor;
 let noiseReductionNode;
 let stream;
-let originalFrequency = 440; // Default frequency for pitch adjustment
 
 function toggleDAF(button) {
     if (button.textContent === 'Start DAF') {
@@ -25,22 +24,56 @@ function startDAF() {
             stream = s;
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             source = audioContext.createMediaStreamSource(stream);
+            
+            // Create nodes
             delayNode = audioContext.createDelay();
             gainNode = audioContext.createGain();
-            pitchNode = audioContext.createBiquadFilter();
-            pitchNode.type = "allpass";
             noiseReductionNode = audioContext.createBiquadFilter();
+            
+            // Create ScriptProcessorNode for pitch shifting
+            pitchProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+            
+            // Initialize values
+            delayNode.delayTime.value = document.getElementById('delaySlider').value / 1000;
+            gainNode.gain.value = document.getElementById('boostSlider').value;
             noiseReductionNode.type = "lowpass";
+            noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000 || 0;
+
+            // Set up pitch shifting
+            let pitchShift = 0;
+            let buffer = new Float32Array(4096);
             
-            delayNode.delayTime.value = document.getElementById('delaySlider').value / 1000; // Adjust delay time in seconds
-            gainNode.gain.value = document.getElementById('boostSlider').value; // Adjust boost level
-            pitchNode.frequency.value = originalFrequency; // Set initial pitch frequency
-            noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000 || 0; // Adjust noise reduction
-            
+            pitchProcessor.onaudioprocess = function(e) {
+                const input = e.inputBuffer.getChannelData(0);
+                const output = e.outputBuffer.getChannelData(0);
+                
+                // Copy input to buffer
+                input.forEach((sample, i) => buffer[i] = sample);
+                
+                // Apply pitch shift
+                const pitchValue = parseFloat(document.getElementById('pitchSlider').value);
+                const shift = Math.pow(2, pitchValue / 12); // Convert semitones to frequency ratio
+                
+                // Simple resampling for pitch shift
+                for (let i = 0; i < output.length; i++) {
+                    const position = i * shift;
+                    const index = Math.floor(position);
+                    const fraction = position - index;
+                    
+                    if (index + 1 < buffer.length) {
+                        // Linear interpolation
+                        output[i] = buffer[index] * (1 - fraction) + buffer[index + 1] * fraction;
+                    } else {
+                        output[i] = buffer[index] || 0;
+                    }
+                }
+            };
+
+            // Connect nodes
             source.connect(delayNode);
             delayNode.connect(gainNode);
-            gainNode.connect(pitchNode);
-            pitchNode.connect(noiseReductionNode);
+            gainNode.connect(pitchProcessor);
+            pitchProcessor.connect(noiseReductionNode);
             noiseReductionNode.connect(audioContext.destination);
         })
         .catch(error => {
@@ -63,7 +96,7 @@ function updateDelayTime(value) {
     delaySlider.setAttribute('aria-valuenow', value);
     delaySlider.setAttribute('aria-valuetext', `${value} milliseconds`);
     if (delayNode) {
-        delayNode.delayTime.value = value / 1000; // Adjust delay time in seconds
+        delayNode.delayTime.value = value / 1000;
     }
 }
 
@@ -73,7 +106,7 @@ function updateBoostLevel(value) {
     boostSlider.setAttribute('aria-valuenow', value);
     boostSlider.setAttribute('aria-valuetext', `${value} dB`);
     if (gainNode) {
-        gainNode.gain.value = value; // Adjust boost level
+        gainNode.gain.value = value;
     }
 }
 
@@ -82,11 +115,6 @@ function updatePitchChange(value) {
     const pitchSlider = document.getElementById('pitchSlider');
     pitchSlider.setAttribute('aria-valuenow', value);
     pitchSlider.setAttribute('aria-valuetext', `${value} semitones`);
-
-    if (pitchNode) {
-        let frequencyMultiplier = Math.pow(2, value / 12);  // Convert semitone to frequency multiplier
-        pitchNode.frequency.value = originalFrequency * frequencyMultiplier; // Apply pitch change
-    }
 }
 
 function updateNoiseReduction(value) {
@@ -96,7 +124,6 @@ function updateNoiseReduction(value) {
     noiseReductionSlider.setAttribute('aria-valuenow', value);
     noiseReductionSlider.setAttribute('aria-valuetext', `${percentage}%`);
     if (noiseReductionNode) {
-        // Adjust noise reduction: 0% means no reduction, 100% means maximum reduction
-        noiseReductionNode.frequency.value = value === 0 ? 20000 : 20000 / value; // Apply noise reduction
+        noiseReductionNode.frequency.value = value === 0 ? 20000 : 20000 / value;
     }
 }
