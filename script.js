@@ -37,7 +37,7 @@ function startDAF() {
             delayNode.delayTime.value = document.getElementById('delaySlider').value / 1000;
             gainNode.gain.value = document.getElementById('boostSlider').value;
             noiseReductionNode.type = "lowpass";
-            noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000 || 0;
+            noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000 || 20000;
 
             // Set up pitch shifting
             let pitchShift = 0;
@@ -124,6 +124,8 @@ function updateNoiseReduction(value) {
     noiseReductionSlider.setAttribute('aria-valuenow', value);
     noiseReductionSlider.setAttribute('aria-valuetext', `${percentage}%`);
     if (noiseReductionNode) {
-        noiseReductionNode.frequency.value = value === 0 ? 20000 : 20000 / value;
+        // Adjust noise reduction: 0% means no reduction, 100% means maximum reduction
+        const frequencyValue = value === 0 ? 20000 : 20000 / value;
+        noiseReductionNode.frequency.value = isFinite(frequencyValue) ? frequencyValue : 20000; // Ensure finite value
     }
 }
