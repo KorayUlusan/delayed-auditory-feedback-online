@@ -19,6 +19,8 @@ function toggleDAF(button) {
 }
 
 function startDAF() {
+    const statusMessage = document.getElementById('statusMessage');
+    statusMessage.textContent = 'Connecting to audio device... ⏳';
     navigator.mediaDevices.getUserMedia({ audio: true })
         .then(s => {
             stream = s;
@@ -75,19 +77,24 @@ function startDAF() {
             gainNode.connect(pitchProcessor);
             pitchProcessor.connect(noiseReductionNode);
             noiseReductionNode.connect(audioContext.destination);
+
+            statusMessage.textContent = 'Connected to audio device. ✅';
         })
         .catch(error => {
             console.error('Error accessing microphone:', error);
+            statusMessage.textContent = 'Error accessing microphone. ⚠️';
         });
 }
 
 function stopDAF() {
+    const statusMessage = document.getElementById('statusMessage');
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
     }
     if (audioContext) {
         audioContext.close();
     }
+    statusMessage.textContent = 'Disconnected from audio device. ❌';
 }
 
 function updateDelayTime(value) {

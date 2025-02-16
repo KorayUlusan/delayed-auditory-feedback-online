@@ -5,13 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delayed Audio Feedback (DAF) Online</title>
-    <meta name="description" content="Explore the Delayed Audio Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
+    <meta name="description"
+        content="Explore the Delayed Audio Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
     <meta name="keywords" content="DAF, Delayed Audio Feedback, DAF Online, Speech Therapy, Speech Fluency, Speech Disfluency, Stuttering, Speech Delay, Speech Feedback">
     <meta name="author" content="Online DAF">
     <meta name="robots" content="index, follow">
     <meta name="google-site-verification" content="WLiidijVk_rmBq5yNUVSfdG_TMNw0TkXGntIW_JF630" />
     <meta property="og:title" content="Delayed Audio Feedback (DAF) Online">
-    <meta property="og:description" content="Explore the Delayed Audio Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
+    <meta property="og:description"
+        content="Explore the Delayed Audio Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Delayed Audio Feedback (DAF) Online">
     <meta property="og:locale" content="en_US">
@@ -40,11 +42,13 @@
     <h1>Delayed Audio Feedback (DAF) Online</h1>
     <p>Tip: This tool works best with headphones.</p>
     <p><strong>Privacy Notice:</strong> All audio processing is performed locally in your browser. No audio data is sent to any server.</p>
+    <hr />
     <button id="dafButton" onclick="toggleDAF(this)" aria-pressed="false">Start DAF</button>
+    <p id="statusMessage">Disconnected from audio device. ❌</p>
     <div class="sliders">
         <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">200 ms</span></label>
-        <input type="range" id="delaySlider" min="0" max="500" step="1" value="200" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000"
-            aria-valuenow="200" aria-valuetext="200 milliseconds">
+        <input type="range" id="delaySlider" min="0" max="500" step="1" value="200" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="200"
+            aria-valuetext="200 milliseconds">
         <label for="pitchSlider">🎵 Pitch Change: <span id="pitchValue">0 semitones</span></label>
         <input type="range" id="pitchSlider" min="-5" max="5" step="1" value="0" oninput="updatePitchChange(this.value)" aria-valuemin="-5" aria-valuemax="5" aria-valuenow="0"
             aria-valuetext="0 semitones">
@@ -59,13 +63,14 @@
     <div id="infoBox">
         <h2>About the DAF Online App</h2>
         <p>
-            The Delayed Audio Feedback (DAF) Online App is an easy-to-use, web-based tool designed to assist users in improving speech fluency and managing speech-related challenges.
+            The Delayed Audio Feedback (DAF) Online App is an easy-to-use, web-based tool designed to assist users in improving speech fluency and managing speech-related
+            challenges.
             DAF technology works by playing back a user’s speech with a slight delay, which has been shown to help individuals who stutter or experience other speech disruptions.
         </p>
         <p>
             This app allows users to customize the delay time to suit their needs, providing real-time feedback that can slow down speech patterns and promote clearer articulation.
             With no need for downloads or installations, users can access the DAF system directly from their browser on desktops, tablets, or smartphones.
-    
+
         </p>
     </div>
     <div class="theme-switch-wrapper">

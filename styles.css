@@ -36,7 +36,7 @@ h1 {
 button {
     padding: 10px 20px;
     font-size: 16px;
-    margin: 20px;
+    margin: 20px 0 0 20px; /* Update bottom margin to 0 */
     cursor: pointer;
     background-color: var(--primary-color);
     color: white;
