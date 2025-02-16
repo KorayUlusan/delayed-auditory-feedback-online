@@ -33,7 +33,7 @@ function startDAF() {
             noiseReductionNode = audioContext.createBiquadFilter();
             
             // Create ScriptProcessorNode for pitch shifting
-            pitchProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+            pitchProcessor = audioContext.createScriptProcessor(128, 1, 1);
             
             // Initialize values
             delayNode.delayTime.value = document.getElementById('delaySlider').value / 1000;
@@ -43,7 +43,7 @@ function startDAF() {
 
             // Set up pitch shifting
             let pitchShift = 0;
-            let buffer = new Float32Array(4096);
+            let buffer = new Float32Array(128);
             
             pitchProcessor.onaudioprocess = function(e) {
                 const input = e.inputBuffer.getChannelData(0);
