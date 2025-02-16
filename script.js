@@ -90,12 +90,13 @@ function updatePitchChange(value) {
 }
 
 function updateNoiseReduction(value) {
-    const percentage = Math.round(value * 100);
+    const percentage = Math.round(value);
     document.getElementById('noiseReductionValue').textContent = `${percentage}%`;
     const noiseReductionSlider = document.getElementById('noiseReductionSlider');
     noiseReductionSlider.setAttribute('aria-valuenow', value);
     noiseReductionSlider.setAttribute('aria-valuetext', `${percentage}%`);
     if (noiseReductionNode) {
-        noiseReductionNode.frequency.value = value * 1000; // Adjust noise reduction
+        // Adjust noise reduction: 0% means no reduction, 100% means maximum reduction
+        noiseReductionNode.frequency.value = value === 0 ? 20000 : 20000 / value; // Apply noise reduction
     }
 }
