@@ -2,7 +2,6 @@ let audioContext;
 let source;
 let delayNode;
 let gainNode;
-let pitchProcessor;
 let noiseReductionNode;
 let stream;
 
@@ -32,50 +31,16 @@ function startDAF() {
             gainNode = audioContext.createGain();
             noiseReductionNode = audioContext.createBiquadFilter();
             
-            // Create ScriptProcessorNode for pitch shifting
-            pitchProcessor = audioContext.createScriptProcessor(128, 1, 1);
-            
             // Initialize values
             delayNode.delayTime.value = document.getElementById('delaySlider').value / 1000;
             gainNode.gain.value = document.getElementById('boostSlider').value;
             noiseReductionNode.type = "lowpass";
             noiseReductionNode.frequency.value = document.getElementById('noiseReductionSlider').value * 1000 || 20000;
 
-            // Set up pitch shifting
-            let pitchShift = 0;
-            let buffer = new Float32Array(128);
-            
-            pitchProcessor.onaudioprocess = function(e) {
-                const input = e.inputBuffer.getChannelData(0);
-                const output = e.outputBuffer.getChannelData(0);
-                
-                // Copy input to buffer
-                input.forEach((sample, i) => buffer[i] = sample);
-                
-                // Apply pitch shift
-                const pitchValue = parseFloat(document.getElementById('pitchSlider').value);
-                const shift = Math.pow(2, pitchValue / 12); // Convert semitones to frequency ratio
-                
-                // Simple resampling for pitch shift
-                for (let i = 0; i < output.length; i++) {
-                    const position = i * shift;
-                    const index = Math.floor(position);
-                    const fraction = position - index;
-                    
-                    if (index + 1 < buffer.length) {
-                        // Linear interpolation
-                        output[i] = buffer[index] * (1 - fraction) + buffer[index + 1] * fraction;
-                    } else {
-                        output[i] = buffer[index] || 0;
-                    }
-                }
-            };
-
             // Connect nodes
             source.connect(delayNode);
             delayNode.connect(gainNode);
-            gainNode.connect(pitchProcessor);
-            pitchProcessor.connect(noiseReductionNode);
+            gainNode.connect(noiseReductionNode);
             noiseReductionNode.connect(audioContext.destination);
 
             statusMessage.textContent = 'Connected to audio device. ✅';
