@@ -86,10 +86,10 @@ function startDAF() {
             inputGain.connect(highpassFilter);
             highpassFilter.connect(lowpassFilter);
             lowpassFilter.connect(noiseGate);
-            noiseGate.connect(delayNode);
+            noiseGate.connect(compressor);
+            compressor.connect(delayNode);
             delayNode.connect(outputGain);
-            outputGain.connect(compressor);
-            compressor.connect(audioContext.destination);
+            outputGain.connect(audioContext.destination);
             
             statusMessage.textContent = 'Connected to audio device. ✅';
         })
