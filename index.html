@@ -39,6 +39,16 @@
 </head>
 
 <body>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J3ZKY02K30"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-J3ZKY02K30');
+    </script>
+    <!--  -->
     <h1>Delayed Auditory Feedback (DAF) Online</h1>
     <p>Tip: This tool works best with headphones.</p>
     <p><strong>Privacy Notice:</strong> All audio processing is performed locally in your browser. No audio data is sent to any server.</p>
@@ -53,19 +63,8 @@
         <input type="range" id="pitchSlider" min="-5" max="5" step="1" value="0" oninput="updatePitchChange(this.value)" aria-valuemin="-5" aria-valuemax="5" aria-valuenow="0"
             aria-valuetext="0 semitones">
         <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">10x</span></label>
-        <input 
-            id="inputGainSlider" 
-            type="range" 
-            min="1" 
-            max="20" 
-            value="10" 
-            step="0.5" 
-            oninput="updateInputGain(this.value)" 
-            aria-valuemin="1" 
-            aria-valuemax="20" 
-            aria-valuenow="10" 
-            aria-valuetext="10x"
-        >
+        <input id="inputGainSlider" type="range" min="1" max="20" value="10" step="0.5" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20"
+            aria-valuenow="10" aria-valuetext="10x">
         <label for="noiseReductionSlider">🔇 Background Noise Reduction: <span id="noiseReductionValue">0%</span></label>
         <input type="range" id="noiseReductionSlider" min="0" max="100" step="1" value="0" oninput="updateNoiseReduction(this.value)" aria-valuemin="0" aria-valuemax="100"
             aria-valuenow="0" aria-valuetext="0%">
