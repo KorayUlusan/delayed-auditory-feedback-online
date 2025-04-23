@@ -6,6 +6,8 @@
     --secondary-text-color: #666;
     --box-background-color: white;
     --box-shadow-color: rgba(0, 0, 0, 0.1);
+    --success-color: #4CAF50;
+    --error-color: #F44336;
 }
 
 [data-theme="dark"] {
@@ -16,6 +18,8 @@
     --secondary-text-color: #b0b0b0;
     --box-background-color: #1e1e1e;
     --box-shadow-color: rgba(255, 255, 255, 0.1);
+    --success-color: #4CAF50;
+    --error-color: #F44336;
 }
 
 body {
@@ -139,6 +143,37 @@ input[type="range"] {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px var(--box-shadow-color);
+}
+
+#statusMessage {
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 10px;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.status-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status-error {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.status-default {
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+}
+
+[data-theme="dark"] .status-default {
+    background-color: #333;
+    color: #ccc;
+    border: 1px solid #444;
 }
 
 footer {

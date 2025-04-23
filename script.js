@@ -219,6 +219,18 @@ class SpeechProcessor {
     _updateStatus(message, type = 'info') {
         const statusElement = document.getElementById('statusMessage');
         statusElement.textContent = message;
+        
+        // Remove all status classes
+        statusElement.classList.remove('status-success', 'status-error', 'status-default');
+        
+        // Add appropriate class based on status type
+        if (type === 'success') {
+            statusElement.classList.add('status-success');
+        } else if (type === 'error') {
+            statusElement.classList.add('status-error');
+        } else {
+            statusElement.classList.add('status-default');
+        }
     }
 
     _updateUIDisplay(elementId, value) {
@@ -240,6 +252,10 @@ class SpeechProcessor {
 // Instantiate and set up event listeners
 document.addEventListener('DOMContentLoaded', () => {
     const speechProcessor = new SpeechProcessor();
+    
+    // Initialize status message with default class
+    const statusElement = document.getElementById('statusMessage');
+    statusElement.classList.add('status-default');
     
     document.getElementById('dafButton').addEventListener('click', (e) => {
         if (e.target.textContent === 'Start DAF') {
