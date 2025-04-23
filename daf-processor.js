@@ -32,6 +32,9 @@ class SpeechProcessor {
         this.timerInterval = null;
         this.startTime = 0;
         this.elapsedTime = 0;
+        
+        // Wake lock to prevent device sleep
+        this.wakeLock = null;
     }
 
     async initializeAudio() {
@@ -137,18 +140,24 @@ class SpeechProcessor {
         nodes.outputGain.connect(this.audioContext.destination);
     }
 
-    start() {
+    async start() {
         this.initializeAudio()
-            .then(success => {
+            .then(async success => {
                 if (success) {
                     this._updateStatus('Speech Processing Active', 'success');
                     this._updateUIControls(true);
                     this._startTimer();
+                    
+                    // Request wake lock to prevent device from sleeping
+                    await this._requestWakeLock();
+                    
+                    // Handle visibility change (app going to background)
+                    document.addEventListener('visibilitychange', this._handleVisibilityChange.bind(this));
                 }
             });
     }
 
-    stop() {
+    async stop() {
         if (this.audioStream) {
             this.audioStream.getTracks().forEach(track => track.stop());
         }
@@ -177,6 +186,12 @@ class SpeechProcessor {
         this._updateStatus('Speech Processing Stopped', 'warning');
         this._updateUIControls(false);
         this._stopTimer();
+        
+        // Release wake lock when stopping
+        await this._releaseWakeLock();
+        
+        // Remove visibility change listener
+        document.removeEventListener('visibilitychange', this._handleVisibilityChange.bind(this));
     }
 
     updateDelayTime(value) {
@@ -303,6 +318,66 @@ class SpeechProcessor {
         const timerElement = document.getElementById('dafTimer');
         if (timerElement) {
             timerElement.style.display = 'none';
+        }
+    }
+    
+    async _requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                // Request a screen wake lock
+                this.wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock is active');
+                
+                // Listen for wake lock release
+                this.wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock was released');
+                });
+            } else {
+                console.log('Wake Lock API not supported on this device');
+                this._setupAudioContext();
+            }
+        } catch (err) {
+            console.error(`Failed to obtain wake lock: ${err.message}`);
+            this._setupAudioContext();
+        }
+    }
+    
+    async _releaseWakeLock() {
+        if (this.wakeLock) {
+            try {
+                await this.wakeLock.release();
+                this.wakeLock = null;
+                console.log('Wake Lock released');
+            } catch (err) {
+                console.error(`Error releasing wake lock: ${err.message}`);
+            }
+        }
+    }
+    
+    // Handle visibility changes (browser tab/app going to background)
+    async _handleVisibilityChange() {
+        if (document.visibilityState === 'visible' && !this.wakeLock) {
+            // Re-request wake lock if page becomes visible and we don't have an active wake lock
+            await this._requestWakeLock();
+        }
+        
+        if (document.visibilityState === 'hidden') {
+            // Keep audio processing active using a silent audio context when in background
+            this._setupAudioContext();
+        }
+    }
+    
+    _setupAudioContext() {
+        // Create a silent audio context to keep the app running in background
+        // This is a fallback method when wake lock isn't available
+        if (!this._silentAudio && this.audioContext) {
+            this._silentAudio = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 0.001; // Nearly silent
+            this._silentAudio.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+            this._silentAudio.start();
+            console.log('Silent audio started to maintain background processing');
         }
     }
 }

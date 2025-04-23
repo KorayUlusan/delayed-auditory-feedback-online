@@ -12,6 +12,14 @@
     <meta name="robots" content="index, follow">
     <meta name="google-site-verification" content="WLiidijVk_rmBq5yNUVSfdG_TMNw0TkXGntIW_JF630" />
     
+    <!-- Mobile specific meta tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DAF Online">
+    <meta name="apple-mobile-web-app-title" content="DAF Online">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0056b3">
+    
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://korayulusan.github.io/delayed-auditory-feedback-online/">
@@ -151,6 +159,114 @@
 
     <script src="daf-processor.js"></script>
     <script>
+        // Register service worker for background processing
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                        
+                        // Request notification permission (helps with keeping audio running)
+                        Notification.requestPermission();
+                        
+                        // Register for periodic background sync if available
+                        if ('periodicSync' in registration) {
+                            const syncOptions = {
+                                tag: 'daf-background-sync',
+                                minInterval: 60000 // 1 minute minimum
+                            };
+                            
+                            registration.periodicSync.register(syncOptions)
+                                .catch(err => console.log('Periodic sync could not be registered:', err));
+                        }
+                    })
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+            
+            // Keep service worker active when DAF is running
+            let keepAliveInterval;
+            function startKeepAlive() {
+                if (keepAliveInterval) return;
+                
+                // Send periodic messages to keep the service worker active
+                keepAliveInterval = setInterval(() => {
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'KEEP_ALIVE'
+                        });
+                    }
+                }, 15000); // Every 15 seconds
+            }
+            
+            function stopKeepAlive() {
+                if (keepAliveInterval) {
+                    clearInterval(keepAliveInterval);
+                    keepAliveInterval = null;
+                }
+            }
+            
+            // Add event listeners to the DAF button to manage keep-alive
+            document.getElementById('dafButton').addEventListener('click', function(e) {
+                const isStarting = this.textContent === 'Start DAF';
+                if (isStarting) {
+                    startKeepAlive();
+                } else {
+                    stopKeepAlive();
+                }
+            });
+        }
+        
+        // Prevent screen lock on mobile devices using NoSleep.js technique
+        const preventSleep = {
+            noSleep: null,
+            video: null,
+            
+            enable: function() {
+                if (!this.video) {
+                    this.video = document.createElement('video');
+                    this.video.setAttribute('playsinline', '');
+                    this.video.setAttribute('muted', '');
+                    this.video.setAttribute('loop', '');
+                    this.video.setAttribute('width', '1');
+                    this.video.setAttribute('height', '1');
+                    this.video.style.position = 'absolute';
+                    this.video.style.left = '-1px';
+                    this.video.style.top = '-1px';
+                    document.body.appendChild(this.video);
+                    
+                    // Create empty video source
+                    this.video.src = 'data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAAAAG1wNDJtcDQxaXNvbWF2YzEAAATKbW9vdgAAAGxtdmhkAAAAANLEP5XSxD+VAAB1MAAAdU4AAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAACFpb2RzAAAAABCAgIAQAE////9//w6AgIAEAAAAAQAABDV0cmFrAAAAXHRraGQAAAAH0sQ/ldLEP5UAAAABAAAAAAAAdU4AAAAAAAAAAAAAAAABAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAABnaWYzMgAAAAAAAQxCAAAF/////wEAAAKZBMIAAAH4BMIAAAAGQEIAAAAP+BLj4QAAA+gAECU2ZEFUAAAAIGZkdGQAAAAAbWRtZGkAAAAAAAAIaGRscgAAAAAAAAAAAABtaXIxAAAAEEhtaXJoZGx\
+yRlJBTUVfUkFURQAQIGhtaXJoZGxyAAAAAQAAABBobWlyaGRsctBpdHNjAAAAAAIAAAABAAAAEAAAABBtaXJtZGlhc3BlY3QAAAAAAQAAABBtaXJjb2RlY3MAAAAAAAAAAQAAABBtaXJoZGxyAAAAAQAAABBtaXJ2aWRlQVVESU9fREFUQRAAAAAgbWlyZGF0YQAAAAMgRlJBTUVfUkFURRAQIG1pcmhkbHIAAAABAAAAEG1pcmNvZGVjcwAAAAAAAAABAAAAEG1pcnZpZGUAAAAAAQAAABBtaXJkYXRh';
+                }
+                
+                if (this.video) {
+                    try {
+                        this.video.play();
+                        console.log('NoSleep video enabled');
+                    } catch (e) {
+                        console.error('Error enabling NoSleep:', e);
+                    }
+                }
+            },
+            
+            disable: function() {
+                if (this.video) {
+                    this.video.pause();
+                    console.log('NoSleep disabled');
+                }
+            }
+        };
+        
+        // Add event listeners to manage sleep prevention
+        document.getElementById('dafButton').addEventListener('click', function(e) {
+            const isStarting = this.textContent === 'Start DAF';
+            if (isStarting) {
+                preventSleep.enable();
+            } else {
+                preventSleep.disable();
+            }
+        });
+        
         window.onload = function () {
             // Set current year in footer
             document.getElementById('currentYear').textContent = new Date().getFullYear();
