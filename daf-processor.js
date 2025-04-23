@@ -528,21 +528,11 @@ class SpeechProcessor {
             );
         }
         
-        // Check if we need to switch between direct and normal modes
-        const wasVeryLowLatency = previousDelay <= 5;
-        const isVeryLowLatency = value <= 5;
-        
         // If switching between latency modes, rebuild audio path
-        if (this.config.useZeroLatencyMode && (wasVeryLowLatency !== isVeryLowLatency)) {
-            if (isVeryLowLatency) {
-                this._setupDirectMode();
-                this._updateStatus('Zero-latency mode active - Processing features disabled', 'success');
-                this._disableProcessingControls(true);
-            } else {
-                this.directModeEnabled = false;
-                this._rebuildAudioPath();
-                this._disableProcessingControls(false);
-            }
+        if (this.config.useZeroLatencyMode) {
+            this.directModeEnabled = false;
+            this._rebuildAudioPath();
+            this._disableProcessingControls(false);
         }
         
         this._updateUIDisplay('delayValue', `${value} ms`);
