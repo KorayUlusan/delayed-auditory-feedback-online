@@ -13,7 +13,9 @@ class SpeechProcessor {
             lowpassFilter: null,
             highpassFilter: null,
             compressor: null,
-            pitchShifter: null
+            pitchShifter: null,
+            channelSplitter: null,
+            channelMerger: null
         };
 
         // Speech processing configuration
@@ -68,6 +70,10 @@ class SpeechProcessor {
         nodes.delayNode = ctx.createDelay(1);
         nodes.outputGain = ctx.createGain();
         
+        // For stereo output (both ears)
+        nodes.channelSplitter = ctx.createChannelSplitter(2);
+        nodes.channelMerger = ctx.createChannelMerger(2);
+        
         // Advanced noise reduction
         nodes.noiseGate = ctx.createDynamicsCompressor();
         nodes.lowpassFilter = ctx.createBiquadFilter();
@@ -113,7 +119,16 @@ class SpeechProcessor {
         nodes.lowpassFilter.connect(nodes.noiseGate);
         nodes.noiseGate.connect(nodes.compressor);
         nodes.compressor.connect(nodes.delayNode);
-        nodes.delayNode.connect(nodes.outputGain);
+        
+        // Ensure stereo output by duplicating the signal to both channels
+        nodes.delayNode.connect(nodes.channelSplitter);
+        
+        // Connect each channel from the splitter to both inputs of the merger
+        // This duplicates the audio signal to both left and right channels
+        nodes.channelSplitter.connect(nodes.channelMerger, 0, 0); // Left to left
+        nodes.channelSplitter.connect(nodes.channelMerger, 0, 1); // Left to right
+        
+        nodes.channelMerger.connect(nodes.outputGain);
         nodes.outputGain.connect(this.audioContext.destination);
     }
 
