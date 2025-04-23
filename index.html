@@ -4,19 +4,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delayed Auditory Feedback (DAF) Online</title>
+    <title>Delayed Auditory Feedback (DAF) Online Tool for Speech Fluency</title>
     <meta name="description"
-        content="Explore the Delayed Auditory Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
-    <meta name="keywords" content="DAF, Delayed Auditory Feedback, DAF Online, Speech Therapy, Speech Fluency, Speech Disfluency, Stuttering, Speech Delay, Speech Feedback">
-    <meta name="author" content="Online DAF">
+        content="Free online Delayed Auditory Feedback (DAF) tool to improve speech fluency and reduce stuttering. Works instantly in your browser with no downloads required.">
+    <meta name="keywords" content="DAF, Delayed Auditory Feedback, DAF Online, Speech Therapy, Speech Fluency, Stuttering Treatment, Stuttering App, Speech Delay, Speech Feedback, Free DAF">
+    <meta name="author" content="DAF Online Tool">
     <meta name="robots" content="index, follow">
     <meta name="google-site-verification" content="WLiidijVk_rmBq5yNUVSfdG_TMNw0TkXGntIW_JF630" />
-    <meta property="og:title" content="Delayed Auditory Feedback (DAF) Online">
-    <meta property="og:description"
-        content="Explore the Delayed Auditory Feedback (DAF) Online App – a user-friendly, web-based tool designed to improve speech fluency and manage speech-related challenges.">
+    
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Delayed Auditory Feedback (DAF) Online">
+    <meta property="og:url" content="https://korayulusan.github.io/delayed-auditory-feedback-online/">
+    <meta property="og:title" content="Delayed Auditory Feedback (DAF) Online Tool for Speech Fluency">
+    <meta property="og:description" content="Free online Delayed Auditory Feedback (DAF) tool to improve speech fluency and reduce stuttering. Works instantly in your browser with no downloads required.">
+    <meta property="og:image" content="https://korayulusan.github.io/delayed-auditory-feedback-online/images/daf-social-preview.png">
+    <meta property="og:site_name" content="DAF Online Tool">
     <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://korayulusan.github.io/delayed-auditory-feedback-online/">
+    <meta name="twitter:title" content="Delayed Auditory Feedback (DAF) Online Tool for Speech Fluency">
+    <meta name="twitter:description" content="Free online Delayed Auditory Feedback (DAF) tool to improve speech fluency and reduce stuttering. Works instantly in your browser with no downloads required.">
+    <meta name="twitter:image" content="https://korayulusan.github.io/delayed-auditory-feedback-online/images/daf-social-preview.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://korayulusan.github.io/delayed-auditory-feedback-online/">
+    
     <link rel="stylesheet" href="styles.css">
     <!-- Favicon setup for better Google search results -->
     <link rel="icon" href="favicon/favicon-32x32.png" type="image/png">
@@ -38,60 +52,108 @@
     <meta name="msapplication-TileImage" content="favicon/ms-icon-144x144.png">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
+    
+    <!-- Structured data for better SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Delayed Auditory Feedback (DAF) Online Tool",
+      "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/",
+      "description": "Free online Delayed Auditory Feedback (DAF) tool to improve speech fluency and reduce stuttering. Works instantly in your browser.",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "DAF Online",
+        "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/"
+      },
+      "keywords": "DAF, delayed auditory feedback, stuttering, speech therapy, speech fluency",
+      "browserRequirements": "Requires a modern browser with microphone access"
+    }
+    </script>
 </head>
 
 <body>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J3ZKY02K30"></script>
     <script src="analytics.js"></script>
-    <!--  -->
-    <h1>Delayed Auditory Feedback (DAF) Online</h1>
-    <p>Tip: This tool works best with headphones.</p>
-    <p><strong>Privacy Notice:</strong> All audio processing is performed locally in your browser. No audio data is sent to any server.</p>
-    <hr />
-    <button id="dafButton" onclick="toggleDAF(this)" aria-pressed="false">Start DAF</button>
-    <br />
-    <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
-    <div class="sliders">
-        <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">200 ms</span></label>
-        <input type="range" id="delaySlider" min="0" max="500" step="1" value="20" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="200"
-            aria-valuetext="200 milliseconds">
-        <label for="pitchSlider">🎵 Pitch Change: (Coming Soon) <span id="pitchValue">0 semitones</span></label>
-        <input type="range" id="pitchSlider" min="-5" max="5" step="1" value="0" oninput="updatePitchChange(this.value)" aria-valuemin="-5" aria-valuemax="5" aria-valuenow="0"
-            aria-valuetext="0 semitones">
-        <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">10x</span></label>
-        <input id="inputGainSlider" type="range" min="1" max="20" value="10" step="0.5" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20"
-            aria-valuenow="10" aria-valuetext="10x">
-        <label for="noiseReductionSlider">🔇 Background Noise Reduction: <span id="noiseReductionValue">0%</span></label>
-        <input type="range" id="noiseReductionSlider" min="0" max="100" step="1" value="0" oninput="updateNoiseReduction(this.value)" aria-valuemin="0" aria-valuemax="100"
-            aria-valuenow="0" aria-valuetext="0%">
-    </div>
-    <hr />
-    <div id="infoBox">
-        <h2>About the DAF Online App</h2>
-        <p>
-
-            The Delayed Auditory Feedback (DAF) Online App is an easy-to-use, web-based tool designed to assist users in improving speech fluency and managing speech-related
-            challenges.
-            DAF technology works by playing back a user’s speech with a slight delay, which has been shown to help individuals who stutter or experience other speech disruptions.
-        </p>
-        <p>
-            This app allows users to customize the delay time to suit their needs, providing real-time feedback that can slow down speech patterns and promote clearer articulation.
-            With no need for downloads or installations, users can access the DAF system directly from their browser on desktops, tablets, or smartphones.
-
-        </p>
-    </div>
-    <div class="theme-switch-wrapper">
-        <em>Toggle Dark Mode</em>
-        <label class="theme-switch" for="checkbox">
-            <input type="checkbox" id="checkbox" onchange="toggleTheme()">
-            <div class="slider round"></div>
-        </label>
-    </div>
+    
+    <header>
+        <h1>Delayed Auditory Feedback (DAF) Online</h1>
+        <p>Tip: This tool works best with headphones.</p>
+        <p><strong>Privacy Notice:</strong> All audio processing is performed locally in your browser. No audio data is sent to any server.</p>
+    </header>
+    
+    <main>
+        <section id="controls">
+            <hr />
+            <button id="dafButton" onclick="toggleDAF(this)" aria-pressed="false">Start DAF</button>
+            <br />
+            <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
+            <div class="sliders">
+                <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">200 ms</span></label>
+                <input type="range" id="delaySlider" min="0" max="500" step="1" value="20" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="200"
+                    aria-valuetext="200 milliseconds">
+                <label for="pitchSlider">🎵 Pitch Change: (Coming Soon) <span id="pitchValue">0 semitones</span></label>
+                <input type="range" id="pitchSlider" min="-5" max="5" step="1" value="0" oninput="updatePitchChange(this.value)" aria-valuemin="-5" aria-valuemax="5" aria-valuenow="0"
+                    aria-valuetext="0 semitones">
+                <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">10x</span></label>
+                <input id="inputGainSlider" type="range" min="1" max="20" value="10" step="0.5" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20"
+                    aria-valuenow="10" aria-valuetext="10x">
+                <label for="noiseReductionSlider">🔇 Background Noise Reduction: <span id="noiseReductionValue">0%</span></label>
+                <input type="range" id="noiseReductionSlider" min="0" max="100" step="1" value="0" oninput="updateNoiseReduction(this.value)" aria-valuemin="0" aria-valuemax="100"
+                    aria-valuenow="0" aria-valuetext="0%">
+            </div>
+            <hr />
+        </section>
+        
+        <section id="infoBox" aria-labelledby="about-heading">
+            <h2 id="about-heading">About the DAF Online App</h2>
+            <p>
+                The Delayed Auditory Feedback (DAF) Online App is an easy-to-use, web-based tool designed to assist users in improving speech fluency and managing speech-related
+                challenges.
+                DAF technology works by playing back a user's speech with a slight delay, which has been shown to help individuals who stutter or experience other speech disruptions.
+            </p>
+            <p>
+                This app allows users to customize the delay time to suit their needs, providing real-time feedback that can slow down speech patterns and promote clearer articulation.
+                With no need for downloads or installations, users can access the DAF system directly from their browser on desktops, tablets, or smartphones.
+            </p>
+            
+            <section id="benefits" aria-labelledby="benefits-heading">
+                <h3 id="benefits-heading">Benefits of Using DAF</h3>
+                <ul>
+                    <li><strong>Improved Fluency</strong> - Helps reduce stuttering and speech blocks</li>
+                    <li><strong>Customizable Experience</strong> - Adjust delay time to find what works best for you</li>
+                    <li><strong>Accessibility</strong> - Works on any device with a browser and microphone</li>
+                    <li><strong>Privacy-focused</strong> - All processing happens locally, no data transmitted</li>
+                    <li><strong>Free to Use</strong> - No cost, subscriptions or hidden fees</li>
+                </ul>
+            </section>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="theme-switch-wrapper">
+            <em>Toggle Dark Mode</em>
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" onchange="toggleTheme()">
+                <div class="slider round"></div>
+            </label>
+        </div>
+        <p>&copy; <span id="currentYear"></span> DAF Online Tool. All rights reserved.</p>
+    </footer>
 
     <script src="daf-processor.js"></script>
     <script>
         window.onload = function () {
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
             // Apply saved theme preference
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);

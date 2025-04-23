@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Sitemap: https://korayulusan.github.io/delayed-auditory-feedback-online/sitemap.xml
+
+# Allow all crawlers
+User-agent: *
+Disallow:
+
+# Prevent media files from being indexed
+User-agent: Googlebot-Image
+Disallow: /images/backgrounds/
+Disallow: /images/icons/
+
+# Add crawl delay for specific bots
+User-agent: Bingbot
+Crawl-delay: 10
