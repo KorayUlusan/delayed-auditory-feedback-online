@@ -35,6 +35,13 @@ class SpeechProcessor {
         
         // Wake lock to prevent device sleep
         this.wakeLock = null;
+        
+        // App visibility and audio state tracking
+        this.isAppVisible = true;
+        this.isAudioRunning = false;
+        this.audioSuspendedByBackground = false;
+        this.resumeAttempts = 0;
+        this.maxResumeAttempts = 5;
     }
 
     async initializeAudio() {
@@ -56,10 +63,24 @@ class SpeechProcessor {
                 latencyHint: 'interactive'
             });
 
+            // Add event listener for state changes
+            this.audioContext.addEventListener('statechange', () => {
+                console.log(`Audio context state changed to: ${this.audioContext.state}`);
+                this._notifyServiceWorker('AUDIO_STATE', this.audioContext.state);
+                
+                // If returning from suspension and app is visible, attempt to resume
+                if (this.audioContext.state === 'suspended' && this.isAppVisible && this.isAudioRunning) {
+                    this._attemptResumeAudio();
+                }
+            });
+
             // Initialize audio processing nodes
             this._createAudioNodes();
             this._configureAudioNodes();
             this._connectAudioNodes();
+            
+            // Set audio running state
+            this.isAudioRunning = true;
 
             return true;
         } catch (error) {
@@ -165,20 +186,31 @@ class SpeechProcessor {
     }
 
     async start() {
-        this.initializeAudio()
-            .then(async success => {
-                if (success) {
-                    this._updateStatus('Speech Processing Active', 'success');
-                    this._updateUIControls(true);
-                    this._startTimer();
-                    
-                    // Request wake lock to prevent device from sleeping
-                    await this._requestWakeLock();
-                    
-                    // Handle visibility change (app going to background)
-                    document.addEventListener('visibilitychange', this._handleVisibilityChange.bind(this));
-                }
-            });
+        const success = await this.initializeAudio();
+        if (success) {
+            this._updateStatus('Speech Processing Active', 'success');
+            this._updateUIControls(true);
+            this._startTimer();
+            this.isAudioRunning = true;
+            
+            // Request wake lock to prevent device from sleeping
+            await this._requestWakeLock();
+            
+            // Set up visibility change handler
+            document.addEventListener('visibilitychange', this._handleVisibilityChange.bind(this));
+            
+            // Set up page lifecycle events if available
+            if ('onfreeze' in document) {
+                document.addEventListener('freeze', this._handleFreeze.bind(this));
+            }
+            
+            if ('onresume' in document) {
+                document.addEventListener('resume', this._handleResume.bind(this));
+            }
+            
+            // Create a service worker message listener
+            navigator.serviceWorker.addEventListener('message', this._handleServiceWorkerMessage.bind(this));
+        }
     }
 
     async stop() {
@@ -195,7 +227,7 @@ class SpeechProcessor {
                     }
                 });
 
-                this.audioContext.close();
+                await this.audioContext.close();
             } catch (error) {
                 console.error('Shutdown Error:', error);
             }
@@ -207,6 +239,7 @@ class SpeechProcessor {
             });
         }
 
+        this.isAudioRunning = false;
         this._updateStatus('Speech Processing Stopped', 'warning');
         this._updateUIControls(false);
         this._stopTimer();
@@ -215,7 +248,137 @@ class SpeechProcessor {
         await this._releaseWakeLock();
         
         // Remove visibility change listener
-        document.removeEventListener('visibilitychange', this._handleVisibilityChange.bind(this));
+        document.removeEventListener('visibilitychange', this._handleVisibilityChange);
+        
+        // Remove page lifecycle event listeners
+        if ('onfreeze' in document) {
+            document.removeEventListener('freeze', this._handleFreeze);
+        }
+        
+        if ('onresume' in document) {
+            document.removeEventListener('resume', this._handleResume);
+        }
+        
+        // Remove service worker message listener
+        navigator.serviceWorker.removeEventListener('message', this._handleServiceWorkerMessage);
+    }
+
+    // Attempt to resume audio context after suspension
+    async _attemptResumeAudio() {
+        if (!this.audioContext || this.audioContext.state !== 'suspended' || this.resumeAttempts >= this.maxResumeAttempts) {
+            return false;
+        }
+        
+        this.resumeAttempts++;
+        console.log(`Attempting to resume audio context (attempt ${this.resumeAttempts}/${this.maxResumeAttempts})`);
+        
+        try {
+            await this.audioContext.resume();
+            console.log(`Audio context successfully resumed after ${this.resumeAttempts} attempts`);
+            this.resumeAttempts = 0;
+            
+            // If this was suspended by background, rebuild audio path
+            if (this.audioSuspendedByBackground) {
+                this._rebuildAudioPath();
+                this.audioSuspendedByBackground = false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Failed to resume audio context:', error);
+            
+            // Try again with exponential backoff if we have attempts left
+            if (this.resumeAttempts < this.maxResumeAttempts) {
+                const delay = Math.pow(2, this.resumeAttempts) * 100;
+                setTimeout(() => this._attemptResumeAudio(), delay);
+            } else {
+                console.error('Max resume attempts reached. User interaction needed.');
+                this._updateStatus('Tap to resume audio', 'error');
+                return false;
+            }
+        }
+    }
+    
+    // Handle messages from the service worker
+    _handleServiceWorkerMessage(event) {
+        // Handle keep-alive confirmation
+        if (event.data && event.data.type === 'KEEP_ALIVE_CONFIRMATION') {
+            console.log('Received keep-alive confirmation from service worker');
+        }
+        
+        // Handle visibility updates from other tabs/instances
+        if (event.data && event.data.type === 'VISIBILITY_UPDATE') {
+            console.log(`Received visibility update: ${event.data.isVisible ? 'visible' : 'hidden'}`);
+        }
+        
+        // Handle audio state updates from other tabs/instances
+        if (event.data && event.data.type === 'AUDIO_STATE_UPDATE') {
+            console.log(`Received audio state update: ${event.data.state}`);
+        }
+    }
+    
+    // Send message to service worker
+    _notifyServiceWorker(type, data) {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: type,
+                ...data
+            });
+        }
+    }
+    
+    // Handle page freeze event (when browser hibernates the page)
+    _handleFreeze() {
+        console.log('Page is being frozen. Saving audio state.');
+        
+        // Save state for when the page unfreezes
+        if (this.audioContext && this.audioContext.state === 'running') {
+            this.audioSuspendedByBackground = true;
+        }
+    }
+    
+    // Handle page resume event (when returning from hibernation)
+    _handleResume() {
+        console.log('Page is resuming from frozen state. Restoring audio.');
+        
+        if (this.isAudioRunning && this.audioContext && this.audioContext.state === 'suspended') {
+            this._attemptResumeAudio();
+        }
+    }
+
+    // Handle visibility changes (browser tab/app going to background)
+    async _handleVisibilityChange() {
+        const isVisible = document.visibilityState === 'visible';
+        this.isAppVisible = isVisible;
+        
+        console.log(`Page visibility changed: ${isVisible ? 'visible' : 'hidden'}`);
+        
+        // Notify service worker about visibility change
+        this._notifyServiceWorker('VISIBILITY_CHANGE', { isVisible });
+        
+        if (isVisible) {
+            // Page is now visible
+            if (this.isAudioRunning && this.audioContext && this.audioContext.state === 'suspended') {
+                // Try to resume audio context
+                this._attemptResumeAudio();
+            }
+            
+            // Re-request wake lock if needed
+            if (!this.wakeLock && this.isAudioRunning) {
+                await this._requestWakeLock();
+            }
+        } else {
+            // Page is now hidden
+            
+            // On iOS, we'll likely get suspended, so prepare for that
+            if (this.audioContext && this.audioContext.state === 'running') {
+                // Keep a record that we were running when backgrounded
+                this.audioSuspendedByBackground = true;
+            }
+            
+            // Keep audio processing active using a silent audio context
+            this._setupAudioContext();
+        }
     }
 
     updateDelayTime(value) {
@@ -316,6 +479,8 @@ class SpeechProcessor {
 
     _updateStatus(message, type = 'info') {
         const statusElement = document.getElementById('statusMessage');
+        if (!statusElement) return;
+        
         statusElement.textContent = message;
         
         // Remove all status classes
@@ -392,6 +557,12 @@ class SpeechProcessor {
                 // Listen for wake lock release
                 this.wakeLock.addEventListener('release', () => {
                     console.log('Wake Lock was released');
+                    this.wakeLock = null;
+                    
+                    // Try to reacquire wake lock if audio is still running and page is visible
+                    if (this.isAudioRunning && this.isAppVisible) {
+                        setTimeout(() => this._requestWakeLock(), 1000);
+                    }
                 });
             } else {
                 console.log('Wake Lock API not supported on this device');
@@ -415,30 +586,21 @@ class SpeechProcessor {
         }
     }
     
-    // Handle visibility changes (browser tab/app going to background)
-    async _handleVisibilityChange() {
-        if (document.visibilityState === 'visible' && !this.wakeLock) {
-            // Re-request wake lock if page becomes visible and we don't have an active wake lock
-            await this._requestWakeLock();
-        }
-        
-        if (document.visibilityState === 'hidden') {
-            // Keep audio processing active using a silent audio context when in background
-            this._setupAudioContext();
-        }
-    }
-    
     _setupAudioContext() {
         // Create a silent audio context to keep the app running in background
         // This is a fallback method when wake lock isn't available
         if (!this._silentAudio && this.audioContext) {
-            this._silentAudio = this.audioContext.createOscillator();
-            const gainNode = this.audioContext.createGain();
-            gainNode.gain.value = 0.001; // Nearly silent
-            this._silentAudio.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
-            this._silentAudio.start();
-            console.log('Silent audio started to maintain background processing');
+            try {
+                this._silentAudio = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                gainNode.gain.value = 0.001; // Nearly silent
+                this._silentAudio.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                this._silentAudio.start();
+                console.log('Silent audio started to maintain background processing');
+            } catch (e) {
+                console.error('Failed to create silent audio context:', e);
+            }
         }
     }
 }
@@ -486,5 +648,16 @@ document.addEventListener('DOMContentLoaded', () => {
         speechProcessor.updatePitchShift(e.target.value);
         // Track control adjustment
         trackControlEvent('pitch_shift', `${e.target.value} semitones`);
+    });
+    
+    // Add click handler to the status message to resume audio context
+    // This helps on iOS when the context gets suspended
+    document.getElementById('statusMessage').addEventListener('click', () => {
+        if (window.globalSpeechProcessor && 
+            window.globalSpeechProcessor.audioContext && 
+            window.globalSpeechProcessor.audioContext.state === 'suspended') {
+            
+            window.globalSpeechProcessor._attemptResumeAudio();
+        }
     });
 });
