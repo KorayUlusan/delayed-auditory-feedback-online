@@ -157,8 +157,31 @@ class SpeechProcessor {
         
         // For ultra-low latency, connect directly to output with minimal processing
         if (this.config.delayTime <= 0) {
-            // Direct pass-through for zero delay
-            source.connect(ctx.destination);
+            // Direct pass-through but ensure stereo output
+            // First create a stereo splitter for the mono source
+            const splitter = ctx.createChannelSplitter();
+            const merger = ctx.createChannelMerger(2);
+            
+            // Connect source to splitter
+            source.connect(splitter);
+            
+            // Connect the single channel to both left and right outputs
+            splitter.connect(merger, 0, 0); // Connect to left channel
+            splitter.connect(merger, 0, 1); // Connect to right channel
+            
+            // Connect the merger to the destination
+            merger.connect(ctx.destination);
+            
+            // Store for cleanup later
+            this.directOutput = {
+                splitter: splitter,
+                merger: merger,
+                disconnect: function() {
+                    this.splitter.disconnect();
+                    this.merger.disconnect();
+                }
+            };
+            
             return;
         }
         
@@ -166,10 +189,31 @@ class SpeechProcessor {
         const delayNode = this.audioNodes.delayNode;
         const outputGain = this.audioNodes.outputGain;
         
-        // Simplified signal path: source -> delay -> output
+        // Create channel splitter and merger to ensure stereo output
+        const splitter = ctx.createChannelSplitter();
+        const merger = ctx.createChannelMerger(2);
+        
+        // Simplified signal path: source -> delay -> splitter -> merger -> output
         source.connect(delayNode);
-        delayNode.connect(outputGain);
+        delayNode.connect(splitter);
+        
+        // Connect the mono channel to both left and right outputs
+        splitter.connect(merger, 0, 0); // Connect to left channel
+        splitter.connect(merger, 0, 1); // Connect to right channel
+        
+        // Connect to output
+        merger.connect(outputGain);
         outputGain.connect(ctx.destination);
+        
+        // Store for cleanup
+        this.directOutput = {
+            splitter: splitter,
+            merger: merger,
+            disconnect: function() {
+                this.splitter.disconnect();
+                this.merger.disconnect();
+            }
+        };
     }
 
     _configureAudioNodes() {
