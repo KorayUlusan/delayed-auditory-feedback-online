@@ -258,7 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
     statusElement.classList.add('status-default');
     
     document.getElementById('dafButton').addEventListener('click', (e) => {
-        if (e.target.textContent === 'Start DAF') {
+        const isStarting = e.target.textContent === 'Start DAF';
+        
+        // Track button click using the analytics.js function
+        trackDAFEvent(isStarting ? 'start_daf' : 'stop_daf', isStarting ? 'DAF Started' : 'DAF Stopped');
+        
+        if (isStarting) {
             speechProcessor.start();
         } else {
             speechProcessor.stop();
@@ -267,17 +272,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('delaySlider').addEventListener('input', (e) => {
         speechProcessor.updateDelayTime(e.target.value);
+        // Track control adjustment
+        trackControlEvent('delay_time', `${e.target.value} ms`);
     });
 
     document.getElementById('inputGainSlider').addEventListener('input', (e) => {
         speechProcessor.updateInputGain(e.target.value);
+        // Track control adjustment
+        trackControlEvent('input_gain', `${e.target.value}x`);
     });
 
     document.getElementById('noiseReductionSlider').addEventListener('input', (e) => {
         speechProcessor.updateNoiseReduction(e.target.value);
+        // Track control adjustment
+        trackControlEvent('noise_reduction', `${e.target.value}%`);
     });
 
     document.getElementById('pitchSlider').addEventListener('input', (e) => {
         speechProcessor.updatePitchShift(e.target.value);
+        // Track control adjustment
+        trackControlEvent('pitch_shift', `${e.target.value} semitones`);
     });
 });
