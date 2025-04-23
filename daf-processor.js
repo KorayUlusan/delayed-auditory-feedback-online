@@ -119,20 +119,44 @@ class SpeechProcessor {
 
     _connectAudioNodes() {
         const nodes = this.audioNodes;
+        const cfg = this.config;
 
-        // Optimized audio routing with noise reduction
+        // Basic direct connection for minimum latency when no processing is needed
+        if (cfg.noiseReduction === 0 && cfg.inputGain === 1) {
+            // Optimized shortest path: source -> delayNode -> output
+            nodes.source.connect(nodes.delayNode);
+            this._connectDelayToOutput();
+            console.log('Using optimized latency path (bypassing noise reduction and gain)');
+            return;
+        }
+
+        // Standard processing path with all nodes
         nodes.source.connect(nodes.inputGain);
-        nodes.inputGain.connect(nodes.highpassFilter);
-        nodes.highpassFilter.connect(nodes.lowpassFilter);
-        nodes.lowpassFilter.connect(nodes.noiseGate);
-        nodes.noiseGate.connect(nodes.compressor);
-        nodes.compressor.connect(nodes.delayNode);
+        
+        // Conditionally include noise reduction
+        if (cfg.noiseReduction > 0) {
+            // Full processing chain with noise reduction
+            nodes.inputGain.connect(nodes.highpassFilter);
+            nodes.highpassFilter.connect(nodes.lowpassFilter);
+            nodes.lowpassFilter.connect(nodes.noiseGate);
+            nodes.noiseGate.connect(nodes.compressor);
+            nodes.compressor.connect(nodes.delayNode);
+        } else {
+            // Skip noise reduction nodes
+            nodes.inputGain.connect(nodes.delayNode);
+        }
+        
+        this._connectDelayToOutput();
+    }
+    
+    // Helper method to connect delay node to output (stereo)
+    _connectDelayToOutput() {
+        const nodes = this.audioNodes;
         
         // Ensure stereo output by duplicating the signal to both channels
         nodes.delayNode.connect(nodes.channelSplitter);
         
         // Connect each channel from the splitter to both inputs of the merger
-        // This duplicates the audio signal to both left and right channels
         nodes.channelSplitter.connect(nodes.channelMerger, 0, 0); // Left to left
         nodes.channelSplitter.connect(nodes.channelMerger, 0, 1); // Left to right
         
