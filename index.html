@@ -159,6 +159,9 @@
 
     <script src="daf-processor.js"></script>
     <script>
+        // Global reference to speech processor instance
+        let globalSpeechProcessor = null;
+
         // Register service worker for background processing
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -214,6 +217,74 @@
                     stopKeepAlive();
                 }
             });
+        }
+        
+        // Functions to handle UI controls and pass values to the speech processor
+        function updateDelayTime(value) {
+            document.getElementById('delayValue').textContent = `${value} ms`;
+            if (globalSpeechProcessor) {
+                globalSpeechProcessor.updateDelayTime(value);
+            }
+        }
+        
+        function updatePitchChange(value) {
+            document.getElementById('pitchValue').textContent = `${value} semitones`;
+            if (globalSpeechProcessor) {
+                globalSpeechProcessor.updatePitchShift(value);
+            }
+        }
+        
+        function updateInputGain(value) {
+            document.getElementById('inputGainValue').textContent = `${value}x`;
+            if (globalSpeechProcessor) {
+                globalSpeechProcessor.updateInputGain(value);
+            }
+        }
+        
+        function updateNoiseReduction(value) {
+            document.getElementById('noiseReductionValue').textContent = `${value}%`;
+            if (globalSpeechProcessor) {
+                globalSpeechProcessor.updateNoiseReduction(value);
+            }
+        }
+        
+        function toggleDAF(button) {
+            const isStarting = button.textContent === 'Start DAF';
+            
+            if (isStarting) {
+                if (!globalSpeechProcessor) {
+                    globalSpeechProcessor = new SpeechProcessor();
+                }
+                
+                // Initialize with current slider values before starting
+                const delayValue = document.getElementById('delaySlider').value;
+                const pitchValue = document.getElementById('pitchSlider').value;
+                const inputGainValue = document.getElementById('inputGainSlider').value;
+                const noiseReductionValue = document.getElementById('noiseReductionSlider').value;
+                
+                globalSpeechProcessor.config.delayTime = delayValue;
+                globalSpeechProcessor.config.pitchShift = pitchValue;
+                globalSpeechProcessor.config.inputGain = inputGainValue;
+                globalSpeechProcessor.config.noiseReduction = noiseReductionValue;
+                
+                globalSpeechProcessor.start();
+                
+                if ('preventSleep' in window) {
+                    preventSleep.enable();
+                }
+                
+                startKeepAlive();
+            } else {
+                if (globalSpeechProcessor) {
+                    globalSpeechProcessor.stop();
+                }
+                
+                if ('preventSleep' in window) {
+                    preventSleep.disable();
+                }
+                
+                stopKeepAlive();
+            }
         }
         
         // Prevent screen lock on mobile devices using NoSleep.js technique
@@ -277,8 +348,13 @@ yRlJBTUVfUkFURQAQIGhtaXJoZGxyAAAAAQAAABBobWlyaGRsctBpdHNjAAAAAAIAAAABAAAAEAAAABB
             // Update sliders
             updateDelayTime(document.getElementById('delaySlider').value);
             updatePitchChange(document.getElementById('pitchSlider').value);
-            updateInputGain(document.getElementById('inputGainSlider').value); // Fixed element ID
+            updateInputGain(document.getElementById('inputGainSlider').value); 
             updateNoiseReduction(document.getElementById('noiseReductionSlider').value);
+            
+            // Initialize language system
+            if (typeof initLanguage === 'function') {
+                initLanguage();
+            }
         };
 
         function toggleTheme() {

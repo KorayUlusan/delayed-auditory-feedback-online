@@ -230,44 +230,81 @@ class SpeechProcessor {
     }
 
     updateInputGain(value) {
+        const previousValue = this.config.inputGain;
         this.config.inputGain = value;
+        
         if (this.audioNodes.inputGain && this.audioContext) {
             this.audioNodes.inputGain.gain.setValueAtTime(
                 value, 
                 this.audioContext.currentTime
             );
+            
+            // Check if we're crossing the threshold between optimized and normal path
+            if ((previousValue === 1 && value > 1) || (previousValue > 1 && value === 1)) {
+                this._rebuildAudioPath();
+            }
         }
+        
         this._updateUIDisplay('inputGainValue', `${value}x`);
     }
 
     updateNoiseReduction(value) {
+        const previousValue = this.config.noiseReduction;
         this.config.noiseReduction = value;
         const percentage = Math.round(value);
         
-        if (this.audioNodes.lowpassFilter && 
-            this.audioNodes.highpassFilter && 
-            this.audioNodes.noiseGate) {
+        if (this.audioContext) {
+            // Apply noise reduction settings when the nodes exist
+            if (this.audioNodes.lowpassFilter && 
+                this.audioNodes.highpassFilter && 
+                this.audioNodes.noiseGate) {
+                
+                const frequencyValue = value === 0 ? 20000 : 3000 / (value / 100);
+                const thresholdValue = -50 + (value * 0.5);
+                
+                this.audioNodes.lowpassFilter.frequency.setValueAtTime(
+                    frequencyValue, 
+                    this.audioContext.currentTime
+                );
+                
+                this.audioNodes.highpassFilter.frequency.setValueAtTime(
+                    100 + (value * 2), 
+                    this.audioContext.currentTime
+                );
+                
+                this.audioNodes.noiseGate.threshold.setValueAtTime(
+                    thresholdValue, 
+                    this.audioContext.currentTime
+                );
+            }
             
-            const frequencyValue = value === 0 ? 20000 : 3000 / (value / 100);
-            const thresholdValue = -50 + (value * 0.5);
-            
-            this.audioNodes.lowpassFilter.frequency.setValueAtTime(
-                frequencyValue, 
-                this.audioContext.currentTime
-            );
-            
-            this.audioNodes.highpassFilter.frequency.setValueAtTime(
-                100 + (value * 2), 
-                this.audioContext.currentTime
-            );
-            
-            this.audioNodes.noiseGate.threshold.setValueAtTime(
-                thresholdValue, 
-                this.audioContext.currentTime
-            );
+            // Check if we're crossing the threshold between optimized and normal path
+            if ((previousValue === 0 && value > 0) || (previousValue > 0 && value === 0)) {
+                this._rebuildAudioPath();
+            }
         }
         
         this._updateUIDisplay('noiseReductionValue', `${percentage}%`);
+    }
+    
+    // Method to rebuild the audio path when configuration changes require it
+    _rebuildAudioPath() {
+        // Only rebuild if we have an active audio context
+        if (!this.audioContext || !this.audioNodes.source) {
+            return;
+        }
+        
+        console.log('Rebuilding audio path for optimal latency');
+        
+        // Disconnect all existing connections
+        Object.values(this.audioNodes).forEach(node => {
+            if (node && typeof node.disconnect === 'function') {
+                node.disconnect();
+            }
+        });
+        
+        // Rebuild connections with current settings
+        this._connectAudioNodes();
     }
 
     updatePitchShift(value) {
