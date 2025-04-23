@@ -93,7 +93,6 @@
     
     <!-- Load JavaScript dependencies -->
     <script src="analytics.js"></script>
-    <script src="prevent-sleep.js"></script>
     
     <header>
         <h1>Delayed Auditory Feedback (DAF) Online</h1>
@@ -104,22 +103,16 @@
     <main>
         <section id="controls">
             <hr />
-            <button id="dafButton" onclick="toggleDAF(this)" aria-pressed="false">Start DAF</button>
+            <button id="dafButton" aria-pressed="false">Start DAF</button>
             <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
             <p id="dafTimer" class="timer-display">00:00</p>
             <div class="sliders">
                 <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">20 ms</span></label>
                 <input type="range" id="delaySlider" min="0" max="500" step="1" value="20" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="200"
                     aria-valuetext="200 milliseconds">
-                <label for="pitchSlider">🎵 Pitch Change: (Coming Soon) <span id="pitchValue">0 semitones</span></label>
-                <input type="range" id="pitchSlider" min="-5" max="5" step="1" value="0" oninput="updatePitchChange(this.value)" aria-valuemin="-5" aria-valuemax="5" aria-valuenow="0"
-                    aria-valuetext="0 semitones">
-                <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">1x</span></label>
-                <input id="inputGainSlider" type="range" min="1" max="20" value="1" step="0.5" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20"
+                <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">10x</span></label>
+                <input id="inputGainSlider" type="range" min="1" max="20" value="10" step="1" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20"
                     aria-valuenow="10" aria-valuetext="10x">
-                <label for="noiseReductionSlider">🔇 Background Noise Reduction: <span id="noiseReductionValue">0%</span></label>
-                <input type="range" id="noiseReductionSlider" min="0" max="100" step="1" value="0" oninput="updateNoiseReduction(this.value)" aria-valuemin="0" aria-valuemax="100"
-                    aria-valuenow="0" aria-valuetext="0%">
             </div>
             <hr />
         </section>
