@@ -94,8 +94,8 @@
         <section id="controls">
             <hr />
             <button id="dafButton" onclick="toggleDAF(this)" aria-pressed="false">Start DAF</button>
-            <br />
             <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
+            <p id="dafTimer" class="timer-display">00:00</p>
             <div class="sliders">
                 <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">20 ms</span></label>
                 <input type="range" id="delaySlider" min="0" max="500" step="1" value="20" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="200"

@@ -27,6 +27,11 @@ class SpeechProcessor {
             speechFrequencyMin: 85,   // Hz, lower speech frequency bound
             speechFrequencyMax: 3400  // Hz, upper speech frequency bound
         };
+        
+        // Timer functionality
+        this.timerInterval = null;
+        this.startTime = 0;
+        this.elapsedTime = 0;
     }
 
     async initializeAudio() {
@@ -138,6 +143,7 @@ class SpeechProcessor {
                 if (success) {
                     this._updateStatus('Speech Processing Active', 'success');
                     this._updateUIControls(true);
+                    this._startTimer();
                 }
             });
     }
@@ -170,6 +176,7 @@ class SpeechProcessor {
 
         this._updateStatus('Speech Processing Stopped', 'warning');
         this._updateUIControls(false);
+        this._stopTimer();
     }
 
     updateDelayTime(value) {
@@ -260,6 +267,42 @@ class SpeechProcessor {
         if (toggleButton) {
             toggleButton.textContent = isActive ? 'Stop DAF' : 'Start DAF';
             toggleButton.setAttribute('aria-pressed', isActive.toString());
+        }
+    }
+    
+    _startTimer() {
+        const timerElement = document.getElementById('dafTimer');
+        if (!timerElement) return;
+        
+        // Reset and show timer
+        this.startTime = Date.now();
+        this.elapsedTime = 0;
+        timerElement.textContent = '00:00';
+        timerElement.style.display = 'block';
+        
+        // Update timer every second
+        this.timerInterval = setInterval(() => {
+            this.elapsedTime = Date.now() - this.startTime;
+            const seconds = Math.floor(this.elapsedTime / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const displaySeconds = String(seconds % 60).padStart(2, '0');
+            const displayMinutes = String(minutes).padStart(2, '0');
+            
+            timerElement.textContent = `${displayMinutes}:${displaySeconds}`;
+        }, 1000);
+    }
+    
+    _stopTimer() {
+        // Clear timer interval
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+        
+        // Hide timer display
+        const timerElement = document.getElementById('dafTimer');
+        if (timerElement) {
+            timerElement.style.display = 'none';
         }
     }
 }

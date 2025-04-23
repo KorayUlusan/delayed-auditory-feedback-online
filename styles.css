@@ -8,11 +8,14 @@
     --box-shadow-color: rgba(0, 0, 0, 0.1);
     --success-color: #4CAF50;
     --error-color: #F44336;
+    --slider-track-color: #ddd;
+    --slider-thumb-color: #0056b3;
+    --slider-thumb-hover-color: #004494;
 }
 
 [data-theme="dark"] {
-    --primary-color: #90caf9;
-    --primary-color-hover: #64b5f6;
+    --primary-color: #3d85c6; /* Changed from #90caf9 to a darker blue */
+    --primary-color-hover: #2d6da3; /* Changed from #64b5f6 to a darker hover blue */
     --background-color: #121212;
     --text-color: #e0e0e0;
     --secondary-text-color: #b0b0b0;
@@ -20,6 +23,9 @@
     --box-shadow-color: rgba(255, 255, 255, 0.1);
     --success-color: #4CAF50;
     --error-color: #F44336;
+    --slider-track-color: #444;
+    --slider-thumb-color: #3d85c6;
+    --slider-thumb-hover-color: #2d6da3;
 }
 
 body {
@@ -40,12 +46,13 @@ h1 {
 button {
     padding: 10px 20px;
     font-size: 16px;
-    margin: 20px 0 0 20px; /* Update bottom margin to 0 */
+    margin: 20px auto; /* Changed from "20px 0 0 20px" to center the button */
     cursor: pointer;
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 5px;
+    display: block; /* Added to ensure proper centering */
 }
 
 button:hover {
@@ -129,7 +136,50 @@ label {
 }
 
 input[type="range"] {
+    -webkit-appearance: none;
     width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: var(--slider-track-color);
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--slider-thumb-color);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: var(--slider-thumb-color);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+    background: var(--slider-thumb-hover-color);
+}
+
+input[type="range"]:hover::-moz-range-thumb {
+    background: var(--slider-thumb-hover-color);
+}
+
+input[type="range"]::-moz-range-track {
+    background: var(--slider-track-color);
+    border-radius: 5px;
+}
+
+input[type="range"]:focus {
+    outline: none;
 }
 
 #delayValue, #pitchValue, #boostValue, #noiseReductionValue {
@@ -180,5 +230,15 @@ footer {
     margin-top: 40px;
     font-size: 0.9em;
     color: var(--secondary-text-color);
+}
+
+.timer-display {
+    font-family: monospace;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    display: none; /* Hidden by default, shown when DAF is active */
 }
 
