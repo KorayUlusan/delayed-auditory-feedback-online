@@ -6,9 +6,8 @@ class SpeechProcessor {
         this.audioStream = null;
         this.audioNodes = {
             source: null,
-            inputGain: null,
+            gainNode: null, // Single gain node instead of separate input/output
             delayNode: null,
-            outputGain: null,
             channelSplitter: null,
             channelMerger: null,
         };
@@ -16,7 +15,7 @@ class SpeechProcessor {
         // Speech processing configuration
         this.config = {
             delayTime: 50,        // ms, optimal for speech DAF
-            inputGain: 1,         // default gain
+            gain: 1,              // unified gain control
         };
 
         // State tracking
@@ -91,7 +90,8 @@ class SpeechProcessor {
                 autoGainControl: false,
                 noiseSuppression: false,
                 channelCount: 1,
-                latency: 0.001 // Request minimal latency if supported
+                latency: 0.0, // Request absolute minimal latency
+                sampleRate: 48000 // Higher sample rates can reduce latency
             }
         };
 
@@ -101,8 +101,8 @@ class SpeechProcessor {
     _createAudioContext() {
         // Create audio context with absolute minimal latency
         const contextOptions = {
-            latencyHint: 'interactive', // Use 'playback' for more stability or 'interactive' for lower latency
-            sampleRate: 48000 // Higher sample rates can reduce latency on some devices
+            latencyHint: 0.0, // Override with lowest possible latency
+            sampleRate: 48000 // Higher sample rate for lower latency
         };
 
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
@@ -123,14 +123,17 @@ class SpeechProcessor {
         const nodes = this.audioNodes;
 
         nodes.source = ctx.createMediaStreamSource(this.audioStream);
-        nodes.inputGain = ctx.createGain();
-
-        // Create delay node with minimal delay
-        nodes.delayNode = ctx.createDelay(1);
-        nodes.delayNode.delayTime.value = Math.max(0.00001, this.config.delayTime / 1000);
-
-        nodes.outputGain = ctx.createGain();
-
+        
+        // Single gain node for all gain control
+        nodes.gainNode = ctx.createGain();
+        
+        // Create delay node with minimal delay buffer size
+        nodes.delayNode = ctx.createDelay(0.5); // Reduce max delay to 500ms for better performance
+        
+        // Use the smallest possible delay value when setting to zero
+        const minDelay = 0.000001; // 1 microsecond, effectively zero
+        nodes.delayNode.delayTime.value = Math.max(minDelay, this.config.delayTime / 1000);
+        
         // For stereo output (both ears)
         nodes.channelSplitter = ctx.createChannelSplitter(2);
         nodes.channelMerger = ctx.createChannelMerger(2);
@@ -140,33 +143,28 @@ class SpeechProcessor {
         const nodes = this.audioNodes;
         const cfg = this.config;
         const ctx = this.audioContext;
-
-        // Initial gain and delay settings
-        nodes.inputGain.gain.setValueAtTime(cfg.inputGain, ctx.currentTime);
-        nodes.delayNode.delayTime.setValueAtTime(Math.max(0.00001, cfg.delayTime / 1000), ctx.currentTime);
+        
+        // Use the minimum possible delay value when setting to zero
+        const minDelay = 0.000001; // 1 microsecond, effectively zero
+        const actualDelay = cfg.delayTime <= 0 ? minDelay : cfg.delayTime / 1000;
+        
+        // Set gain and delay settings with immediate application
+        nodes.gainNode.gain.setValueAtTime(cfg.gain, ctx.currentTime);
+        nodes.delayNode.delayTime.setValueAtTime(actualDelay, ctx.currentTime);
     }
 
     _connectAudioNodes() {
         const nodes = this.audioNodes;
-
-        // Simplified audio path: source -> input gain -> delay -> output
-        nodes.source.connect(nodes.inputGain);
-        nodes.inputGain.connect(nodes.delayNode);
-
-        // Ensure stereo output by duplicating the signal to both channels
-        nodes.delayNode.connect(nodes.channelSplitter);
-
-        // Connect each channel from the splitter to both inputs of the merger
-        nodes.channelSplitter.connect(nodes.channelMerger, 0, 0); // Left to left
-        nodes.channelSplitter.connect(nodes.channelMerger, 0, 1); // Left to right
-
-        nodes.channelMerger.connect(nodes.outputGain);
-        nodes.outputGain.connect(this.audioContext.destination);
-
-        // Mark as direct mode since we're using the optimized path
+        
+        // Ultra-simplified audio path with single gain node for minimal latency
+        nodes.source.connect(nodes.delayNode);
+        nodes.delayNode.connect(nodes.gainNode);
+        nodes.gainNode.connect(this.audioContext.destination);
+        
+        // Mark as direct mode
         this.directModeEnabled = true;
-
-        console.log('Audio path connected with delay:', this.config.delayTime + 'ms');
+        
+        console.log('Ultra-optimized audio path connected with delay:', this.config.delayTime + 'ms');
     }
 
 
@@ -344,29 +342,36 @@ class SpeechProcessor {
 
         if (!this.audioContext || !this.audioNodes.delayNode) return;
 
-        // Set minimum possible delay if zero is requested
-        const actualDelay = value <= 0 ? 0.00001 : value / 1000; // Minimum value to avoid errors
+        // Use minimum possible delay value when setting to zero
+        const minDelay = 0.000001; // 1 microsecond, effectively zero
+        const actualDelay = value <= 0 ? minDelay : value / 1000;
 
+        // Set delay time immediately with no ramp for lowest latency
         this.audioNodes.delayNode.delayTime.setValueAtTime(
             actualDelay,
             this.audioContext.currentTime
         );
-        console.log(`Delay time updated to: ${actualDelay.toFixed(5)} seconds (${value} ms)`);
+        console.log(`Delay time updated to: ${actualDelay.toFixed(6)} seconds (${value} ms)`);
 
         this._updateUIDisplay('delayValue', `${value} ms`);
     }
 
-    updateInputGain(value) {
-        this.config.inputGain = value;
-
-        if (!this.audioContext || !this.audioNodes.inputGain) return;
-
-        this.audioNodes.inputGain.gain.setValueAtTime(
-            value,
+    updateGain(value) {
+        this.config.gain = value;
+        
+        if (!this.audioContext || !this.audioNodes.gainNode) return;
+        
+        this.audioNodes.gainNode.gain.setValueAtTime(
+            value, 
             this.audioContext.currentTime
         );
+        
+        this._updateUIDisplay('gainValue', `${value}x`);
+    }
 
-        this._updateUIDisplay('inputGainValue', `${value}x`);
+    // For backward compatibility with existing UI controls
+    updateInputGain(value) {
+        this.updateGain(value);
     }
 
     // UI METHODS
