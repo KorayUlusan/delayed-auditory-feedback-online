@@ -1,7 +1,7 @@
 // app.js - Main application logic for DAF Online
 
 // Global reference to speech processor instance
-let globalSpeechProcessor = null;
+let globalSpeechProcessor = new SpeechProcessor();
 
 // Register service worker for background processing
 if ('serviceWorker' in navigator) {
@@ -188,13 +188,6 @@ function toggleDAF(button) {
     const isStarting = button.textContent === 'Start DAF';
     
     if (isStarting) {
-        if (!globalSpeechProcessor) {
-            globalSpeechProcessor = new SpeechProcessor();
-        }
-        
-        // Make the SpeechProcessor instance globally accessible
-        window.globalSpeechProcessor = globalSpeechProcessor;
-        
         // Initialize with current slider values before starting
         const delayValue = document.getElementById('delaySlider').value;
         const pitchValue = document.getElementById('pitchSlider').value;
@@ -212,9 +205,7 @@ function toggleDAF(button) {
         preventSleep.enable();
         startKeepAlive();
     } else {
-        if (globalSpeechProcessor) {
-            globalSpeechProcessor.stop();
-        }
+        globalSpeechProcessor.stop();
         
         preventSleep.disable();
         stopKeepAlive();

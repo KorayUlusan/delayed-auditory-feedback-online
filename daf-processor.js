@@ -1,4 +1,8 @@
 // Speech Processing and Delayed Auditory Feedback (DAF) Module
+
+// Global reference to speech processor instance
+let globalSpeechProcessor = null;
+
 class SpeechProcessor {
     constructor() {
         // Core audio processing components
@@ -25,7 +29,9 @@ class SpeechProcessor {
             noiseReduction: 50,   // percentage
             pitchShift: 0,        // semitones
             speechFrequencyMin: 85,   // Hz, lower speech frequency bound
-            speechFrequencyMax: 3400  // Hz, upper speech frequency bound
+            speechFrequencyMax: 3400,  // Hz, upper speech frequency bound
+            useZeroLatencyMode: true,  // New option for ultra-low latency
+            bufferSize: 256       // Buffer size for ScriptProcessor (lower = less latency but more CPU)
         };
         
         // Timer functionality
@@ -42,6 +48,10 @@ class SpeechProcessor {
         this.audioSuspendedByBackground = false;
         this.resumeAttempts = 0;
         this.maxResumeAttempts = 5;
+        
+        // Direct mode components (for zero latency)
+        this.directModeEnabled = false;
+        this.directOutput = null;
     }
 
     async initializeAudio() {
@@ -50,7 +60,8 @@ class SpeechProcessor {
                 echoCancellation: false,
                 autoGainControl: false,
                 noiseSuppression: false,
-                channelCount: 1
+                channelCount: 1,
+                latency: 0.001 // Request minimal latency if supported
             }
         };
 
@@ -58,11 +69,20 @@ class SpeechProcessor {
             // Request microphone access
             this.audioStream = await navigator.mediaDevices.getUserMedia(constraints);
             
-            // Create audio context with low latency
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                latencyHint: 'interactive'
-            });
-
+            // Create audio context with absolute minimal latency
+            const contextOptions = {
+                latencyHint: 'interactive', // Use 'playback' for more stability or 'interactive' for lower latency
+                sampleRate: 48000 // Higher sample rates can reduce latency on some devices
+            };
+            
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
+            
+            // Log system audio info for debugging latency issues
+            console.log(`Audio context state: ${this.audioContext.state}`);
+            console.log(`Sample rate: ${this.audioContext.sampleRate}Hz`);
+            console.log(`Base latency: ${this.audioContext.baseLatency || 'not supported'}`);
+            console.log(`Output latency: ${this.audioContext.outputLatency || 'not supported'}`);
+            
             // Add event listener for state changes
             this.audioContext.addEventListener('statechange', () => {
                 console.log(`Audio context state changed to: ${this.audioContext.state}`);
@@ -77,7 +97,13 @@ class SpeechProcessor {
             // Initialize audio processing nodes
             this._createAudioNodes();
             this._configureAudioNodes();
-            this._connectAudioNodes();
+            
+            // Choose appropriate connection strategy based on latency needs
+            if (this.config.useZeroLatencyMode && this.config.delayTime <= 5) {
+                this._setupDirectMode();
+            } else {
+                this._connectAudioNodes();
+            }
             
             // Set audio running state
             this.isAudioRunning = true;
@@ -96,7 +122,11 @@ class SpeechProcessor {
 
         nodes.source = ctx.createMediaStreamSource(this.audioStream);
         nodes.inputGain = ctx.createGain();
-        nodes.delayNode = ctx.createDelay(1);
+        
+        // For zero latency, we need smallest possible delay (0.01ms)
+        nodes.delayNode = ctx.createDelay(1); 
+        nodes.delayNode.delayTime.value = Math.max(0.00001, this.config.delayTime / 1000);
+        
         nodes.outputGain = ctx.createGain();
         
         // For stereo output (both ears)
@@ -108,6 +138,38 @@ class SpeechProcessor {
         nodes.lowpassFilter = ctx.createBiquadFilter();
         nodes.highpassFilter = ctx.createBiquadFilter();
         nodes.compressor = ctx.createDynamicsCompressor();
+    }
+
+    // Setup ultra-low latency direct output mode
+    _setupDirectMode() {
+        console.log('Using zero-latency direct mode');
+        this.directModeEnabled = true;
+        
+        // Disconnect any existing nodes
+        Object.values(this.audioNodes).forEach(node => {
+            if (node && typeof node.disconnect === 'function') {
+                node.disconnect();
+            }
+        });
+        
+        const ctx = this.audioContext;
+        const source = this.audioNodes.source;
+        
+        // For ultra-low latency, connect directly to output with minimal processing
+        if (this.config.delayTime <= 0) {
+            // Direct pass-through for zero delay
+            source.connect(ctx.destination);
+            return;
+        }
+        
+        // For very small delays, simplify the path as much as possible
+        const delayNode = this.audioNodes.delayNode;
+        const outputGain = this.audioNodes.outputGain;
+        
+        // Simplified signal path: source -> delay -> output
+        source.connect(delayNode);
+        delayNode.connect(outputGain);
+        outputGain.connect(ctx.destination);
     }
 
     _configureAudioNodes() {
@@ -127,27 +189,31 @@ class SpeechProcessor {
         nodes.noiseGate.threshold.setValueAtTime(-40, ctx.currentTime);
         nodes.noiseGate.knee.setValueAtTime(20, ctx.currentTime);
         nodes.noiseGate.ratio.setValueAtTime(10, ctx.currentTime);
+        nodes.noiseGate.attack.setValueAtTime(0, ctx.currentTime); // Reduced for less latency
+        nodes.noiseGate.release.setValueAtTime(0.1, ctx.currentTime); // Reduced for less latency
         
         // Compressor for speech clarity
         nodes.compressor.threshold.setValueAtTime(-18, ctx.currentTime);
         nodes.compressor.knee.setValueAtTime(15, ctx.currentTime);
         nodes.compressor.ratio.setValueAtTime(8, ctx.currentTime);
+        nodes.compressor.attack.setValueAtTime(0, ctx.currentTime); // Reduced for less latency
+        nodes.compressor.release.setValueAtTime(0.05, ctx.currentTime); // Reduced for less latency
         
         // Initial gain and delay settings
         nodes.inputGain.gain.setValueAtTime(cfg.inputGain, ctx.currentTime);
-        nodes.delayNode.delayTime.setValueAtTime(cfg.delayTime / 1000, ctx.currentTime);
+        nodes.delayNode.delayTime.setValueAtTime(Math.max(0.00001, cfg.delayTime / 1000), ctx.currentTime);
     }
 
     _connectAudioNodes() {
         const nodes = this.audioNodes;
         const cfg = this.config;
 
-        // Basic direct connection for minimum latency when no processing is needed
-        if (cfg.noiseReduction === 0 && cfg.inputGain === 1) {
-            // Optimized shortest path: source -> delayNode -> output
+        // Optimize for minimum latency when delay is very low or noise reduction is disabled
+        if (cfg.delayTime < 20 || (cfg.noiseReduction === 0 && cfg.inputGain === 1)) {
+            // Ultra-optimized path for minimum latency: source -> delayNode -> output
             nodes.source.connect(nodes.delayNode);
             this._connectDelayToOutput();
-            console.log('Using optimized latency path (bypassing noise reduction and gain)');
+            console.log('Using optimized ultra-low latency path (bypassing all processing)');
             return;
         }
 
@@ -163,7 +229,7 @@ class SpeechProcessor {
             nodes.noiseGate.connect(nodes.compressor);
             nodes.compressor.connect(nodes.delayNode);
         } else {
-            // Skip noise reduction nodes
+            // Skip noise reduction nodes for lower latency
             nodes.inputGain.connect(nodes.delayNode);
         }
         
@@ -209,7 +275,14 @@ class SpeechProcessor {
             }
             
             // Create a service worker message listener
-            navigator.serviceWorker.addEventListener('message', this._handleServiceWorkerMessage.bind(this));
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.addEventListener('message', this._handleServiceWorkerMessage.bind(this));
+            }
+            
+            // Apply current user settings
+            if (this.config.delayTime <= 5) {
+                this._updateStatus('Zero-latency mode active', 'success');
+            }
         }
     }
 
@@ -227,6 +300,12 @@ class SpeechProcessor {
                     }
                 });
 
+                // If we have a direct mode active, clean it up
+                if (this.directOutput) {
+                    this.directOutput.disconnect();
+                    this.directOutput = null;
+                }
+
                 await this.audioContext.close();
             } catch (error) {
                 console.error('Shutdown Error:', error);
@@ -237,6 +316,8 @@ class SpeechProcessor {
             Object.keys(this.audioNodes).forEach(key => {
                 this.audioNodes[key] = null;
             });
+            
+            this.directModeEnabled = false;
         }
 
         this.isAudioRunning = false;
@@ -247,10 +328,9 @@ class SpeechProcessor {
         // Release wake lock when stopping
         await this._releaseWakeLock();
         
-        // Remove visibility change listener
+        // Remove event listeners
         document.removeEventListener('visibilitychange', this._handleVisibilityChange);
         
-        // Remove page lifecycle event listeners
         if ('onfreeze' in document) {
             document.removeEventListener('freeze', this._handleFreeze);
         }
@@ -259,8 +339,9 @@ class SpeechProcessor {
             document.removeEventListener('resume', this._handleResume);
         }
         
-        // Remove service worker message listener
-        navigator.serviceWorker.removeEventListener('message', this._handleServiceWorkerMessage);
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.removeEventListener('message', this._handleServiceWorkerMessage);
+        }
     }
 
     // Attempt to resume audio context after suspension
@@ -382,13 +463,36 @@ class SpeechProcessor {
     }
 
     updateDelayTime(value) {
+        const previousDelay = this.config.delayTime;
         this.config.delayTime = value;
-        if (this.audioNodes.delayNode && this.audioContext) {
+        
+        if (!this.audioContext) return;
+        
+        // Set minimum possible delay if zero is requested
+        const actualDelay = value <= 0 ? 0.00001 : value / 1000; // Minimum value to avoid errors
+        
+        if (this.audioNodes.delayNode) {
             this.audioNodes.delayNode.delayTime.setValueAtTime(
-                value / 1000, 
+                actualDelay, 
                 this.audioContext.currentTime
             );
         }
+        
+        // Check if we need to switch between direct and normal modes
+        const wasVeryLowLatency = previousDelay <= 5;
+        const isVeryLowLatency = value <= 5;
+        
+        // If switching between latency modes, rebuild audio path
+        if (this.config.useZeroLatencyMode && (wasVeryLowLatency !== isVeryLowLatency)) {
+            if (isVeryLowLatency) {
+                this._setupDirectMode();
+                this._updateStatus('Zero-latency mode active', 'success');
+            } else {
+                this.directModeEnabled = false;
+                this._rebuildAudioPath();
+            }
+        }
+        
         this._updateUIDisplay('delayValue', `${value} ms`);
     }
 
@@ -466,8 +570,25 @@ class SpeechProcessor {
             }
         });
         
-        // Rebuild connections with current settings
-        this._connectAudioNodes();
+        if (this.directOutput) {
+            this.directOutput.disconnect();
+            this.directOutput = null;
+        }
+        
+        // Determine if we should use direct mode for ultra-low latency
+        if (this.config.useZeroLatencyMode && this.config.delayTime <= 5) {
+            this._setupDirectMode();
+            this._updateStatus('Zero-latency mode active', 'success');
+        } else {
+            // Rebuild connections with current settings
+            this._connectAudioNodes();
+            
+            // If previously in direct mode, update status
+            if (this.directModeEnabled) {
+                this.directModeEnabled = false;
+                this._updateStatus('Speech Processing Active', 'success');
+            }
+        }
     }
 
     updatePitchShift(value) {
@@ -605,59 +726,72 @@ class SpeechProcessor {
     }
 }
 
-// Instantiate and set up event listeners
+// Initialize the global speech processor on DOM content load
 document.addEventListener('DOMContentLoaded', () => {
-    const speechProcessor = new SpeechProcessor();
+    // Create a single global instance
+    globalSpeechProcessor = new SpeechProcessor();
     
     // Initialize status message with default class
     const statusElement = document.getElementById('statusMessage');
-    statusElement.classList.add('status-default');
+    if (statusElement) {
+        statusElement.classList.add('status-default');
+    }
     
     document.getElementById('dafButton').addEventListener('click', (e) => {
         const isStarting = e.target.textContent === 'Start DAF';
         
         // Track button click using the analytics.js function
-        trackDAFEvent(isStarting ? 'start_daf' : 'stop_daf', isStarting ? 'DAF Started' : 'DAF Stopped');
+        if (typeof trackDAFEvent === 'function') {
+            trackDAFEvent(isStarting ? 'start_daf' : 'stop_daf', isStarting ? 'DAF Started' : 'DAF Stopped');
+        }
         
         if (isStarting) {
-            speechProcessor.start();
+            globalSpeechProcessor.start();
         } else {
-            speechProcessor.stop();
+            globalSpeechProcessor.stop();
         }
     });
 
     document.getElementById('delaySlider').addEventListener('input', (e) => {
-        speechProcessor.updateDelayTime(e.target.value);
+        globalSpeechProcessor.updateDelayTime(e.target.value);
         // Track control adjustment
-        trackControlEvent('delay_time', `${e.target.value} ms`);
+        if (typeof trackControlEvent === 'function') {
+            trackControlEvent('delay_time', `${e.target.value} ms`);
+        }
     });
 
     document.getElementById('inputGainSlider').addEventListener('input', (e) => {
-        speechProcessor.updateInputGain(e.target.value);
+        globalSpeechProcessor.updateInputGain(e.target.value);
         // Track control adjustment
-        trackControlEvent('input_gain', `${e.target.value}x`);
+        if (typeof trackControlEvent === 'function') {
+            trackControlEvent('input_gain', `${e.target.value}x`);
+        }
     });
 
     document.getElementById('noiseReductionSlider').addEventListener('input', (e) => {
-        speechProcessor.updateNoiseReduction(e.target.value);
+        globalSpeechProcessor.updateNoiseReduction(e.target.value);
         // Track control adjustment
-        trackControlEvent('noise_reduction', `${e.target.value}%`);
+        if (typeof trackControlEvent === 'function') {
+            trackControlEvent('noise_reduction', `${e.target.value}%`);
+        }
     });
 
     document.getElementById('pitchSlider').addEventListener('input', (e) => {
-        speechProcessor.updatePitchShift(e.target.value);
+        globalSpeechProcessor.updatePitchShift(e.target.value);
         // Track control adjustment
-        trackControlEvent('pitch_shift', `${e.target.value} semitones`);
+        if (typeof trackControlEvent === 'function') {
+            trackControlEvent('pitch_shift', `${e.target.value} semitones`);
+        }
     });
     
     // Add click handler to the status message to resume audio context
     // This helps on iOS when the context gets suspended
     document.getElementById('statusMessage').addEventListener('click', () => {
-        if (window.globalSpeechProcessor && 
-            window.globalSpeechProcessor.audioContext && 
-            window.globalSpeechProcessor.audioContext.state === 'suspended') {
+        if (globalSpeechProcessor && 
+            globalSpeechProcessor.audioContext && 
+            globalSpeechProcessor.audioContext.state === 'suspended') {
             
-            window.globalSpeechProcessor._attemptResumeAudio();
+            globalSpeechProcessor._attemptResumeAudio();
         }
     });
 });
