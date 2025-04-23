@@ -9,15 +9,17 @@ window.onload = function () {
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     
-    // Set the checkbox state based on theme
+    // Set the checkbox state based on theme and directly attach event listener
     const checkbox = document.getElementById('checkbox');
     if (checkbox) {
+        // Make sure the checkbox state matches the current theme
         checkbox.checked = savedTheme === 'dark';
         
-        // Attach the event listener directly here
-        checkbox.addEventListener('change', function() {
-            toggleTheme();
-        });
+        // Remove any existing listeners and attach fresh event listener
+        checkbox.removeEventListener('change', toggleTheme);
+        checkbox.addEventListener('change', toggleTheme);
+        
+        console.log('Theme toggle initialized:', savedTheme);
     }
     
     // Update sliders with initial values

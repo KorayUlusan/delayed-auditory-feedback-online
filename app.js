@@ -214,10 +214,18 @@ function toggleDAF(button) {
 
 function toggleTheme() {
     const checkbox = document.getElementById('checkbox');
+    if (!checkbox) return;
+    
     const themeColorMeta = document.querySelector('meta[name="theme-color"]');
     const theme = checkbox.checked ? 'dark' : 'light';
+    
+    console.log('Toggling theme to:', theme);
     document.documentElement.setAttribute('data-theme', theme);
-    themeColorMeta.setAttribute('content', theme === 'dark' ? '#121212' : '#ffffff');
+    
+    if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', theme === 'dark' ? '#121212' : '#ffffff');
+    }
+    
     localStorage.setItem('theme', theme); // Save theme preference
 }
 

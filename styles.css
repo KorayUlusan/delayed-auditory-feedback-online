@@ -242,3 +242,24 @@ footer {
     display: none; /* Hidden by default, shown when DAF is active */
 }
 
+/* Disabled slider styles for zero-latency mode */
+input[type="range"].disabled-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+input[type="range"].disabled-slider::-webkit-slider-thumb {
+    background: #888;
+    cursor: not-allowed;
+}
+
+input[type="range"].disabled-slider::-moz-range-thumb {
+    background: #888;
+    cursor: not-allowed;
+}
+
+label span:contains("Disabled in zero-latency mode") {
+    font-style: italic;
+    color: var(--secondary-text-color);
+}
+

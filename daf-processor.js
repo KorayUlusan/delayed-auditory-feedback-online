@@ -182,6 +182,9 @@ class SpeechProcessor {
                 }
             };
             
+            // Disable sliders that have no effect in zero-latency mode
+            this._disableProcessingControls(true);
+            
             return;
         }
         
@@ -214,6 +217,9 @@ class SpeechProcessor {
                 this.merger.disconnect();
             }
         };
+        
+        // Disable sliders that have no effect in low-latency mode
+        this._disableProcessingControls(true);
     }
 
     _configureAudioNodes() {
@@ -530,10 +536,12 @@ class SpeechProcessor {
         if (this.config.useZeroLatencyMode && (wasVeryLowLatency !== isVeryLowLatency)) {
             if (isVeryLowLatency) {
                 this._setupDirectMode();
-                this._updateStatus('Zero-latency mode active', 'success');
+                this._updateStatus('Zero-latency mode active - Processing features disabled', 'success');
+                this._disableProcessingControls(true);
             } else {
                 this.directModeEnabled = false;
                 this._rebuildAudioPath();
+                this._disableProcessingControls(false);
             }
         }
         
@@ -622,7 +630,8 @@ class SpeechProcessor {
         // Determine if we should use direct mode for ultra-low latency
         if (this.config.useZeroLatencyMode && this.config.delayTime <= 5) {
             this._setupDirectMode();
-            this._updateStatus('Zero-latency mode active', 'success');
+            this._updateStatus('Zero-latency mode active - Processing features disabled', 'success');
+            this._disableProcessingControls(true);
         } else {
             // Rebuild connections with current settings
             this._connectAudioNodes();
@@ -631,6 +640,53 @@ class SpeechProcessor {
             if (this.directModeEnabled) {
                 this.directModeEnabled = false;
                 this._updateStatus('Speech Processing Active', 'success');
+                this._disableProcessingControls(false);
+            }
+        }
+    }
+    
+    // Helper method to disable/enable processing controls in zero-latency mode
+    _disableProcessingControls(disable) {
+        // Get the slider elements
+        const inputGainSlider = document.getElementById('inputGainSlider');
+        const noiseReductionSlider = document.getElementById('noiseReductionSlider');
+        const inputGainLabel = document.querySelector('label[for="inputGainSlider"]');
+        const noiseReductionLabel = document.querySelector('label[for="noiseReductionSlider"]');
+        
+        if (inputGainSlider && noiseReductionSlider) {
+            // Update disabled state
+            inputGainSlider.disabled = disable;
+            noiseReductionSlider.disabled = disable;
+            
+            // Update visual appearance
+            if (disable) {
+                inputGainSlider.classList.add('disabled-slider');
+                noiseReductionSlider.classList.add('disabled-slider');
+                
+                if (inputGainLabel) {
+                    inputGainLabel.innerHTML = '🎤 Microphone Boost: <span id="inputGainValue">Disabled in zero-latency mode</span>';
+                }
+                
+                if (noiseReductionLabel) {
+                    noiseReductionLabel.innerHTML = '🔇 Background Noise Reduction: <span id="noiseReductionValue">Disabled in zero-latency mode</span>';
+                }
+                
+                // Reset to default values while disabled
+                this.config.inputGain = 1;
+                this.config.noiseReduction = 0;
+                
+            } else {
+                inputGainSlider.classList.remove('disabled-slider');
+                noiseReductionSlider.classList.remove('disabled-slider');
+                
+                // Restore labels
+                if (inputGainLabel) {
+                    inputGainLabel.innerHTML = '🎤 Microphone Boost: <span id="inputGainValue">' + this.config.inputGain + 'x</span>';
+                }
+                
+                if (noiseReductionLabel) {
+                    noiseReductionLabel.innerHTML = '🔇 Background Noise Reduction: <span id="noiseReductionValue">' + this.config.noiseReduction + '%</span>';
+                }
             }
         }
     }
