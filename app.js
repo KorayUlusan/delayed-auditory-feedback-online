@@ -104,6 +104,22 @@ document.addEventListener('DOMContentLoaded', () => {
         statusElement.classList.add('status-default');
     }
     
+    // Set initial values from sliders to speech processor config
+    const delaySlider = document.getElementById('delaySlider');
+    const inputGainSlider = document.getElementById('inputGainSlider');
+    
+    if (window.speechProcessor && delaySlider && inputGainSlider) {
+        // Initialize config with current slider values
+        window.speechProcessor.config.delayTime = delaySlider.value;
+        window.speechProcessor.config.gain = inputGainSlider.value;
+        
+        // Update UI displays to match
+        document.getElementById('delayValue').textContent = `${delaySlider.value} ms`;
+        document.getElementById('inputGainValue').textContent = `${inputGainSlider.value}x`;
+        
+        console.log(`Initial values set - Delay: ${delaySlider.value}ms, Mic Boost: ${inputGainSlider.value}x`);
+    }
+    
     // Remove inline onclick attribute and add event listener to prevent duplicate handlers
     const dafButton = document.getElementById('dafButton');
     if (dafButton) {

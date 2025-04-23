@@ -135,7 +135,8 @@ class SpeechProcessor {
         nodes.delayNode.delayTime.value = Math.max(minDelay, this.config.delayTime / 1000);
         
         // For stereo output (both ears)
-        nodes.channelSplitter = ctx.createChannelSplitter(2);
+        // Create a stereo splitter even though our source is mono
+        nodes.channelSplitter = ctx.createChannelSplitter(1);
         nodes.channelMerger = ctx.createChannelMerger(2);
     }
 
@@ -156,15 +157,25 @@ class SpeechProcessor {
     _connectAudioNodes() {
         const nodes = this.audioNodes;
         
-        // Ultra-simplified audio path with single gain node for minimal latency
+        // Connect source to delay node
         nodes.source.connect(nodes.delayNode);
-        nodes.delayNode.connect(nodes.gainNode);
+        
+        // Apply stereo output through splitter and merger for proper stereo panning
+        nodes.delayNode.connect(nodes.channelSplitter);
+        
+        // Connect the mono source to both left and right channels
+        // This ensures the audio is heard in both ears
+        nodes.channelSplitter.connect(nodes.channelMerger, 0, 0); // Left channel
+        nodes.channelSplitter.connect(nodes.channelMerger, 0, 1); // Right channel
+        
+        // Connect merger to gain node then to destination
+        nodes.channelMerger.connect(nodes.gainNode);
         nodes.gainNode.connect(this.audioContext.destination);
         
         // Mark as direct mode
         this.directModeEnabled = true;
         
-        console.log('Ultra-optimized audio path connected with delay:', this.config.delayTime + 'ms');
+        console.log('Optimized stereo audio path connected with delay:', this.config.delayTime + 'ms');
     }
 
 
