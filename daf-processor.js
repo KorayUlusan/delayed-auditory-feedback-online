@@ -52,7 +52,20 @@ class SpeechProcessor {
             return true;
         } catch (error) {
             console.error('Speech Processor Initialization Error:', error);
-            this._updateStatus(`Error: ${error.message}`, 'error');
+            
+            const isLocalFile = window.location.href.includes('file://');
+            
+            // Check if the error is related to AudioContext
+            if (!isLocalFile && (
+                error.name === 'NotSupportedError' || 
+                error.message.includes('AudioContext') || 
+                error.message.includes('audio') ||
+                !window.AudioContext && !window.webkitAudioContext)) {
+                this._updateStatus('Sorry, we don\'t support your browser yet.', 'error');
+            } else {
+                this._updateStatus(`Error: ${error.message}`, 'error');
+            }
+            
             return false;
         }
     }
