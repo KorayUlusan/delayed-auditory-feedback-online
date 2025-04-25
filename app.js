@@ -66,6 +66,16 @@ document.addEventListener('click', function() {
 window.toggleDAF = function(button) {
     const isStarting = button.textContent === 'Start DAF';
     
+    // Track DAF button click as a key event in Google Analytics
+    if (typeof gtag === 'function') {
+        gtag('event', isStarting ? 'start_daf' : 'stop_daf', {
+            'event_category': 'user_action',
+            'event_label': isStarting ? 'DAF Started' : 'DAF Stopped',
+            'value': 1
+        });
+        console.log(`DAF ${isStarting ? 'start' : 'stop'} event tracked in Google Analytics`);
+    }
+    
     // Prevent creating multiple instances or starting multiple times
     if (isStarting) {
         if (window.speechProcessor && window.speechProcessor.isAudioRunning) {
@@ -132,6 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Track button click using the analytics.js function
             if (typeof trackDAFEvent === 'function') {
                 trackDAFEvent(isStarting ? 'start_daf' : 'stop_daf', isStarting ? 'DAF Started' : 'DAF Stopped');
+            }
+            
+            // Direct gtag event for more important tracking
+            if (typeof gtag === 'function') {
+                gtag('event', isStarting ? 'start_daf' : 'stop_daf', {
+                    'event_category': 'key_user_action',
+                    'event_label': isStarting ? 'DAF Started' : 'DAF Stopped',
+                    'value': 1
+                });
+                console.log(`DAF button ${isStarting ? 'start' : 'stop'} tracked as key event`);
             }
             
             window.toggleDAF(e.target);

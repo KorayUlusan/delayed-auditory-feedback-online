@@ -11,6 +11,8 @@
     --slider-track-color: #ddd;
     --slider-thumb-color: #0056b3;
     --slider-thumb-hover-color: #004494;
+    --border-radius: 8px;
+    --transition-speed: 0.3s;
 }
 
 [data-theme="dark"] {
@@ -28,35 +30,91 @@
     --slider-thumb-hover-color: #2d6da3;
 }
 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     text-align: center;
     margin: 0 auto;
     padding: 20px;
-    max-width: 700px;
+    max-width: 800px;
     background-color: var(--background-color);
     color: var(--text-color);
+    line-height: 1.6;
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+header {
+    margin-bottom: 30px;
+}
+
+h1, h2, h3 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    line-height: 1.3;
+    transition: color var(--transition-speed) ease;
 }
 
 h1 {
-    margin-top: 20px;
-    color: var(--primary-color);
+    font-size: 2.2rem;
+}
+
+h2 {
+    font-size: 1.8rem;
+    border-bottom: 1px solid rgba(125, 125, 125, 0.2);
+    padding-bottom: 10px;
+    margin-top: 30px;
+}
+
+h3 {
+    font-size: 1.4rem;
+    margin-top: 25px;
+}
+
+p {
+    margin-bottom: 15px;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0));
+    margin: 25px 0;
+}
+
+[data-theme="dark"] hr {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
 }
 
 button {
-    padding: 10px 20px;
+    padding: 12px 25px;
     font-size: 16px;
-    margin: 20px auto; /* Changed from "20px 0 0 20px" to center the button */
+    font-weight: 600;
+    margin: 20px auto;
     cursor: pointer;
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 5px;
-    display: block; /* Added to ensure proper centering */
+    border-radius: var(--border-radius);
+    display: block;
+    transition: background-color var(--transition-speed) ease, transform 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 button:hover {
     background-color: var(--primary-color-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
 }
 
 .theme-switch-wrapper {
@@ -68,6 +126,8 @@ button:hover {
 
 .theme-switch-wrapper em {
     margin-right: 10px;
+    font-style: normal;
+    font-size: 0.9rem;
 }
 
 .theme-switch {
@@ -90,6 +150,7 @@ button:hover {
     right: 0;
     top: 0;
     transition: 0.4s;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .slider:before {
@@ -101,6 +162,7 @@ button:hover {
     position: absolute;
     transition: 0.4s;
     width: 26px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 input:checked + .slider {
@@ -121,18 +183,20 @@ input:checked + .slider:before {
 
 .sliders {
     text-align: left;
-    margin-top: 20px;
+    margin: 30px auto;
     background-color: var(--box-background-color);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px var(--box-shadow-color);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px var(--box-shadow-color);
+    transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
 label {
     display: flex;
     justify-content: space-between;
     margin: 20px 0 10px;
-    font-weight: bold;
+    font-weight: 600;
+    align-items: center;
 }
 
 input[type="range"] {
@@ -142,35 +206,41 @@ input[type="range"] {
     border-radius: 5px;
     background: var(--slider-track-color);
     outline: none;
+    margin: 10px 0;
+    transition: background var(--transition-speed) ease;
 }
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--slider-thumb-color);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border: none;
     border-radius: 50%;
     background: var(--slider-thumb-color);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 input[type="range"]:hover::-webkit-slider-thumb {
     background: var(--slider-thumb-hover-color);
+    transform: scale(1.1);
 }
 
 input[type="range"]:hover::-moz-range-thumb {
     background: var(--slider-thumb-hover-color);
+    transform: scale(1.1);
 }
 
 input[type="range"]::-moz-range-track {
@@ -182,22 +252,27 @@ input[type="range"]:focus {
     outline: none;
 }
 
-#delayValue, #pitchValue, #boostValue, #noiseReductionValue {
+#delayValue, #pitchValue, #boostValue, #noiseReductionValue, #inputGainValue {
     font-weight: bold;
+    min-width: 60px;
+    text-align: right;
+    color: var(--primary-color);
 }
 
-#infoBox {
+
+#infoBox, #use-cases, #faq, #try-it-now {
     text-align: left;
-    margin: 20px auto;
+    margin: 30px auto;
     background-color: var(--box-background-color);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px var(--box-shadow-color);
+    padding: 5px 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px var(--box-shadow-color);
+    transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
 #statusMessage {
-    padding: 5px 10px;
-    border-radius: 4px;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
     display: inline-block;
     margin-top: 10px;
     font-weight: 500;
@@ -227,19 +302,28 @@ input[type="range"]:focus {
 }
 
 footer {
-    margin-top: 40px;
+    margin-top: 50px;
+    padding: 20px 0;
     font-size: 0.9em;
     color: var(--secondary-text-color);
+    border-top: 1px solid rgba(125, 125, 125, 0.1);
 }
 
 .timer-display {
     font-family: monospace;
-    font-size: 1.2em;
+    font-size: 1.5em;
     font-weight: bold;
-    margin-top: 5px;
-    margin-bottom: 15px;
+    margin: 15px auto;
     color: var(--primary-color);
     display: none; /* Hidden by default, shown when DAF is active */
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: var(--border-radius);
+    width: 120px;
+}
+
+[data-theme="dark"] .timer-display {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Disabled slider styles */
@@ -261,5 +345,115 @@ input[type="range"].disabled-slider::-moz-range-thumb {
 label span:contains("Disabled") {
     font-style: italic;
     color: var(--secondary-text-color);
+}
+
+/* Testimonial styles */
+#testimonials blockquote {
+    margin: 20px 0;
+    padding: 15px 25px 15px 40px;
+    border-left: 4px solid var(--primary-color);
+    background-color: var(--box-background-color);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    font-style: italic;
+    position: relative;
+}
+
+#testimonials blockquote::before {
+    content: '"';
+    font-size: 3em;
+    position: absolute;
+    left: 10px;
+    top: 5px;
+    opacity: 0.2;
+    color: var(--primary-color);
+}
+
+/* FAQ styles */
+#faq h3 {
+    cursor: pointer;
+    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    transition: background-color var(--transition-speed) ease;
+}
+
+[data-theme="dark"] #faq h3 {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+#faq h3:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] #faq h3:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* List styles */
+ul, ol {
+    margin-left: 25px;
+    margin-bottom: 20px;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+/* Use case section */
+#use-cases li {
+    padding: 5px 0;
+}
+
+#use-cases li strong {
+    color: var(--primary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    h3 {
+        font-size: 1.2rem;
+    }
+    
+    .sliders, #infoBox {
+        padding: 20px 15px;
+    }
+    
+    button {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background-color: white;
+        color: black;
+    }
+    
+    .sliders, .theme-switch-wrapper, button {
+        display: none;
+    }
+    
+    #infoBox, #testimonials, #faq, #use-cases {
+        page-break-inside: avoid;
+        margin: 20px 0;
+        border: 1px solid #ddd;
+        padding: 15px;
+        box-shadow: none;
+    }
 }
 
