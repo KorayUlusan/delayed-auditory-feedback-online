@@ -376,6 +376,8 @@ label span:contains("Disabled") {
     border-radius: var(--border-radius);
     margin-top: 15px;
     transition: background-color var(--transition-speed) ease;
+    position: relative;
+    padding-right: 35px;  /* Space for the indicator */
 }
 
 [data-theme="dark"] #faq h3 {
@@ -390,6 +392,48 @@ label span:contains("Disabled") {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Add dropdown indicator */
+#faq h3::after {
+    content: '+';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: var(--primary-color);
+    transition: transform var(--transition-speed) ease;
+}
+
+#faq h3.active::after {
+    content: '−';  /* En dash for minus sign */
+    transform: translateY(-50%);
+}
+
+#faq h3.active {
+    background-color: rgba(0, 0, 0, 0.07);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+[data-theme="dark"] #faq h3.active {
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Answer styling */
+#faq [itemscope][itemprop="acceptedAnswer"] {
+    padding: 0 15px 15px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    margin-top: 0;
+    border-top: none;
+    transition: all var(--transition-speed) ease;
+}
+
+[data-theme="dark"] #faq [itemscope][itemprop="acceptedAnswer"] {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
 /* List styles */
 ul, ol {
     margin-left: 25px;
@@ -400,13 +444,31 @@ li {
     margin-bottom: 8px;
 }
 
+#quick-info{
+    text-align: left;
+}
+
 /* Use case section */
-#use-cases li {
+#use-cases li ul {
     padding: 5px 0;
 }
 
-#use-cases li strong {
+/* Strong text styling */
+strong {
+    color: inherit; /* Use the parent element's text color instead of inheriting from headings */
+    font-weight: 700;
+}
+
+/* Ensure links have distinct styling */
+a {
     color: var(--primary-color);
+    text-decoration: underline;
+    transition: color var(--transition-speed) ease;
+}
+
+a:hover {
+    color: var(--primary-color-hover);
+    text-decoration: underline;
 }
 
 /* Responsive adjustments */

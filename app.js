@@ -184,6 +184,42 @@ document.addEventListener('DOMContentLoaded', () => {
             window.speechProcessor._attemptResumeAudio();
         }
     });
+    
+    // Initialize FAQ accordion functionality
+    const faqQuestions = document.querySelectorAll('#faq [itemscope][itemprop="mainEntity"] h3');
+    faqQuestions.forEach(question => {
+        // Initially hide all answers
+        const answer = question.nextElementSibling;
+        answer.style.display = 'none';
+        
+        // Add click event to toggle answers
+        question.addEventListener('click', () => {
+            // Toggle the answer visibility
+            const isVisible = answer.style.display !== 'none';
+            answer.style.display = isVisible ? 'none' : 'block';
+            
+            // Toggle active class for styling
+            question.classList.toggle('active', !isVisible);
+            
+            // Track FAQ interaction if analytics is available
+            if (typeof trackControlEvent === 'function') {
+                trackControlEvent('faq_interaction', question.textContent);
+            }
+        });
+        
+        // Add accessibility attributes
+        question.setAttribute('aria-expanded', 'false');
+        question.setAttribute('role', 'button');
+        question.setAttribute('tabindex', '0');
+        
+        // Allow keyboard navigation
+        question.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                question.click();
+            }
+        });
+    });
 });
 
 // Keep this function but make it call window.toggleDAF to ensure we use the same logic

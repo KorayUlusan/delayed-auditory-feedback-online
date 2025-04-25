@@ -96,13 +96,13 @@
     
     <header>
         <h1>Delayed Auditory Feedback (DAF) Online</h1>
-        <p>Tip: This tool works best with headphones.</p>
-        <p><strong>Privacy Notice:</strong> All audio processing is performed locally in your browser. No audio data is sent to any server.</p>
+        
+        
     </header>
     
     <main>
         <section id="controls">
-            <hr />
+            <!-- <hr /> -->
             <button id="dafButton" aria-pressed="false">Start DAF</button>
             <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
             <p id="dafTimer" class="timer-display">00:00</p>
@@ -114,6 +114,10 @@
                 <input id="inputGainSlider" type="range" min="1" max="20" value="10" step="1" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20"
                     aria-valuenow="10" aria-valuetext="10x">
             </div>
+            <div id="quick-info">
+                <p>Tip: This tool works best with headphones.</p>
+                <p><strong>Privacy Notice:</strong> All audio processing is performed locally in your browser. No audio data is sent to any server.</p>
+            </div>
             <hr />
             <div class="theme-switch-wrapper">
                 <em>Toggle Dark Mode</em>
@@ -122,6 +126,8 @@
                     <div class="slider round"></div>
                 </label>
             </div>
+            <!-- <hr /> -->
+            
         </section>
         
         <section id="infoBox" aria-labelledby="about-heading">
@@ -151,9 +157,10 @@
         
             <h3 id="usage-tips-heading">Tips for Best Results</h3>
             <ul>
-                <li>Use <strong>headphones</strong> to prevent audio feedback and echo</li>
-                <li>Start with a short delay (e.g., 20–50 ms) and increase gradually</li>
-                <li>Practice reading aloud or structured phrases to monitor your progress</li>
+              <li>Use <strong>headphones</strong> to prevent audio feedback and echo</li>
+              <li><strong>Avoid Bluetooth headphones</strong> — they add extra delay that disrupts DAF effectiveness. Use wired headphones for best results</li>
+              <li>Start with a short delay (e.g., 20–50 ms) and increase gradually</li>
+              <li>Practice reading aloud or structured phrases to monitor your progress</li>
             </ul>
         
             <p>
