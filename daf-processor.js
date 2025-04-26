@@ -41,7 +41,7 @@ class SpeechProcessor {
         this._setupEventListeners();
         
         // Initialize device status UI with default values (no permissions yet)
-        this._updateDeviceUI('Microphone access needed', false);
+        this._updateDeviceUI('Click "Start DAF" to select your microphone', false);
     }
 
     // LIFECYCLE METHODS
@@ -90,6 +90,12 @@ class SpeechProcessor {
         this._stopAudioStream();
         await this._closeAudioContext();
         this._resetAudioState();
+
+        // Reset mic access flag when stopping DAF
+        this.micAccessGranted = false;
+        
+        // Reset device UI to show microphone is no longer in use
+        this._updateDeviceUI('Click "Start DAF" to select your microphone', false);
 
         this._updateStatus('Speech Processing Stopped', 'warning');
         this._updateUIControls(false);
@@ -202,8 +208,13 @@ class SpeechProcessor {
 
     _stopAudioStream() {
         if (this.audioStream) {
-            this.audioStream.getTracks().forEach(track => track.stop());
+            // Ensure all tracks are properly stopped to fully release the microphone
+            this.audioStream.getTracks().forEach(track => {
+                track.stop();
+                track.enabled = false;
+            });
             this.audioStream = null;
+            console.log('Microphone access fully released');
         }
     }
 
@@ -557,10 +568,11 @@ class SpeechProcessor {
         
         if (!deviceNameEl || !deviceIconEl || !deviceStatusEl) return;
         
-        // Simplify the device name for display
+        // Simplify the device name for displayw
         let displayName = deviceName || 'Default microphone';
-        if (displayName.length > 30) {
-            displayName = displayName.substring(0, 27) + '...';
+        let lengthCutoff = 55;
+        if (displayName.length > lengthCutoff) {
+            displayName = displayName.substring(0,lengthCutoff) + '...';
         }
         
         // Update the name and icon
@@ -583,10 +595,15 @@ class SpeechProcessor {
     async selectAudioDevice(deviceId) {
         if (!deviceId) return false;
         
+        // Store previous device ID for logging
+        const previousDeviceId = this.selectedDeviceId;
+        
+        // Update the selected device ID
         this.selectedDeviceId = deviceId;
         
-        // If already running, restart with new device
+        // If already running, properly close previous connection and restart
         if (this.isAudioRunning) {
+            console.log(`Switching from device ${previousDeviceId} to ${deviceId}`);
             return await this.restartWithNewDevice();
         }
         
@@ -602,10 +619,10 @@ class SpeechProcessor {
             // Save current configuration
             const currentConfig = { ...this.config };
             
-            // Stop current processing
+            // Stop current processing and release previous microphone
             await this.stop();
             
-            // Small delay to ensure clean shutdown
+            // Small delay to ensure clean shutdown and release of previous mic
             await new Promise(resolve => setTimeout(resolve, 300));
             
             // Restore configuration
@@ -641,5 +658,62 @@ class SpeechProcessor {
                 await this.enumerateAudioDevices();
             };
         }
+        
+        // Set up click handler for device switching
+        const deviceStatusEl = document.getElementById('deviceStatus');
+        if (deviceStatusEl) {
+            deviceStatusEl.style.cursor = 'pointer'; // Show it's clickable
+            
+            // Add a hint to the title attribute
+            deviceStatusEl.title = 'Click to cycle through available microphones';
+            
+            deviceStatusEl.addEventListener('click', () => {
+                this.cycleToNextAudioDevice();
+            });
+        }
+    }
+    
+    /**
+     * Cycle to the next available audio device in the list
+     */
+    async cycleToNextAudioDevice() {
+        if (!this.micAccessGranted) {
+            // If no microphone access yet, show a message
+            this._updateStatus('Please start DAF first to access microphones', 'warning');
+            return false;
+        }
+        
+        if (this.availableDevices.length <= 1) {
+            // If only one device is available, nothing to cycle through
+            this._updateStatus('Only one microphone available', 'info');
+            return false;
+        }
+        
+        // Find current device index
+        let currentIndex = -1;
+        if (this.selectedDeviceId) {
+            currentIndex = this.availableDevices.findIndex(device => 
+                device.deviceId === this.selectedDeviceId);
+        }
+        
+        // Get next device (or first if at end or not found)
+        const nextIndex = currentIndex === -1 || currentIndex >= this.availableDevices.length - 1 
+            ? 0 
+            : currentIndex + 1;
+        
+        const nextDevice = this.availableDevices[nextIndex];
+        const previousDevice = currentIndex >= 0 ? this.availableDevices[currentIndex] : null;
+        
+        console.log(`Switching from device ${previousDevice ? previousDevice.label : 'default'} to ${nextDevice.label}`);
+        
+        // Select and display the device - this will handle closing the previous mic connection
+        await this.selectAudioDevice(nextDevice.deviceId);
+        const isHeadphoneMic = this._isHeadphoneMic(nextDevice.label);
+        this._updateDeviceUI(nextDevice.label, isHeadphoneMic);
+        
+        // Show feedback to the user
+        this._updateStatus(`Switched to: ${nextDevice.label}`, 'success');
+        
+        return true;
     }
 }

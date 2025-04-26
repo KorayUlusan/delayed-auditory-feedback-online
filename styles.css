@@ -337,11 +337,35 @@ footer {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: background-color var(--transition-speed) ease;
+    transition: all var(--transition-speed) ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.device-status:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.device-status::after {
+    content: '↻';
+    position: absolute;
+    right: 10px;
+    opacity: 0.5;
+    font-size: 1.1em;
+    transition: all 0.2s ease;
+}
+
+.device-status:hover::after {
+    opacity: 1;
+    transform: rotate(90deg);
 }
 
 [data-theme="dark"] .device-status {
     background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .device-status:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .device-status.headphone-mic {
@@ -355,6 +379,25 @@ footer {
 
 #deviceIcon {
     font-size: 1.2em;
+}
+
+/* Tooltip for device status */
+.device-status:hover::before {
+    content: 'Click to switch microphone';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-color);
+    color: var(--background-color);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    opacity: 0.9;
+    pointer-events: none;
+    margin-bottom: 5px;
+    z-index: 100;
 }
 
 /* Disabled slider styles */
