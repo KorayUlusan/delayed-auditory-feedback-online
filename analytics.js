@@ -8,7 +8,9 @@
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'G-J3ZKY02K30');
+    gtag('config', 'G-J3ZKY02K30', {
+        cookie_domain: 'auto',
+    });
 })();
 
 /**
