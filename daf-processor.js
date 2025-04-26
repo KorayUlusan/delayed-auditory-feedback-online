@@ -87,13 +87,8 @@ class SpeechProcessor {
     }
 
     async stop() {
-        // Ensure immediate microphone release first
         this._stopAudioStream();
-        
-        // Then handle audio context shutdown
         await this._closeAudioContext();
-        
-        // Reset all audio state
         this._resetAudioState();
 
         // Reset mic access flag when stopping DAF
@@ -105,48 +100,6 @@ class SpeechProcessor {
         this._updateStatus('Speech Processing Stopped', 'warning');
         this._updateUIControls(false);
         this._stopTimer();
-        
-        console.log('DAF completely stopped and microphone released');
-        
-        // Completely revoke microphone permissions if supported by the browser
-        this._revokePermissions();
-    }
-
-    // Completely revoke microphone permissions at browser level
-    _revokePermissions() {
-        try {
-            // For browsers that support the Permissions API
-            if (navigator.permissions && navigator.permissions.revoke) {
-                navigator.permissions.revoke({ name: 'microphone' })
-                    .then(result => {
-                        console.log('Microphone permission explicitly revoked:', result.state);
-                    })
-                    .catch(err => {
-                        console.log('Unable to revoke permissions through Permissions API:', err);
-                    });
-            } else {
-                console.log('Permission revocation not supported by this browser');
-                
-                // For browsers that don't support permission revocation,
-                // at least make sure we've stopped all tracks
-                if (this.audioStream) {
-                    this.audioStream.getTracks().forEach(track => {
-                        if (track.readyState === 'live') {
-                            track.stop();
-                            console.log('Forcibly stopped track that was still live');
-                        }
-                    });
-                }
-            }
-            
-            // Set permission state flags
-            this.micAccessGranted = false;
-            
-            // Reset selected device as permissions are now gone
-            this.selectedDeviceId = null;
-        } catch (error) {
-            console.error('Error while revoking permissions:', error);
-        }
     }
 
     // AUDIO SETUP METHODS
@@ -278,24 +231,13 @@ class SpeechProcessor {
 
     _stopAudioStream() {
         if (this.audioStream) {
-            try {
-                // Ensure all tracks are properly stopped to fully release the microphone
-                this.audioStream.getTracks().forEach(track => {
-                    // First disable the track
-                    track.enabled = false;
-                    
-                    // Then stop it completely
-                    track.stop();
-                    
-                    console.log(`Stopped audio track: ${track.kind}, readyState: ${track.readyState}`);
-                });
-                
-                // Clear the stream reference
-                this.audioStream = null;
-                console.log('Microphone access fully released');
-            } catch (error) {
-                console.error('Error stopping audio stream:', error);
-            }
+            // Ensure all tracks are properly stopped to fully release the microphone
+            this.audioStream.getTracks().forEach(track => {
+                track.stop();
+                track.enabled = false;
+            });
+            this.audioStream = null;
+            console.log('Microphone access fully released');
         }
     }
 
