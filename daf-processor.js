@@ -105,32 +105,55 @@ class SpeechProcessor {
     // AUDIO SETUP METHODS
 
     async _requestMicrophoneAccess() {
-        const constraints = {
-            audio: {
-                echoCancellation: false,
-                autoGainControl: false,
-                noiseSuppression: false,
-                channelCount: 1,
-                latencyHint: 'interactive', // Changed from 0.0 to 'interactive'
-                sampleRate: 48000, // Higher sample rates can reduce latency
-                deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined
-            }
-        };
-
-        this.audioStream = await navigator.mediaDevices.getUserMedia(constraints);
-        this.micAccessGranted = true;
+        try {
+            // First get available audio formats for the selected device
+            const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+            let constraints = {
+                audio: {
+                    echoCancellation: false,
+                    autoGainControl: false,
+                    noiseSuppression: false,
+                    channelCount: 1,
+                    latencyHint: 'interactive',
+                    deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined
+                }
+            };
+            
+            // Get the stream with initial constraints
+            this.audioStream = await navigator.mediaDevices.getUserMedia(constraints);
+            this.micAccessGranted = true;
+            
+            // Get actual track settings to match audio context settings
+            const audioTrack = this.audioStream.getAudioTracks()[0];
+            const settings = audioTrack.getSettings();
+            
+            console.log('Selected microphone settings:', settings);
+            
+            // Store the actual sample rate for creating a matching audio context
+            this.deviceSampleRate = settings.sampleRate;
+            
+            return this.audioStream;
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            throw error;
+        }
     }
 
     _createAudioContext() {
-        // Create audio context with interactive latency
+        // Create audio context with settings that match the input device
         const contextOptions = {
-            latencyHint: 'interactive', // Changed from 0.0 to 'interactive'
-            sampleRate: 48000 // Higher sample rate for lower latency
+            latencyHint: 'interactive'
         };
+        
+        // If we have a device sample rate, use it for the audio context
+        if (this.deviceSampleRate) {
+            contextOptions.sampleRate = this.deviceSampleRate;
+            console.log(`Creating audio context with matching sample rate: ${this.deviceSampleRate}Hz`);
+        } else {
+            contextOptions.sampleRate = 48000; // Default to 48kHz if no device rate is available
+        }
 
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
-
-        // Add event listener for state changes
         this.audioContext.addEventListener('statechange', this._handleAudioContextStateChange.bind(this));
     }
 
@@ -220,12 +243,23 @@ class SpeechProcessor {
 
     async _closeAudioContext() {
         if (this.audioContext) {
+            // First disconnect all nodes
             this._disconnectAllNodes();
+            
             try {
-                await this.audioContext.close();
+                // Check if context is not already closed
+                if (this.audioContext.state !== 'closed') {
+                    await this.audioContext.close();
+                    console.log('Audio context closed successfully');
+                } else {
+                    console.log('Audio context already closed, skipping close operation');
+                }
             } catch (error) {
                 console.error('Error closing audio context:', error);
             }
+            
+            // Always set to null to prevent reuse of a closed context
+            this.audioContext = null;
         }
     }
 
