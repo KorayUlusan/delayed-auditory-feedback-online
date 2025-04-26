@@ -11,6 +11,42 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Wake Lock variable to store reference
+let wakeLock = null;
+
+// Function to request wake lock
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock is active');
+            
+            wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock was released');
+                wakeLock = null;
+            });
+        } else {
+            console.log('Wake Lock API not supported in this browser');
+        }
+    } catch (err) {
+        console.error(`Failed to request Wake Lock: ${err.message}`);
+    }
+}
+
+// Function to release wake lock
+function releaseWakeLock() {
+    if (wakeLock !== null) {
+        wakeLock.release()
+            .then(() => {
+                console.log('Wake Lock released by function call');
+                wakeLock = null;
+            })
+            .catch((err) => {
+                console.error(`Error releasing Wake Lock: ${err.message}`);
+            });
+    }
+}
+
 // Handle page visibility changes
 document.addEventListener('visibilitychange', function() {
     const isVisible = document.visibilityState === 'visible';
@@ -24,6 +60,12 @@ document.addEventListener('visibilitychange', function() {
         console.log('Attempting to resume audio context after visibility change');
         window.speechProcessor._attemptResumeAudio();
     }
+    
+    // Re-request wake lock if it was released due to page becoming hidden
+    if (isVisible && window.speechProcessor && window.speechProcessor.isAudioRunning && !wakeLock) {
+        console.log('Page visible again, re-requesting wake lock');
+        requestWakeLock();
+    }
 });
 
 // Handle page unload/closing
@@ -32,6 +74,9 @@ window.addEventListener('beforeunload', function() {
     if (window.speechProcessor && window.speechProcessor.isAudioRunning) {
         window.speechProcessor.stop();
     }
+    
+    // Release wake lock when page is closed
+    releaseWakeLock();
 });
 
 // Functions to handle UI controls and pass values to the speech processor
@@ -95,11 +140,17 @@ window.toggleDAF = function(button) {
         window.speechProcessor.config.delayTime = delayValue;
         window.speechProcessor.config.inputGain = inputGainValue;
         
+        // Request wake lock when starting DAF
+        requestWakeLock();
+        
         window.speechProcessor.start();
     } else {
         if (window.speechProcessor) {
             window.speechProcessor.stop();
         }
+        
+        // Release wake lock when stopping DAF
+        releaseWakeLock();
     }
 };
 

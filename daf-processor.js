@@ -21,7 +21,6 @@ class SpeechProcessor {
         // State tracking
         this.isAudioRunning = false;
         this.isAppVisible = document.visibilityState === 'visible';
-        this.directModeEnabled = false;
         this.audioSuspendedByBackground = false;
 
         // Audio resume handling
@@ -76,11 +75,6 @@ class SpeechProcessor {
             this._updateStatus('Speech Processing Active', 'success');
             this._updateUIControls(true);
             this._startTimer();
-
-            // Apply current user settings
-            if (this.config.delayTime <= 5) {
-                this._updateStatus('Direct audio mode active', 'success');
-            }
         }
     }
 
@@ -112,9 +106,9 @@ class SpeechProcessor {
     }
 
     _createAudioContext() {
-        // Create audio context with absolute minimal latency
+        // Create audio context with interactive latency
         const contextOptions = {
-            latencyHint: 0.0, // Override with lowest possible latency
+            latencyHint: 'interactive', // Changed from 0.0 to 'interactive'
             sampleRate: 48000 // Higher sample rate for lower latency
         };
 
@@ -125,10 +119,8 @@ class SpeechProcessor {
     }
 
     _logAudioContextInfo() {
-        console.log(`Audio context state: ${this.audioContext.state}`);
-        console.log(`Sample rate: ${this.audioContext.sampleRate}Hz`);
-        console.log(`Base latency: ${this.audioContext.baseLatency || 'not supported'}`);
-        console.log(`Output latency: ${this.audioContext.outputLatency || 'not supported'}`);
+        // Reduced console logs to essential information only
+        console.log(`Audio context: ${this.audioContext.state}, Sample rate: ${this.audioContext.sampleRate}Hz`);
     }
 
     _createAudioNodes() {
@@ -187,8 +179,6 @@ class SpeechProcessor {
         
         // Mark as direct mode
         this.directModeEnabled = true;
-        
-        console.log('Optimized stereo audio path connected with delay:', this.config.delayTime + 'ms');
     }
 
 
@@ -225,7 +215,6 @@ class SpeechProcessor {
         });
 
         this.isAudioRunning = false;
-        this.directModeEnabled = false;
         this.audioSuspendedByBackground = false;
         this.resumeAttempts = 0;
     }
@@ -254,7 +243,6 @@ class SpeechProcessor {
     _handleAudioContextStateChange() {
         if (!this.audioContext) return;
 
-        console.log(`Audio context state changed to: ${this.audioContext.state}`);
         this._notifyServiceWorker('AUDIO_STATE', this.audioContext.state);
 
         // If returning from suspension and app is visible, attempt to resume
@@ -266,8 +254,6 @@ class SpeechProcessor {
     _handleVisibilityChange() {
         const isVisible = document.visibilityState === 'visible';
         this.isAppVisible = isVisible;
-
-        console.log(`Page visibility changed: ${isVisible ? 'visible' : 'hidden'}`);
 
         // Notify service worker about visibility change
         this._notifyServiceWorker('VISIBILITY_CHANGE', { isVisible });
@@ -287,8 +273,6 @@ class SpeechProcessor {
     }
 
     _handleFreeze() {
-        console.log('Page is being frozen. Saving audio state.');
-
         // Save state for when the page unfreezes
         if (this.audioContext && this.audioContext.state === 'running') {
             this.audioSuspendedByBackground = true;
@@ -296,8 +280,6 @@ class SpeechProcessor {
     }
 
     _handleResume() {
-        console.log('Page is resuming from frozen state. Restoring audio.');
-
         if (this.isAudioRunning && this.audioContext && this.audioContext.state === 'suspended') {
             this._attemptResumeAudio();
         }
@@ -306,17 +288,17 @@ class SpeechProcessor {
     _handleServiceWorkerMessage(event) {
         // Handle keep-alive confirmation
         if (event.data && event.data.type === 'KEEP_ALIVE_CONFIRMATION') {
-            console.log('Received keep-alive confirmation from service worker');
+            // Processing without logging
         }
 
         // Handle visibility updates from other tabs/instances
         if (event.data && event.data.type === 'VISIBILITY_UPDATE') {
-            console.log(`Received visibility update: ${event.data.isVisible ? 'visible' : 'hidden'}`);
+            // Processing without logging
         }
 
         // Handle audio state updates from other tabs/instances
         if (event.data && event.data.type === 'AUDIO_STATE_UPDATE') {
-            console.log(`Received audio state update: ${event.data.state}`);
+            // Processing without logging
         }
     }
 
@@ -328,22 +310,17 @@ class SpeechProcessor {
         }
 
         this.resumeAttempts++;
-        console.log(`Attempting to resume audio context (attempt ${this.resumeAttempts}/${this.maxResumeAttempts})`);
 
         try {
             await this.audioContext.resume();
-            console.log(`Audio context successfully resumed after ${this.resumeAttempts} attempts`);
             this.resumeAttempts = 0;
             return true;
         } catch (error) {
-            console.error('Failed to resume audio context:', error);
-
             // Try again with exponential backoff if we have attempts left
             if (this.resumeAttempts < this.maxResumeAttempts) {
                 const delay = Math.pow(2, this.resumeAttempts) * 100;
                 setTimeout(() => this._attemptResumeAudio(), delay);
             } else {
-                console.error('Max resume attempts reached. User interaction needed.');
                 this._updateStatus('Tap to resume audio', 'error');
                 return false;
             }
@@ -375,7 +352,6 @@ class SpeechProcessor {
             actualDelay,
             this.audioContext.currentTime
         );
-        console.log(`Delay time updated to: ${actualDelay.toFixed(6)} seconds (${value} ms)`);
 
         this._updateUIDisplay('delayValue', `${value} ms`);
     }
