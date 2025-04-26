@@ -682,14 +682,26 @@ class SpeechProcessor {
         // Set up device change listener
         navigator.mediaDevices.addEventListener('devicechange', async () => {
             console.log('Audio devices changed, re-enumerating...');
-            await this.enumerateAudioDevices();
+            
+            // Only react to device changes if DAF is active
+            if (this.isAudioRunning) {
+                await this.enumerateAudioDevices();
+            } else {
+                console.log('DAF not active, ignoring microphone change');
+            }
         });
         
         // Monitor headphone connection events when supported
         if ('onheadphoneschange' in navigator) {
             navigator.onheadphoneschange = async () => {
                 console.log('Headphone connection state changed');
-                await this.enumerateAudioDevices();
+                
+                // Only react to headphone changes if DAF is active
+                if (this.isAudioRunning) {
+                    await this.enumerateAudioDevices();
+                } else {
+                    console.log('DAF not active, ignoring headphone change');
+                }
             };
         }
         
