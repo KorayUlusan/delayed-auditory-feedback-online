@@ -6,7 +6,6 @@ const ASSETS_TO_CACHE = [
   '/styles.css',
   '/daf-processor.js',
   '/analytics.js',
-  '/language-manager.js',
   '/favicon/favicon.ico',
   '/favicon/favicon-32x32.png'
 ];

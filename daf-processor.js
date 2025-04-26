@@ -97,7 +97,8 @@ class SpeechProcessor {
                 autoGainControl: false,
                 noiseSuppression: false,
                 channelCount: 1,
-                latency: 0.0, // Request absolute minimal latency
+                latencyHint: 'interactive', // Changed from 0.0 to 'interactive'
+                // latency: 0.0, // Request absolute minimal latency
                 sampleRate: 48000 // Higher sample rates can reduce latency
             }
         };
