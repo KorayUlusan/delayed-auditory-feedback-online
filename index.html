@@ -113,6 +113,9 @@
                 <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">10x</span></label>
                 <input id="inputGainSlider" type="range" min="1" max="20" value="10" step="1" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20"
                     aria-valuenow="10" aria-valuetext="10x">
+                <div id="deviceStatus" class="device-status">
+                    <span id="deviceIcon">🎙️</span> <span id="deviceName">Built-in microphone</span>
+                </div>
             </div>
             <div id="quick-info">
                 <p>Tip: This tool works best with headphones.</p>

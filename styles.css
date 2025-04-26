@@ -326,6 +326,37 @@ footer {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Device selection status */
+.device-status {
+    margin-top: 15px;
+    padding: 8px 10px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: var(--border-radius);
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color var(--transition-speed) ease;
+}
+
+[data-theme="dark"] .device-status {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.device-status.headphone-mic {
+    background-color: rgba(0, 86, 179, 0.15);
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .device-status.headphone-mic {
+    background-color: rgba(61, 133, 198, 0.15);
+}
+
+#deviceIcon {
+    font-size: 1.2em;
+}
+
 /* Disabled slider styles */
 input[type="range"].disabled-slider {
     opacity: 0.5;

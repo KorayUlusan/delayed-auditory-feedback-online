@@ -165,6 +165,13 @@ document.addEventListener('DOMContentLoaded', () => {
         statusElement.classList.add('status-default');
     }
     
+    // Initialize device detection to automatically find headphone microphones
+    if (window.speechProcessor) {
+        window.speechProcessor.initializeDeviceDetection().then(() => {
+            console.log('Audio device detection initialized');
+        });
+    }
+    
     // Set initial values from sliders to speech processor config
     const delaySlider = document.getElementById('delaySlider');
     const inputGainSlider = document.getElementById('inputGainSlider');

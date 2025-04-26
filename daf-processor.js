@@ -31,6 +31,10 @@ class SpeechProcessor {
         this.timerInterval = null;
         this.startTime = 0;
         this.elapsedTime = 0;
+        
+        // Device selection
+        this.selectedDeviceId = null;
+        this.availableDevices = [];
 
         // Add event listeners for visibility and freeze/resume events
         this._setupEventListeners();
@@ -98,8 +102,8 @@ class SpeechProcessor {
                 noiseSuppression: false,
                 channelCount: 1,
                 latencyHint: 'interactive', // Changed from 0.0 to 'interactive'
-                // latency: 0.0, // Request absolute minimal latency
-                sampleRate: 48000 // Higher sample rates can reduce latency
+                sampleRate: 48000, // Higher sample rates can reduce latency
+                deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined
             }
         };
 
@@ -446,6 +450,191 @@ class SpeechProcessor {
         const timerElement = document.getElementById('dafTimer');
         if (timerElement) {
             timerElement.style.display = 'none';
+        }
+    }
+
+    // DEVICE SELECTION METHODS
+
+    /**
+     * Enumerate all available audio input devices
+     * @returns {Promise<Array>} List of audio input devices
+     */
+    async enumerateAudioDevices() {
+        try {
+            // First ensure we have permission to access media devices
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            // Get all media devices
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            
+            // Filter to only audio input devices
+            this.availableDevices = devices.filter(device => device.kind === 'audioinput');
+            
+            console.log('Available audio input devices:', this.availableDevices);
+            
+            // Look for likely headset/headphone mics
+            const headphoneMic = this.availableDevices.find(device => {
+                const label = device.label.toLowerCase();
+                return label.includes('headphone') || 
+                       label.includes('headset') || 
+                       label.includes('earphone') ||
+                       label.includes('airpod') ||
+                       label.includes('bluetooth');
+            });
+            
+            // Auto-select headphone mic if available and not already selected
+            if (headphoneMic && (!this.selectedDeviceId || this.selectedDeviceId !== headphoneMic.deviceId)) {
+                this.selectedDeviceId = headphoneMic.deviceId;
+                console.log('Auto-selected headphone microphone:', headphoneMic.label);
+                
+                // Update UI to reflect the headphone mic selection
+                this._updateDeviceUI(headphoneMic.label, true);
+                
+                // If already running, restart with new device
+                if (this.isAudioRunning) {
+                    await this.restartWithNewDevice();
+                }
+            } else if (this.selectedDeviceId) {
+                // Find the currently selected device to update UI
+                const selectedDevice = this.availableDevices.find(device => device.deviceId === this.selectedDeviceId);
+                if (selectedDevice) {
+                    const isHeadphoneMic = this._isHeadphoneMic(selectedDevice.label);
+                    this._updateDeviceUI(selectedDevice.label, isHeadphoneMic);
+                }
+            } else {
+                // No specific device selected, likely using default
+                const defaultDevice = this.availableDevices.find(device => device.deviceId === 'default' || device.deviceId === '');
+                if (defaultDevice) {
+                    const isHeadphoneMic = this._isHeadphoneMic(defaultDevice.label);
+                    this._updateDeviceUI(defaultDevice.label, isHeadphoneMic);
+                } else if (this.availableDevices.length > 0) {
+                    // Just use the first available device if no default is identified
+                    const firstDevice = this.availableDevices[0];
+                    const isHeadphoneMic = this._isHeadphoneMic(firstDevice.label);
+                    this._updateDeviceUI(firstDevice.label, isHeadphoneMic);
+                } else {
+                    this._updateDeviceUI('Default microphone', false);
+                }
+            }
+            
+            return this.availableDevices;
+        } catch (error) {
+            console.error('Error enumerating audio devices:', error);
+            this._updateDeviceUI('Default microphone', false);
+            return [];
+        }
+    }
+    
+    /**
+     * Check if device label indicates it's a headphone microphone
+     * @param {string} label - Device label to check
+     * @returns {boolean} - True if it appears to be a headphone mic
+     */
+    _isHeadphoneMic(label) {
+        if (!label) return false;
+        const lowerLabel = label.toLowerCase();
+        return lowerLabel.includes('headphone') || 
+               lowerLabel.includes('headset') || 
+               lowerLabel.includes('earphone') ||
+               lowerLabel.includes('airpod') ||
+               lowerLabel.includes('bluetooth');
+    }
+    
+    /**
+     * Update the device UI to show which microphone is being used
+     * @param {string} deviceName - Name of the device to display
+     * @param {boolean} isHeadphoneMic - Whether this is a headphone microphone
+     */
+    _updateDeviceUI(deviceName, isHeadphoneMic) {
+        const deviceNameEl = document.getElementById('deviceName');
+        const deviceIconEl = document.getElementById('deviceIcon');
+        const deviceStatusEl = document.getElementById('deviceStatus');
+        
+        if (!deviceNameEl || !deviceIconEl || !deviceStatusEl) return;
+        
+        // Simplify the device name for display
+        let displayName = deviceName || 'Default microphone';
+        if (displayName.length > 30) {
+            displayName = displayName.substring(0, 27) + '...';
+        }
+        
+        // Update the name and icon
+        deviceNameEl.textContent = displayName;
+        deviceIconEl.textContent = isHeadphoneMic ? '🎧' : '🎙️';
+        
+        // Update the status class
+        if (isHeadphoneMic) {
+            deviceStatusEl.classList.add('headphone-mic');
+        } else {
+            deviceStatusEl.classList.remove('headphone-mic');
+        }
+    }
+    
+    /**
+     * Select a specific audio input device by ID
+     * @param {string} deviceId - The ID of the device to select
+     * @returns {Promise<boolean>} - Success or failure
+     */
+    async selectAudioDevice(deviceId) {
+        if (!deviceId) return false;
+        
+        this.selectedDeviceId = deviceId;
+        
+        // If already running, restart with new device
+        if (this.isAudioRunning) {
+            return await this.restartWithNewDevice();
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Restart the audio processing with a new input device
+     * @returns {Promise<boolean>} - Success or failure
+     */
+    async restartWithNewDevice() {
+        try {
+            // Save current configuration
+            const currentConfig = { ...this.config };
+            
+            // Stop current processing
+            await this.stop();
+            
+            // Small delay to ensure clean shutdown
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Restore configuration
+            this.config = currentConfig;
+            
+            // Start with new device
+            await this.start();
+            
+            return true;
+        } catch (error) {
+            console.error('Error restarting with new device:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Initialize device detection and handling for headphones
+     */
+    async initializeDeviceDetection() {
+        // First enumeration
+        await this.enumerateAudioDevices();
+        
+        // Set up device change listener
+        navigator.mediaDevices.addEventListener('devicechange', async () => {
+            console.log('Audio devices changed, re-enumerating...');
+            await this.enumerateAudioDevices();
+        });
+        
+        // Monitor headphone connection events when supported
+        if ('onheadphoneschange' in navigator) {
+            navigator.onheadphoneschange = async () => {
+                console.log('Headphone connection state changed');
+                await this.enumerateAudioDevices();
+            };
         }
     }
 }
