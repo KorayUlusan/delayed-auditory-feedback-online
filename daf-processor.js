@@ -35,9 +35,13 @@ class SpeechProcessor {
         // Device selection
         this.selectedDeviceId = null;
         this.availableDevices = [];
+        this.micAccessGranted = false;
 
         // Add event listeners for visibility and freeze/resume events
         this._setupEventListeners();
+        
+        // Initialize device status UI with default values (no permissions yet)
+        this._updateDeviceUI('Microphone access needed', false);
     }
 
     // LIFECYCLE METHODS
@@ -108,6 +112,7 @@ class SpeechProcessor {
         };
 
         this.audioStream = await navigator.mediaDevices.getUserMedia(constraints);
+        this.micAccessGranted = true;
     }
 
     _createAudioContext() {

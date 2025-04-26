@@ -144,6 +144,11 @@ window.toggleDAF = function(button) {
         requestWakeLock();
         
         window.speechProcessor.start();
+        
+        // Initialize device detection to automatically find headphone microphones
+        window.speechProcessor.initializeDeviceDetection().then(() => {
+            console.log('Audio device detection initialized');
+        });
     } else {
         if (window.speechProcessor) {
             window.speechProcessor.stop();
@@ -165,12 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
         statusElement.classList.add('status-default');
     }
     
-    // Initialize device detection to automatically find headphone microphones
-    if (window.speechProcessor) {
-        window.speechProcessor.initializeDeviceDetection().then(() => {
-            console.log('Audio device detection initialized');
-        });
-    }
+    // Don't initialize device detection on page load
+    // Only do it when user clicks Start DAF
     
     // Set initial values from sliders to speech processor config
     const delaySlider = document.getElementById('delaySlider');
