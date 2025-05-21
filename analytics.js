@@ -7,10 +7,27 @@
 (function initAnalytics() {
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-J3ZKY02K30', {
-        cookie_domain: 'auto',
-    });
+
+    // Wait for the Google Analytics script to load
+    if (typeof gtag === 'undefined') {
+        console.warn('Google Analytics script not yet loaded. Retrying initialization...');
+        const retryInterval = setInterval(() => {
+            if (typeof gtag === 'function') {
+                clearInterval(retryInterval);
+                gtag('js', new Date());
+                gtag('config', 'G-J3ZKY02K30', {
+                    cookie_domain: 'auto',
+                });
+                console.log('Google Analytics initialized successfully.');
+            }
+        }, 100); // Retry every 100ms
+    } else {
+        gtag('js', new Date());
+        gtag('config', 'G-J3ZKY02K30', {
+            cookie_domain: 'auto',
+        });
+        console.log('Google Analytics initialized successfully.');
+    }
 })();
 
 /**
