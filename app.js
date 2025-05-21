@@ -211,6 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     'value': 1
                 });
                 console.log(`DAF button ${isStarting ? 'start' : 'stop'} tracked as key event`);
+            } else {
+                console.warn('Google Analytics gtag function is not available. Key event not tracked.');
             }
             
             window.toggleDAF(e.target);
