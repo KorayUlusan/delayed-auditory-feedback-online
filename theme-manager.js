@@ -1,5 +1,15 @@
 // theme-manager.js - Handles theme switching functionality
 
+
+function updateGraphs(theme) {
+    document.querySelectorAll('.themed-graph').forEach(img => {
+        img.src = theme === 'dark'
+            ? img.dataset.dark
+            : img.dataset.light;
+    });
+}
+
+
 // Set up theme functionality
 const themeManager = {
     init: function() {
@@ -10,6 +20,7 @@ const themeManager = {
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
         checkbox.checked = savedTheme === 'dark';
+        updateGraphs(savedTheme);
         
         // Update meta theme-color for mobile browsers
         const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -25,6 +36,8 @@ const themeManager = {
             // Apply theme to document
             document.documentElement.setAttribute('data-theme', theme);
             
+            updateGraphs(theme);
+
             // Update meta theme-color for mobile browsers
             if (themeColorMeta) {
                 themeColorMeta.setAttribute('content', theme === 'dark' ? '#121212' : '#ffffff');
