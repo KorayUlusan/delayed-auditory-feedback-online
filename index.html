@@ -143,15 +143,14 @@
   <script src="analytics.js"></script>
 
   <header>
-    <h1>Delayed Auditory Feedback (DAF) Online</h1>
-
-
+    <h1>Free Online DAF Tool: Delayed Auditory Feedback for Stuttering</h1>
+    <p>Professional speech fluency aid for therapists and individuals.</p>
   </header>
 
   <main>
     <section id="controls">
       <!-- <hr /> -->
-      <button id="dafButton" aria-pressed="false">Start DAF</button>
+      <button id="dafButton" aria-pressed="false">Start DAF Session</button>
       <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
       <p id="dafTimer" class="timer-display">00:00</p>
       <div class="sliders">
@@ -184,39 +183,29 @@
     <section id="infoBox" aria-labelledby="about-heading">
       <h2 id="about-heading">What is Delayed Auditory Feedback?</h2>
       <p>
-        If you've ever worn headphones while speaking and heard your voice played back with a slight delay, you've experienced the odd sensation that DAF creates.
-        <strong>Delayed Auditory Feedback</strong> is exactly that—hearing yourself speak, but a fraction of a second later than usual.
+        If you've ever worn headphones while speaking and heard your voice played back with a slight delay, you've experienced the sensation that DAF creates.
+        <strong>Delayed Auditory Feedback</strong> is hearing yourself speak, but a fraction of a second later than usual.
       </p>
       <p>
-        What makes this interesting is how our brains respond to it. That tiny delay naturally makes most people slow down their speech without even trying.
-        For people who stutter, this effect can be particularly helpful. Speech therapists have been using DAF for decades because it really works—research
-        consistently shows it helps improve fluency and reduces stuttering blocks.
+        That tiny delay naturally makes most people slow down their speech. For people who stutter, this effect can be particularly helpful. Speech therapists have used DAF for
+        decades because research consistently shows it helps improve fluency and reduces stuttering blocks.
       </p>
-
-
 
       <img class="themed-graph" data-light="images/daf-cycle-light.svg" data-dark="images/daf-cycle-dark.svg" src="images/daf-cycle-light.svg"
         alt="Diagram showing the DAF (Delayed Auditory Feedback) usage cycle for improving speech fluency in stuttering therapy">
 
 
       <p>
-        We built this tool to make DAF accessible to anyone who needs it. No downloads, no signup forms, no payment information.
-        Just open your browser, allow microphone access, and you're ready to go.
+        We built this tool to make DAF accessible to anyone. No downloads, no signup forms, and no payment information required.
       </p>
+
 
       <h3 id="how-it-works-heading">How It Actually Works</h3>
 
       <p>
-        Here's the thing about how we process speech: normally, your brain hears your voice the instant you speak. It's part of how you monitor
-        what you're saying and adjust on the fly. DAF throws a wrench in that system by delaying the audio feedback by anywhere from 20 to 200 milliseconds.
+        Normally, your brain hears your voice the instant you speak. DAF introduces a delay of 20 to 500 milliseconds.
+        Your brain notices the timing shift, and you unconsciously adjust your speech rate—slowing down and becoming more aware of articulation.
       </p>
-      <p>
-        Your brain notices something's off with the timing, and in response, you unconsciously adjust your speech rate. Most people slow down,
-        speak more deliberately, and become more aware of their articulation. For someone who stutters, this can mean fewer blocks, less repetition,
-        and smoother overall speech flow.
-      </p>
-
-
 
       <img class="themed-graph" data-light="images/progress-light.svg" data-dark="images/progress-dark.svg" src="images/progress-light.svg"
         alt="Graph illustrating speech fluency improvement over time using delayed auditory feedback (DAF) tool">
@@ -224,46 +213,34 @@
 
 
       <p>
-        The sweet spot for the delay varies from person to person. Some people find 50 milliseconds perfect, while others prefer 150ms or more.
-        That's why we made the delay adjustable—you can experiment and find what feels right for you.
+        The sweet spot for the delay varies; many find 50ms to 150ms ideal.
       </p>
 
 
 
-      <h3 id="benefits-heading">Why Use This Tool?</h3>
-
-      Your well being should be your priority. Here are some of the key benefits of using this DAF tool:
-
-      <img class="themed-graph" data-light="images/benefits-light.svg" data-dark="images/benefits-dark.svg" src="images/benefits-light.svg"
-        alt="Infographic highlighting benefits of the online DAF tool for stuttering treatment and speech therapy">
+      <h3 id="benefits-heading">Why Use This Online Stuttering Aid?</h3>
 
       <ul class="leadsto-list">
-        <li>It's completely free. No trials, no premium features locked behind a paywall.</li>
-        <li>Works right in your browser—no need to download anything or create an account.</li>
-        <li>Your audio never leaves your device. Everything is processed locally for complete privacy.</li>
-        <li>Adjust the delay from 0 to 500 milliseconds to find your ideal setting.</li>
-        <li>Works on your phone, tablet, or computer. Any modern browser will do.</li>
-        <li>Practice at home, before presentations, or as part of speech therapy exercises.</li>
+        <li>It's completely free with no premium paywalls.</li>
+        <li>Works in your browser on mobile, tablet, or desktop.</li>
+        <li>100% privacy: audio never leaves your device.</li>
+        <li>Adjustable delay (0-500ms) to find your perfect setting.</li>
+        <li>Ideal for home practice or professional speech therapy exercises.</li>
       </ul>
+
+
+      <img class="themed-graph" data-light="images/benefits-light.svg" data-dark="images/benefits-dark.svg" src="images/benefits-light.svg" 
+        alt="Infographic highlighting benefits of the online DAF tool">
 
 
       <h3 id="usage-tips-heading">Getting the Best Results</h3>
 
-      As with any tool, using DAF effectively takes a bit of practice. Here are some tips to help you get the most out of it:
+      <p><strong>Use wired headphones.</strong> Bluetooth adds 100-300ms of extra latency, which interferes with the tool.</p>
+      <p><strong>Start at 150ms.</strong> Gradually decrease the delay until you find what feels most comfortable.</p>
+      <p><strong>Practice with purpose.</strong> Try reading a paragraph or practicing a speech to notice fluency improvements.</p>
 
       <img class="themed-graph" data-light="images/tips-light.svg" data-dark="images/tips-dark.svg" src="images/tips-light.svg"
-        alt="Visual guide with tips for using delayed auditory feedback effectively to reduce stuttering">
-
-      <p><strong>Use wired headphones.</strong> This is really important. Bluetooth headphones add their own delay (usually 100-300ms),
-        which stacks on top of the DAF delay and creates a confusing mess. Wired headphones give you clean, immediate feedback at exactly
-        the delay you've set.</p>
-      <p><strong>Start high and adjust low.</strong> Begin with a delay around 150-200ms. If that doesn't feel like it's helping,
-        gradually decrease it. Most people find their sweet spot somewhere between 50-150ms, but everyone's different.</p>
-      <p><strong>Practice with purpose.</strong> Try reading a paragraph aloud, or practice a speech you're preparing.
-        Having structured content to work with makes it easier to notice improvements in your fluency.</p>
-      <p><strong>Give it time.</strong> DAF can feel weird at first—that's normal. Your brain needs a minute to adjust to the altered feedback.
-        Stick with it for a few minutes and you'll likely notice yourself settling into a more comfortable rhythm.</p>
-
+        alt="Infographic highlighting benefits of the online DAF tool">
 
 
       <p>
@@ -274,18 +251,19 @@
     <section id="testimonials" aria-labelledby="testimonials-heading">
       <h2 id="testimonials-heading">What Users Are Saying</h2>
       <blockquote>
-        “This tool helped me slow down and speak more clearly. I use it before every presentation.” <br /> – Alex R.
+        “This tool helped me slow down and speak more clearly. I use it before every presentation.” <br /> - Alex R.
       </blockquote>
       <blockquote>
-        “As a speech therapist, I recommend this to clients who need at-home fluency practice.” <br /> – Dr. L. Moreno
+        “As a speech therapist, I recommend this to clients who need at-home fluency practice.” <br /> - Dr. L. Moreno
       </blockquote>
     </section>
 
     <section id="use-cases" aria-labelledby="use-cases-heading">
       <h2 id="use-cases-heading">Who Can Benefit from DAF?</h2>
 
-      Delayed Auditory Feedback (DAF) is a versatile tool that can support anyone aiming to enhance their speech clarity and rhythm. From individuals managing stuttering to
-      professionals refining their delivery, DAF provides real-time feedback that helps users adjust pacing, articulation, and overall fluency.
+      <p>DAF supports anyone aiming to enhance speech clarity and rhythm.</p>
+      <img class="themed-graph" data-light="images/beneficiaries-light.svg" data-dark="images/beneficiaries-dark.svg" src="images/beneficiaries-light.svg"
+        alt="Beneficiaries of DAF: people who stutter, SLPs, public speakers, and language learners">
 
       <!-- <ul>
         <li><strong>People Who Stutter</strong> – Reduce blocks and repetitions with delayed feedback.</li>
@@ -294,11 +272,6 @@
         <li><strong>Language Learners</strong> – Improve pronunciation and rhythm in a second language.</li>
       </ul> -->
 
-
-
-
-      <img class="themed-graph" data-light="images/beneficiaries-light.svg" data-dark="images/beneficiaries-dark.svg" src="images/beneficiaries-light.svg"
-        alt="Beneficiaries of delayed auditory feedback: people who stutter (reduce blocks and repetitions), speech-language pathologists (use DAF in therapy sessions), public speakers and actors (practice pacing and articulation), and language learners (improve pronunciation and rhythm).">
     </section>
 
     <section id="science" aria-labelledby="science-heading">
@@ -583,10 +556,8 @@
     </section>
 
     <section id="try-it-now" aria-labelledby="try-it-now-heading">
-      <h2 id="try-it-now-heading">Try DAF Online Now!</h2>
-      <p>
-        Give it a go! <a href="#controls">Jump to the controls</a> and see how Delayed Auditory Feedback can transform your speech in real time.
-      </p>
+      <h2>Start Your Speech Fluency Practice</h2>
+      <p>Ready to begin? <a href="#controls">Use the tool at the top of the page</a> to find your ideal delay.</p>
     </section>
 
   </main>
