@@ -42,7 +42,25 @@
   <!-- Canonical URL -->
   <link rel="canonical" href="https://korayulusan.github.io/delayed-auditory-feedback-online/">
 
-  <link rel="stylesheet" href="styles.css">
+  <!-- Inline critical CSS to reduce render-blocking and improve LCP -->
+  <style>
+    /* Critical above-the-fold styles (minimal) */
+    :root{--primary:#003e7e;--bg:#ffffff;--text:#111}
+    html,body{height:100%}
+    body{font-family:Segoe UI,Helvetica,Arial,sans-serif;margin:0 auto;padding:20px;max-width:800px;background:#fff;color:var(--text);line-height:1.6}
+    header{margin-bottom:30px}
+    h1{font-size:2.2rem;color:var(--primary);margin:0 0 8px}
+    #controls{display:block}
+    button#dafButton{padding:12px 25px;font-size:16px;font-weight:600;background:var(--primary);color:#fff;border-radius:8px;border:none;cursor:pointer}
+    .sliders{background:#fff;padding:16px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin:20px 0;text-align:left}
+    label{display:flex;justify-content:space-between;font-weight:600;margin:12px 0}
+    #delayValue,#inputGainValue{font-weight:700;color:var(--primary);min-width:60px;text-align:right}
+    #statusMessage{display:inline-block;padding:8px 12px;border-radius:8px;margin-top:10px;background:#eef3fb;color:var(--primary);border:1px solid rgba(0,62,126,0.08)}
+  </style>
+
+  <!-- Preload the full minified stylesheet; apply after load to avoid blocking render -->
+  <link rel="preload" href="styles.min.css" as="style" onload="this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="styles.min.css"></noscript>
   <!-- Favicon setup for better Google search results -->
   <link rel="icon" href="favicon/favicon-32x32.png" type="image/png">
   <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
@@ -191,7 +209,7 @@
   <main>
     <section id="controls">
       <!-- <hr /> -->
-      <button id="dafButton" aria-pressed="false">Start DAF Session</button>
+      <button id="dafButton" aria-pressed="false">Start DAF</button>
       <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
       <p id="dafTimer" class="timer-display">00:00</p>
       <div class="sliders">

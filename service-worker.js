@@ -12,7 +12,8 @@ const MAX_RUNTIME_ENTRIES = 50; // max number of runtime cached items
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/styles.css',
+  '/styles.min.css',
+  '/daf-processor.js',
   '/analytics.js',
   '/favicon/favicon.ico',
   '/favicon/favicon-32x32.png'

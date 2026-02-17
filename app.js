@@ -33,9 +33,20 @@ try { window.sendGtagEvent = sendGtagEvent; } catch (e) { /* ignore */ }
 function loadSpeechProcessorScript() {
     return new Promise((resolve, reject) => {
         if (window.SpeechProcessor) return resolve();
+
         const existing = document.querySelector('script[data-daf-processor]');
         if (existing) {
-            existing.addEventListener('load', () => resolve());
+            // If the script element is present, check if it has already loaded.
+            // Some browsers won't re-fire the load event for listeners added after
+            // the event occurred, so use a flag attribute to detect that.
+            if (existing.getAttribute('data-loaded') === '1' || typeof window.SpeechProcessor !== 'undefined') {
+                return resolve();
+            }
+
+            existing.addEventListener('load', () => {
+                existing.setAttribute('data-loaded', '1');
+                resolve();
+            });
             existing.addEventListener('error', (e) => reject(e));
             return;
         }
@@ -44,7 +55,10 @@ function loadSpeechProcessorScript() {
         script.src = 'daf-processor.js';
         script.async = true;
         script.setAttribute('data-daf-processor', '1');
-        script.onload = () => resolve();
+        script.onload = () => {
+            script.setAttribute('data-loaded', '1');
+            resolve();
+        };
         script.onerror = (e) => reject(e);
         document.body.appendChild(script);
     });
@@ -122,15 +136,14 @@ window.addEventListener('beforeunload', function() {
 // Functions to handle UI controls and pass values to the speech processor
 function updateDelayTime(value) {
     document.getElementById('delayValue').textContent = `${value} ms`;
-    if (window.speechProcessor) {
+    if (window.speechProcessor && typeof window.speechProcessor.updateDelayTime === 'function') {
         window.speechProcessor.updateDelayTime(value);
     }
 }
 
-
 function updateInputGain(value) {
     document.getElementById('inputGainValue').textContent = `${value}x`;
-    if (window.speechProcessor) {
+    if (window.speechProcessor && typeof window.speechProcessor.updateInputGain === 'function') {
         window.speechProcessor.updateInputGain(value);
     }
 }
@@ -148,7 +161,7 @@ document.addEventListener('click', function() {
 });
 
 // Make toggleDAF function globally available for HTML onclick attribute
-window.toggleDAF = function(button) {
+window.toggleDAF = async function(button) {
     const isStarting = button.textContent === 'Start DAF';
     
     // Track DAF button click as a key event in Google Analytics
@@ -167,18 +180,26 @@ window.toggleDAF = function(button) {
 
         // Lazy start flow: load processor script if needed, then instantiate and start
         const startWithProcessor = async () => {
+            console.log('startWithProcessor: begin');
             try {
                 if (!window.SpeechProcessor) {
+                    console.log('startWithProcessor: loading daf-processor.js');
                     await loadSpeechProcessorScript();
+                    console.log('startWithProcessor: daf-processor.js loaded');
                 }
             } catch (err) {
                 console.error('Failed to load DAF processor:', err);
                 return;
             }
 
-            if (!window.speechProcessor) {
+            console.log('startWithProcessor: creating SpeechProcessor instance');
+            try {
                 window.speechProcessor = new SpeechProcessor();
+            } catch (e) {
+                console.error('Failed to construct SpeechProcessor instance:', e);
+                return;
             }
+            console.log('startWithProcessor: SpeechProcessor instance created');
 
             // Initialize with current slider values before starting
             const delayValue = document.getElementById('delaySlider').value;
@@ -188,9 +209,30 @@ window.toggleDAF = function(button) {
             window.speechProcessor.config.inputGain = inputGainValue;
 
             // Request wake lock when starting DAF
+            console.log('startWithProcessor: requesting wake lock');
             requestWakeLock();
 
-            window.speechProcessor.start();
+            // Start the speech processor and await completion so we can resume the
+            // audio context immediately in the same user gesture path if needed.
+            try {
+                console.log('startWithProcessor: calling start()');
+                await window.speechProcessor.start();
+                console.log('startWithProcessor: start() completed');
+
+                // Some browsers leave the newly-created AudioContext in a suspended
+                // state unless resumed directly from a user gesture. Attempt to resume
+                // deterministically here.
+                if (window.speechProcessor.audioContext &&
+                    window.speechProcessor.audioContext.state === 'suspended') {
+                    try {
+                        await window.speechProcessor._attemptResumeAudio();
+                    } catch (e) {
+                        console.warn('AudioContext resume attempt failed:', e);
+                    }
+                }
+            } catch (startErr) {
+                console.error('Failed to start speech processor:', startErr);
+            }
 
             // Initialize device detection to automatically find headphone microphones
             window.speechProcessor.initializeDeviceDetection().then(() => {
@@ -198,12 +240,19 @@ window.toggleDAF = function(button) {
             });
         };
 
-        startWithProcessor();
+        // Await the async starter so any thrown errors are visible in this user gesture
+        await startWithProcessor();
     } else {
         if (window.speechProcessor) {
-            window.speechProcessor.stop();
+            try {
+                await window.speechProcessor.stop();
+            } catch (e) {
+                console.warn('Error while stopping speech processor:', e);
+            }
+            // Null out instance to ensure a fresh start next time
+            try { window.speechProcessor = null; } catch (e) { /* ignore */ }
         }
-        
+
         // Release wake lock when stopping DAF
         releaseWakeLock();
     }

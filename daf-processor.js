@@ -36,6 +36,7 @@ class SpeechProcessor {
         this.selectedDeviceId = null;
         this.availableDevices = [];
         this.micAccessGranted = false;
+        this._deviceDetectionInitialized = false;
 
         // Add event listeners for visibility and freeze/resume events
         this._setupEventListeners();
@@ -80,6 +81,25 @@ class SpeechProcessor {
     async start() {
         const success = await this.initializeAudio();
         if (success) {
+            // Support legacy config property `inputGain` set by older UI code
+            if (typeof this.config.inputGain !== 'undefined') {
+                this.config.gain = this.config.inputGain;
+            }
+
+            // Ensure applied audio node values reflect the current config
+            if (this.audioContext && this.audioNodes) {
+                try {
+                    if (typeof this.updateGain === 'function') {
+                        this.updateGain(this.config.gain);
+                    }
+                    if (typeof this.updateDelayTime === 'function') {
+                        this.updateDelayTime(this.config.delayTime);
+                    }
+                } catch (e) {
+                    console.warn('Failed to apply initial gain/delay settings:', e);
+                }
+            }
+
             this._updateStatus('Speech Processing Active', 'success');
             this._updateUIControls(true);
             this._startTimer();
@@ -144,13 +164,14 @@ class SpeechProcessor {
         const contextOptions = {
             latencyHint: 'interactive'
         };
-        
-        // If we have a device sample rate, use it for the audio context
-        if (this.deviceSampleRate) {
+        // Only set sampleRate when the device explicitly reports one.
+        // For many browsers the device sample rate is not exposed and forcing
+        // a sampleRate can cause "different sample-rate" errors when creating
+        // a MediaStreamSource. Let the UA pick a compatible sample rate when
+        // none is available.
+        if (this.deviceSampleRate && Number.isFinite(this.deviceSampleRate)) {
             contextOptions.sampleRate = this.deviceSampleRate;
             console.log(`Creating audio context with matching sample rate: ${this.deviceSampleRate}Hz`);
-        } else {
-            contextOptions.sampleRate = 48000; // Default to 48kHz if no device rate is available
         }
 
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
@@ -511,11 +532,32 @@ class SpeechProcessor {
      */
     async enumerateAudioDevices() {
         try {
-            // First ensure we have permission to access media devices
-            await navigator.mediaDevices.getUserMedia({ audio: true });
-            
+            // First ensure we have permission to access media devices.
+            // Some browsers require an active getUserMedia call to expose device labels.
+            // Use a temporary stream and stop it immediately to avoid leaving the mic active.
+            let tempStream = null;
+            try {
+                tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (permErr) {
+                // If permission denied or not available, proceed to enumerateDevices which
+                // may still return limited information.
+                console.warn('Temporary getUserMedia failed during device enumeration:', permErr);
+            }
+
             // Get all media devices
             const devices = await navigator.mediaDevices.enumerateDevices();
+
+            // Immediately stop the temporary stream to release the microphone
+            if (tempStream) {
+                try {
+                    tempStream.getTracks().forEach(t => {
+                        try { t.stop(); } catch (e) { /* ignore */ }
+                    });
+                } catch (stopErr) {
+                    console.warn('Failed to stop temporary device enumeration stream:', stopErr);
+                }
+                tempStream = null;
+            }
             
             // Filter to only audio input devices
             this.availableDevices = devices.filter(device => device.kind === 'audioinput');
@@ -676,6 +718,9 @@ class SpeechProcessor {
      * Initialize device detection and handling for headphones
      */
     async initializeDeviceDetection() {
+        // Make this idempotent so repeated start/stop cycles don't attach duplicate listeners
+        if (this._deviceDetectionInitialized) return;
+
         // First enumeration
         await this.enumerateAudioDevices();
         
@@ -717,6 +762,8 @@ class SpeechProcessor {
                 this.cycleToNextAudioDevice();
             });
         }
+
+        this._deviceDetectionInitialized = true;
     }
     
     /**
