@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Free DAF Tool Online - Delayed Auditory Feedback for Stuttering & Speech Therapy</title>
   <meta name="description"
-    content="Free online Delayed Auditory Feedback (DAF) tool for stuttering treatment and speech fluency improvement. Scientifically-proven speech therapy technique. No download required - works in browser with adjustable delay 0-500ms.">
+    content="Improve speech fluency instantly with our Free Online DAF Tool. Designed for stuttering treatment and speech therapy, this browser-based tool offers 0-500ms adjustable delay. No downloads, 100% private, and therapist-recommended. Try it now.">
   <meta name="keywords"
     content="DAF tool, delayed auditory feedback online, stuttering treatment, speech therapy app, fluency disorder help, online DAF, free stuttering app, speech delay feedback, DAF therapy, stuttering exercises, speech fluency tool, altered auditory feedback, stuttering aid">
   <meta name="author" content="Koray Ulusan">
@@ -64,7 +64,9 @@
   <meta name="msapplication-TileColor" content="#ffffff">
   <meta name="theme-color" content="#ffffff">
 
-  <!-- Structured data for better SEO -->
+  <link rel="preconnect" href="https://www.googletagmanager.com">
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
   <!-- Structured data for better SEO -->
   <script type="application/ld+json">
     {
@@ -120,6 +122,42 @@
       }]
     }
     </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Online DAF Tool",
+    "operatingSystem": "Web Browser",
+    "applicationCategory": "HealthApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+    </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to use the Online DAF Tool",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "text": "Plug in wired headphones to avoid audio latency."
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Click 'Start DAF Session' and allow microphone access."
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Adjust the delay slider to your comfort level (usually 50-150ms)."
+        }
+      ]
+    }
+    </script>
 
   <!-- Organization structured data -->
   <script type="application/ld+json">
@@ -155,11 +193,11 @@
       <p id="dafTimer" class="timer-display">00:00</p>
       <div class="sliders">
         <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">20 ms</span></label>
-        <input type="range" id="delaySlider" min="0" max="500" step="1" value="20" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="200"
-          aria-valuetext="200 milliseconds">
+        <input type="range" id="delaySlider" min="0" max="500" step="1" value="20" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="500" aria-valuenow="20"
+          aria-valuetext="20 milliseconds">
         <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">1x</span></label>
-        <input id="inputGainSlider" type="range" min="1" max="20" value="1" step="1" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20" aria-valuenow="10"
-          aria-valuetext="10x">
+        <input id="inputGainSlider" type="range" min="1" max="20" value="1" step="1" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20" aria-valuenow="1"
+          aria-valuetext="1x">
         <div id="deviceStatus" class="device-status">
           <span id="deviceIcon">🎙️</span> <span id="deviceName">Built-in microphone</span>
         </div>
@@ -180,28 +218,29 @@
 
     </section>
 
-    <section id="infoBox" aria-labelledby="about-heading">
-      <h2 id="about-heading">What is Delayed Auditory Feedback?</h2>
+
+
+    <section class="boxed-section" id="infoBox" aria-labelledby="about-heading">
+      <h2 id="about-heading">What is Delayed Auditory Feedback (DAF) for Stuttering?</h2>
       <p>
         If you've ever worn headphones while speaking and heard your voice played back with a slight delay, you've experienced the sensation that DAF creates.
-        <strong>Delayed Auditory Feedback</strong> is hearing yourself speak, but a fraction of a second later than usual.
+        <strong>Delayed Auditory Feedback</strong> is a form of altered auditory processing where you hear yourself speak a fraction of a second later than usual.
       </p>
       <p>
-        That tiny delay naturally makes most people slow down their speech. For people who stutter, this effect can be particularly helpful. Speech therapists have used DAF for
-        decades because research consistently shows it helps improve fluency and reduces stuttering blocks.
+        That tiny delay naturally encourages the speaker to slow down. For those seeking effective stuttering management, this effect can be transformative.
+        Professional Speech-Language Pathologists (SLPs) have used DAF for decades because research consistently shows it assists in fluency shaping and reduces the
+        frequency of stuttering blocks.
       </p>
 
       <img class="themed-graph" data-light="images/daf-cycle-light.svg" data-dark="images/daf-cycle-dark.svg" src="images/daf-cycle-light.svg"
         alt="Diagram showing the DAF (Delayed Auditory Feedback) usage cycle for improving speech fluency in stuttering therapy">
 
-
       <p>
-        We built this tool to make DAF accessible to anyone. No downloads, no signup forms, and no payment information required.
+        We built this tool to provide a non-pharmacological treatment aid that is accessible to anyone. No downloads, no signup forms, and no payment information required.
       </p>
 
 
-      <h3 id="how-it-works-heading">How It Actually Works</h3>
-
+      <h3 id="how-it-works-heading">How does Delayed Auditory Feedback work?</h3>
       <p>
         Normally, your brain hears your voice the instant you speak. DAF introduces a delay of 20 to 500 milliseconds.
         Your brain notices the timing shift, and you unconsciously adjust your speech rate—slowing down and becoming more aware of articulation.
@@ -229,7 +268,7 @@
       </ul>
 
 
-      <img class="themed-graph" data-light="images/benefits-light.svg" data-dark="images/benefits-dark.svg" src="images/benefits-light.svg" 
+      <img class="themed-graph" data-light="images/benefits-light.svg" data-dark="images/benefits-dark.svg" src="images/benefits-light.svg"
         alt="Infographic highlighting benefits of the online DAF tool">
 
 
@@ -248,7 +287,7 @@
       </p>
     </section>
 
-    <section id="testimonials" aria-labelledby="testimonials-heading">
+    <section class="boxed-section" id="testimonials" aria-labelledby="testimonials-heading">
       <h2 id="testimonials-heading">What Users Are Saying</h2>
       <blockquote>
         “This tool helped me slow down and speak more clearly. I use it before every presentation.” <br /> - Alex R.
@@ -258,7 +297,7 @@
       </blockquote>
     </section>
 
-    <section id="use-cases" aria-labelledby="use-cases-heading">
+    <section class="boxed-section" id="use-cases" aria-labelledby="use-cases-heading">
       <h2 id="use-cases-heading">Who Can Benefit from DAF?</h2>
 
       <p>DAF supports anyone aiming to enhance speech clarity and rhythm.</p>
@@ -274,44 +313,46 @@
 
     </section>
 
-    <section id="science" aria-labelledby="science-heading">
-      <h2 id="science-heading">The Science Behind DAF for Stuttering Treatment</h2>
 
+    <section class="boxed-section" id="science" aria-labelledby="science-heading">
+      <h2 id="science-heading">The Science Behind DAF</h2>
 
       <p>
-        Delayed Auditory Feedback has been studied extensively since the 1950s when researchers first discovered its effects on speech fluency.
-        Modern neuroscience research has revealed several mechanisms by which DAF reduces stuttering:
+        Delayed Auditory Feedback isn't new—it's actually been studied since the
+          1950s. Back then, researchers first noticed that when people who stutter hear their own voice on a tiny delay, their speech often clears up instantly.
+      </p>
+      <p>
+        Modern neuroscience has given us a better look at why this actually happens:
       </p>
 
       <img class="themed-graph" data-light="images/science-light.svg" data-dark="images/science-dark.svg" src="images/science-light.svg"
         alt="Scientific chart showing neural and speech rate mechanisms behind DAF effectiveness in stuttering treatment">
 
-      <h3>Neural Feedback Loop Modification</h3>
+      <h3>Fixing the "Feedback Loop"</h3>
       <p>
-        DAF alters the timing of auditory feedback to the speech motor control system, forcing the brain to rely more heavily on
-        internal timing mechanisms rather than auditory feedback. This reduces the timing disruptions that contribute to stuttering.
+        Stuttering is often linked to how the brain processes its own speech timing. DAF shifts that timing, forcing the brain to stop over-relying on external sound and lean more
+        on its <strong>internal timing mechanisms</strong>. Research on speech motor
+          control shows this can bypass the "glitch" that causes a block.
       </p>
 
-      <h3>Speech Rate Reduction</h3>
+      <h3>The Natural Slow-Down</h3>
       <p>
-        Studies show DAF naturally slows speech rate, which gives people who stutter more time for speech motor planning
-        and reduces the likelihood of disfluencies.
+        It's almost impossible to speak fast when you hear your voice trailing behind you. This tool naturally encourages <strong>Speech Rate Reduction</strong>. By slowing down,
+        you're giving your brain the extra milliseconds it needs for speech motor planning, which makes disfluencies much less likely.
       </p>
 
-      <h3>Choral Speech Effect</h3>
+      <h3>The "Choral Speech" Effect</h3>
       <p>
-        The delayed playback creates a "choral speech" effect similar to speaking in unison with another person—a condition that
-        dramatically reduces stuttering in most individuals.
+        Have you ever noticed that most people don't stutter when they sing or speak in a crowd? That's called the choral effect. DAF mimics this by making it sound like someone is speaking right along with you, which can dramatically boost fluency.
       </p>
 
       <p>
-        <strong>Research Note:</strong> While DAF is highly effective for many people who stutter, individual responses vary.
-        We recommend using DAF as part of a comprehensive stuttering therapy program under the guidance of a qualified
-        speech-language pathologist.
+        <strong>A quick note:</strong> While the science is solid, everyone's brain is wired differently. Some people see a huge change immediately, while others use it as a
+        secondary tool. It's always best to use this as one part of a bigger plan with a qualified speech therapist.
       </p>
     </section>
 
-    <section id="faq" aria-labelledby="faq-heading">
+    <section class="boxed-section" id="faq" aria-labelledby="faq-heading">
       <h2 id="faq-heading">Frequently Asked Questions (FAQ)</h2>
 
       <div itemscope itemtype="https://schema.org/FAQPage">
@@ -320,7 +361,7 @@
           <h3 itemprop="name">What is Delayed Auditory Feedback (DAF)?</h3>
           <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
             <p itemprop="text">
-              Delayed Auditory Feedback (DAF) is a speech therapy technique that plays a person’s voice back to them with a brief delay, helping individuals who
+              Delayed Auditory Feedback (DAF) is a speech therapy technique that plays a person's voice back to them with a brief delay, helping individuals who
               stutter improve their fluency.
             </p>
           </div>
@@ -364,7 +405,7 @@
           <h3 itemprop="name">How does this online DAF tool work?</h3>
           <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
             <p itemprop="text">
-              This tool uses your browser’s microphone to capture your voice, then plays it back with a customizable delay. All processing happens locally on your
+              This tool uses your browser's microphone to capture your voice, then plays it back with a customizable delay. All processing happens locally on your
               device for real-time feedback and maximum privacy.
             </p>
           </div>
@@ -555,14 +596,38 @@
       </div>
     </section>
 
-    <section id="try-it-now" aria-labelledby="try-it-now-heading">
+    <section class="boxed-section" id="try-it-now" aria-labelledby="try-it-now-heading">
       <h2>Start Your Speech Fluency Practice</h2>
       <p>Ready to begin? <a href="#controls">Use the tool at the top of the page</a> to find your ideal delay.</p>
+    </section>
+
+    <hr />
+
+    <section class="boxed-section" id="resources" aria-labelledby="resources-heading">
+      <h2 id="resources-heading">Want to Dive Deeper?</h2>
+      <p>While this tool is a great place to start, there is a wealth of expert knowledge available if you're looking for long-term support or the hard science behind the
+        technology.</p>
+
+      <ul class="leadsto-list resources-list">
+        <li>
+          If you need community support or educational guides, <strong><a href="https://www.stutteringhelp.org/" target="_blank" rel="noopener noreferrer">The Stuttering
+              Foundation</a></strong> is the gold standard for personal resources.
+        </li>
+        <li>
+          For a professional look at diagnosis and treatment standards, visit <strong><a href="https://www.asha.org/public/speech/disorders/stuttering/" target="_blank"
+              rel="noopener noreferrer">ASHA</a></strong> (the American Speech-Language-Hearing Association).
+        </li>
+        <li>
+          For a clear breakdown of why stuttering happens and current medical research, check out the <strong><a href="https://www.nidcd.nih.gov/health/stuttering" target="_blank"
+              rel="noopener noreferrer">NIDCD Fact Sheet</a></strong>.
+        </li>
+      </ul>
     </section>
 
   </main>
 
   <footer>
+    <p>Last updated: February 2026.</p>
     <p>&copy; <span id="currentYear"></span> DAF Online. All rights reserved.</p>
   </footer>
 
