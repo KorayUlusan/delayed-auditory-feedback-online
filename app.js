@@ -14,6 +14,42 @@ if ('serviceWorker' in navigator) {
 // Wake Lock variable to store reference
 let wakeLock = null;
 
+// Helper to safely send Google tag events if gtag is available
+function sendGtagEvent(action, params = {}) {
+    try {
+        if (typeof gtag === 'function') {
+            gtag('event', action, params);
+        }
+    } catch (e) {
+        // fail silently if analytics isn't available
+        console.warn('gtag event failed:', e);
+    }
+}
+
+// Expose helper globally so other modules can use it
+try { window.sendGtagEvent = sendGtagEvent; } catch (e) { /* ignore */ }
+
+// Lazy-load the speech processor script when needed to avoid blocking initial load
+function loadSpeechProcessorScript() {
+    return new Promise((resolve, reject) => {
+        if (window.SpeechProcessor) return resolve();
+        const existing = document.querySelector('script[data-daf-processor]');
+        if (existing) {
+            existing.addEventListener('load', () => resolve());
+            existing.addEventListener('error', (e) => reject(e));
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'daf-processor.js';
+        script.async = true;
+        script.setAttribute('data-daf-processor', '1');
+        script.onload = () => resolve();
+        script.onerror = (e) => reject(e);
+        document.body.appendChild(script);
+    });
+}
+
 // Function to request wake lock
 async function requestWakeLock() {
     try {
@@ -51,6 +87,8 @@ function releaseWakeLock() {
 document.addEventListener('visibilitychange', function() {
     const isVisible = document.visibilityState === 'visible';
     console.log(`Page visibility changed: ${isVisible ? 'visible' : 'hidden'}`);
+    // Report visibility changes to analytics
+    sendGtagEvent('page_visibility', { visibility: isVisible ? 'visible' : 'hidden' });
     
     // If page is visible and we have active audio that's suspended, try to resume it
     if (isVisible && window.speechProcessor && 
@@ -77,6 +115,8 @@ window.addEventListener('beforeunload', function() {
     
     // Release wake lock when page is closed
     releaseWakeLock();
+    // Log session end
+    sendGtagEvent('session_end');
 });
 
 // Functions to handle UI controls and pass values to the speech processor
@@ -112,14 +152,11 @@ window.toggleDAF = function(button) {
     const isStarting = button.textContent === 'Start DAF';
     
     // Track DAF button click as a key event in Google Analytics
-    if (typeof gtag === 'function') {
-        gtag('event', isStarting ? 'start_daf' : 'stop_daf', {
-            'event_category': 'user_action',
-            'event_label': isStarting ? 'DAF Started' : 'DAF Stopped',
-            'value': 1
-        });
-        console.log(`DAF ${isStarting ? 'start' : 'stop'} event tracked in Google Analytics`);
-    }
+    sendGtagEvent(isStarting ? 'start_daf' : 'stop_daf', {
+        event_category: 'user_action',
+        event_label: isStarting ? 'DAF Started' : 'DAF Stopped'
+    });
+    console.log(`DAF ${isStarting ? 'start' : 'stop'} event tracked`);
     
     // Prevent creating multiple instances or starting multiple times
     if (isStarting) {
@@ -127,28 +164,41 @@ window.toggleDAF = function(button) {
             console.log('DAF is already running, ignoring start request');
             return;
         }
-        
-        // Make sure we have a speech processor instance
-        if (!window.speechProcessor) {
-            window.speechProcessor = new SpeechProcessor();
-        }
-        
-        // Initialize with current slider values before starting
-        const delayValue = document.getElementById('delaySlider').value;
-        const inputGainValue = document.getElementById('inputGainSlider').value;
-        
-        window.speechProcessor.config.delayTime = delayValue;
-        window.speechProcessor.config.inputGain = inputGainValue;
-        
-        // Request wake lock when starting DAF
-        requestWakeLock();
-        
-        window.speechProcessor.start();
-        
-        // Initialize device detection to automatically find headphone microphones
-        window.speechProcessor.initializeDeviceDetection().then(() => {
-            console.log('Audio device detection initialized');
-        });
+
+        // Lazy start flow: load processor script if needed, then instantiate and start
+        const startWithProcessor = async () => {
+            try {
+                if (!window.SpeechProcessor) {
+                    await loadSpeechProcessorScript();
+                }
+            } catch (err) {
+                console.error('Failed to load DAF processor:', err);
+                return;
+            }
+
+            if (!window.speechProcessor) {
+                window.speechProcessor = new SpeechProcessor();
+            }
+
+            // Initialize with current slider values before starting
+            const delayValue = document.getElementById('delaySlider').value;
+            const inputGainValue = document.getElementById('inputGainSlider').value;
+
+            window.speechProcessor.config.delayTime = delayValue;
+            window.speechProcessor.config.inputGain = inputGainValue;
+
+            // Request wake lock when starting DAF
+            requestWakeLock();
+
+            window.speechProcessor.start();
+
+            // Initialize device detection to automatically find headphone microphones
+            window.speechProcessor.initializeDeviceDetection().then(() => {
+                console.log('Audio device detection initialized');
+            });
+        };
+
+        startWithProcessor();
     } else {
         if (window.speechProcessor) {
             window.speechProcessor.stop();
@@ -161,9 +211,6 @@ window.toggleDAF = function(button) {
 
 // Initialize the speech processor on DOM content load
 document.addEventListener('DOMContentLoaded', () => {
-    // Create a single instance and store it on the window object for access
-    window.speechProcessor = new SpeechProcessor();
-    
     // Initialize status message with default class
     const statusElement = document.getElementById('statusMessage');
     if (statusElement) {
@@ -173,19 +220,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Don't initialize device detection on page load
     // Only do it when user clicks Start DAF
     
-    // Set initial values from sliders to speech processor config
+    // Set initial values from sliders for UI
     const delaySlider = document.getElementById('delaySlider');
     const inputGainSlider = document.getElementById('inputGainSlider');
-    
-    if (window.speechProcessor && delaySlider && inputGainSlider) {
-        // Initialize config with current slider values
-        window.speechProcessor.config.delayTime = delaySlider.value;
-        window.speechProcessor.config.gain = inputGainSlider.value;
-        
-        // Update UI displays to match
+    if (delaySlider && inputGainSlider) {
         document.getElementById('delayValue').textContent = `${delaySlider.value} ms`;
         document.getElementById('inputGainValue').textContent = `${inputGainSlider.value}x`;
-        
         console.log(`Initial values set - Delay: ${delaySlider.value}ms, Mic Boost: ${inputGainSlider.value}x`);
     }
     
@@ -203,17 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 trackDAFEvent(isStarting ? 'start_daf' : 'stop_daf', isStarting ? 'DAF Started' : 'DAF Stopped');
             }
             
-            // Direct gtag event for more important tracking
-            if (typeof gtag === 'function') {
-                gtag('event', isStarting ? 'start_daf' : 'stop_daf', {
-                    'event_category': 'key_user_action',
-                    'event_label': isStarting ? 'DAF Started' : 'DAF Stopped',
-                    'value': 1
-                });
-                console.log(`DAF button ${isStarting ? 'start' : 'stop'} tracked as key event`);
-            } else {
-                console.warn('Google Analytics gtag function is not available. Key event not tracked.');
-            }
+            // Additional gtag event for key action
+            sendGtagEvent(isStarting ? 'start_daf_key' : 'stop_daf_key', {
+                event_category: 'key_user_action',
+                event_label: isStarting ? 'DAF Started' : 'DAF Stopped'
+            });
             
             window.toggleDAF(e.target);
         });
@@ -221,19 +255,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners for sliders
     document.getElementById('delaySlider').addEventListener('input', (e) => {
-        window.speechProcessor.updateDelayTime(e.target.value);
+        const val = e.target.value;
+        document.getElementById('delayValue').textContent = `${val} ms`;
+        if (window.speechProcessor && typeof window.speechProcessor.updateDelayTime === 'function') {
+            window.speechProcessor.updateDelayTime(val);
+        }
         // Track control adjustment
         if (typeof trackControlEvent === 'function') {
-            trackControlEvent('delay_time', `${e.target.value} ms`);
+            trackControlEvent('delay_time', `${val} ms`);
         }
+        // Analytics
+        sendGtagEvent('adjust_delay', { value: val });
     });
 
     document.getElementById('inputGainSlider').addEventListener('input', (e) => {
-        window.speechProcessor.updateInputGain(e.target.value);
+        const val = e.target.value;
+        document.getElementById('inputGainValue').textContent = `${val}x`;
+        if (window.speechProcessor && typeof window.speechProcessor.updateInputGain === 'function') {
+            window.speechProcessor.updateInputGain(val);
+        }
         // Track control adjustment
         if (typeof trackControlEvent === 'function') {
-            trackControlEvent('input_gain', `${e.target.value}x`);
+            trackControlEvent('input_gain', `${val}x`);
         }
+        // Analytics
+        sendGtagEvent('adjust_input_gain', { value: val });
     });
 
     // Add click handler to the status message to resume audio context
@@ -243,6 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.speechProcessor.audioContext.state === 'suspended') {
             
             window.speechProcessor._attemptResumeAudio();
+            sendGtagEvent('resume_audio_attempt');
         }
     });
     
@@ -266,6 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof trackControlEvent === 'function') {
                 trackControlEvent('faq_interaction', question.textContent);
             }
+            // Analytics
+            sendGtagEvent('faq_interaction', { question: question.textContent });
         });
         
         // Add accessibility attributes

@@ -751,6 +751,17 @@ class SpeechProcessor {
         const previousDevice = currentIndex >= 0 ? this.availableDevices[currentIndex] : null;
         
         console.log(`Switching from device ${previousDevice ? previousDevice.label : 'default'} to ${nextDevice.label}`);
+        // Analytics: record device switches if analytics helper is present
+        try {
+            if (typeof window.sendGtagEvent === 'function') {
+                window.sendGtagEvent('device_switch', {
+                    from: previousDevice ? previousDevice.label : 'default',
+                    to: nextDevice.label
+                });
+            }
+        } catch (e) {
+            // ignore analytics failures
+        }
         
         // Select and display the device - this will handle closing the previous mic connection
         await this.selectAudioDevice(nextDevice.deviceId);

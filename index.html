@@ -177,8 +177,6 @@
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-J3ZKY02K30"></script>
 
-  <!-- Load JavaScript dependencies -->
-  <script src="analytics.js"></script>
 
   <header>
     <h1>Free Online DAF Tool: Delayed Auditory Feedback for Stuttering</h1>
@@ -632,10 +630,12 @@
   </footer>
 
   <!-- Load core app scripts -->
-  <script src="theme-manager.js"></script>
-  <script src="daf-processor.js"></script>
-  <script src="app.js"></script>
-  <script src="init.js"></script>
+  <script src="theme-manager.js" defer></script>
+  <!-- Load daf-processor.js on demand to avoid blocking LCP -->
+  <script src="app.js" defer></script>
+  <script src="init.js" defer></script>
+  <!-- Analytics can be loaded async -->
+  <script src="analytics.js" async></script>
 </body>
 
 </html>

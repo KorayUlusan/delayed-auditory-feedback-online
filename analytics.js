@@ -1,87 +1,117 @@
 /**
- * Google Analytics Event Tracking
- * This file contains functions for tracking user interactions with Google Analytics
+ * Analytics wrapper: initializes dataLayer/gtag and exposes
+ * normalized, debounced tracking helpers.
  */
-
-// Initialize Google Analytics
-(function initAnalytics() {
+(function () {
+    // Ensure dataLayer and a safe gtag function exist so events can be queued
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-
-    // Wait for the Google Analytics script to load
-    if (typeof gtag === 'undefined') {
-        console.warn('Google Analytics script not yet loaded. Retrying initialization...');
-        const retryInterval = setInterval(() => {
-            if (typeof gtag === 'function') {
-                clearInterval(retryInterval);
-                gtag('js', new Date());
-                gtag('config', 'G-J3ZKY02K30', {
-                    cookie_domain: 'auto',
-                });
-                console.log('Google Analytics initialized successfully.');
-            }
-        }, 100); // Retry every 100ms
-    } else {
-        gtag('js', new Date());
-        gtag('config', 'G-J3ZKY02K30', {
-            cookie_domain: 'auto',
-        });
-        console.log('Google Analytics initialized successfully.');
+    if (typeof window.gtag !== 'function') {
+        window.gtag = function () { window.dataLayer.push(arguments); };
     }
+
+    // Basic config (will be ignored if real gtag config runs later)
+    try {
+        window.gtag('js', new Date());
+        window.gtag('config', 'G-J3ZKY02K30', { cookie_domain: 'auto' });
+    } catch (e) {
+        // ignore
+    }
+
+    // Debounce helper for high-frequency events
+    const debounceTimers = new Map();
+    function debounce(key, fn, wait = 250) {
+        if (debounceTimers.has(key)) clearTimeout(debounceTimers.get(key));
+        const t = setTimeout(() => { debounceTimers.delete(key); fn(); }, wait);
+        debounceTimers.set(key, t);
+    }
+
+    // Normalize and send event to gtag (or queued dataLayer)
+    function sendEvent(name, params = {}, options = {}) {
+        const normalized = normalizeEvent(name, params);
+
+        const doSend = () => {
+            try {
+                window.gtag('event', normalized.name, normalized.params);
+            } catch (e) {
+                // fallback to dataLayer push
+                window.dataLayer.push(['event', normalized.name, normalized.params]);
+            }
+        };
+
+        if (options.debounce) {
+            debounce(normalized.name, doSend, options.debounceMs || 300);
+        } else {
+            doSend();
+        }
+    }
+
+    // Map various input event names to consistent analytics names/params
+    function normalizeEvent(name, params) {
+        const p = Object.assign({}, params);
+        let normalizedName = String(name);
+
+        switch (normalizedName) {
+            case 'delay_time':
+            case 'adjust_delay':
+                normalizedName = 'adjust_delay';
+                p.event_category = p.event_category || 'user_action';
+                p.event_label = p.event_label || `delay:${p.value || p}`;
+                break;
+            case 'input_gain':
+            case 'adjust_input_gain':
+                normalizedName = 'adjust_input_gain';
+                p.event_category = p.event_category || 'user_action';
+                p.event_label = p.event_label || `gain:${p.value || p}`;
+                break;
+            case 'start_daf':
+            case 'stop_daf':
+                normalizedName = normalizedName;
+                p.event_category = p.event_category || 'daf_usage';
+                p.event_label = p.event_label || '';
+                break;
+            case 'device_switch':
+                normalizedName = 'device_switch';
+                p.event_category = p.event_category || 'hardware';
+                break;
+            case 'faq_interaction':
+                normalizedName = 'faq_interaction';
+                p.event_category = p.event_category || 'ui';
+                break;
+            default:
+                normalizedName = normalizedName.replace(/\s+/g, '_').toLowerCase();
+                p.event_category = p.event_category || 'engagement';
+        }
+
+        return { name: normalizedName, params: p };
+    }
+
+    // Public helpers
+    function trackDAFEvent(action, label) {
+        sendEvent(action, { event_label: label, event_category: 'daf_usage' });
+    }
+
+    function trackControlEvent(controlName, value) {
+        // Debounce high-frequency control adjustments
+        sendEvent('adjust_settings', { event_label: `${controlName}: ${value}`, control: controlName, value }, { debounce: true, debounceMs: 300 });
+    }
+
+    function trackErrorEvent(errorType, errorMessage) {
+        sendEvent('error', { event_category: 'daf_errors', event_label: `${errorType}: ${errorMessage}` });
+    }
+
+    function trackPageView(pagePath, additionalParams = {}) {
+        try {
+            window.gtag('event', 'page_view', Object.assign({ page_path: pagePath }, additionalParams));
+        } catch (e) {
+            window.dataLayer.push(['event', 'page_view', Object.assign({ page_path: pagePath }, additionalParams)]);
+        }
+    }
+
+    // Expose on window
+    window.trackDAFEvent = trackDAFEvent;
+    window.trackControlEvent = trackControlEvent;
+    window.trackErrorEvent = trackErrorEvent;
+    window.trackPageView = trackPageView;
+    window.sendAnalyticsEvent = sendEvent;
+
 })();
-
-/**
- * Track DAF usage events
- * @param {string} action - The action performed (e.g., 'start', 'stop')
- * @param {string} label - Additional information about the event
- */
-function trackDAFEvent(action, label) {
-    if (typeof gtag !== 'function') return;
-    
-    gtag('event', action, {
-        'event_category': 'daf_usage',
-        'event_label': label
-    });
-}
-
-/**
- * Track user interaction with controls
- * @param {string} controlName - The name of the control being adjusted
- * @param {string|number} value - The value the control was set to
- */
-function trackControlEvent(controlName, value) {
-    if (typeof gtag !== 'function') return;
-    
-    gtag('event', 'adjust_settings', {
-        'event_category': 'user_preferences',
-        'event_label': `${controlName}: ${value}`
-    });
-}
-
-/**
- * Track errors that occur during DAF usage
- * @param {string} errorType - The type of error that occurred
- * @param {string} errorMessage - The error message
- */
-function trackErrorEvent(errorType, errorMessage) {
-    if (typeof gtag !== 'function') return;
-    
-    gtag('event', 'error', {
-        'event_category': 'daf_errors',
-        'event_label': `${errorType}: ${errorMessage}`
-    });
-}
-
-/**
- * Track page views with custom parameters
- * @param {string} pagePath - The path of the page being viewed
- * @param {Object} additionalParams - Additional parameters to include with the page view
- */
-function trackPageView(pagePath, additionalParams = {}) {
-    if (typeof gtag !== 'function') return;
-    
-    gtag('event', 'page_view', {
-        'page_path': pagePath,
-        ...additionalParams
-    });
-}
