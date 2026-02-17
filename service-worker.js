@@ -1,5 +1,5 @@
 // Service Worker for Delayed Auditory Feedback (DAF) Online Tool
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `daf-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `daf-runtime-${CACHE_VERSION}`;
 
@@ -9,14 +9,40 @@ const MAX_AGE_HTML = 60 * 60 * 1000; // 1 hour
 const MAX_AGE_RUNTIME = 7 * 24 * 60 * 60 * 1000; // 7 days
 const MAX_RUNTIME_ENTRIES = 50; // max number of runtime cached items
 
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/styles.min.css',
-  '/daf-processor.js',
-  '/analytics.js',
-  '/favicon/favicon.ico',
-  '/favicon/favicon-32x32.png'
+// Split precache lists by expected TTL/use-case so we can apply different
+// expiration rules. Static assets get long-lived TTL; HTML gets short TTL.
+const ASSETS_STATIC = [
+  'favicon/favicon.ico',
+  'favicon/favicon-32x32.png',
+  // Illustrations and themed SVGs (pre-cache to ensure long-lived client-side caching)
+  'images/daf-beneficiaries-illustration-dark.svg',
+  'images/daf-beneficiaries-illustration-light.svg',
+  'images/daf-science-chart-light.svg',
+  'images/daf-science-chart-dark.svg',
+  'images/daf-usage-cycle-illustration-dark.svg',
+  'images/daf-usage-cycle-illustration-light.svg',
+  'images/speech-fluency-progress-graph-dark.svg',
+  'images/speech-fluency-progress-graph-light.svg',
+  'images/daf-benefits-infographic-light.svg',
+  'images/daf-benefits-infographic-dark.svg',
+  'images/daf-usage-tips-infographic-dark.svg',
+  'images/daf-usage-tips-infographic-light.svg'
+];
+
+// JavaScript files separated so we can treat them as distinct precache group
+const ASSETS_JS = [
+  'app.js',
+  'daf-processor.js',
+  'analytics.js',
+  'theme-manager.js',
+  'init.js'
+];
+
+// HTML pages we want to precache but treat with a short TTL
+const ASSETS_HTML = [
+  'styles.min.css',
+  'index.html',
+  '/'
 ];
 
 // Helper: create a cached response with a timestamp header so we can expire entries
@@ -64,7 +90,8 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE).then(async (cache) => {
       console.log('Service Worker: Caching core files');
       // Use cache.put with createCachedResponse so entries include timestamps
-      await Promise.all(ASSETS_TO_CACHE.map(async (url) => {
+      // Cache static assets with long TTL
+      await Promise.all(ASSETS_STATIC.map(async (url) => {
         try {
           const resp = await fetch(url, { cache: 'no-cache' });
           if (resp && resp.ok) {
@@ -75,6 +102,32 @@ self.addEventListener('install', (event) => {
           // ignore individual failures during install
         }
       }));
+      // Cache JS files (grouped separately)
+      await Promise.all(ASSETS_JS.map(async (url) => {
+        try {
+          const resp = await fetch(url, { cache: 'no-cache' });
+          if (resp && resp.ok) {
+            const toCache = await createCachedResponse(resp);
+            await cache.put(url, toCache);
+          }
+        } catch (e) {
+          // ignore individual failures during install
+        }
+      }));
+      // Cache HTML with short TTL
+      await Promise.all(ASSETS_HTML.map(async (url) => {
+        try {
+          const resp = await fetch(url, { cache: 'no-cache' });
+          if (resp && resp.ok) {
+            const toCache = await createCachedResponse(resp);
+            await cache.put(url, toCache);
+          }
+        } catch (e) {
+          // ignore individual failures during install
+        }
+      }));
+      // Remove any previously expired entries from the static cache
+      await cleanupExpiredEntries(STATIC_CACHE, MAX_AGE_STATIC);
     })
   );
 });
@@ -133,13 +186,22 @@ async function networkFirst(request) {
 }
 
 async function cacheFirstWithStaleWhileRevalidate(request) {
-  const cache = await caches.open(STATIC_CACHE);
-  const cached = await cache.match(request) || await caches.match(request);
+  // Check STATIC_CACHE first (long-lived assets)
+  const staticCache = await caches.open(STATIC_CACHE);
+  const cachedStatic = await staticCache.match(request);
+  if (cachedStatic && !isExpired(cachedStatic, MAX_AGE_STATIC)) {
+    // Kick off update in background for static cache
+    eventWaitUntilBackgroundUpdate(request, STATIC_CACHE);
+    return cachedStatic;
+  }
 
-  if (cached && !isExpired(cached, MAX_AGE_STATIC)) {
-    // Kick off update in background
-    eventWaitUntilBackgroundUpdate(request);
-    return cached;
+  // Then check RUNTIME_CACHE (shorter-lived runtime entries)
+  const runtimeCache = await caches.open(RUNTIME_CACHE);
+  const cachedRuntime = await runtimeCache.match(request);
+  if (cachedRuntime && !isExpired(cachedRuntime, MAX_AGE_RUNTIME)) {
+    // Kick off update in background for runtime cache
+    eventWaitUntilBackgroundUpdate(request, RUNTIME_CACHE);
+    return cachedRuntime;
   }
 
   try {
@@ -155,12 +217,13 @@ async function cacheFirstWithStaleWhileRevalidate(request) {
     throw new Error('Network response not ok');
   } catch (err) {
     // fall back to cached version even if expired
-    if (cached) return cached;
+    if (cachedStatic) return cachedStatic;
+    if (cachedRuntime) return cachedRuntime;
     return new Response('', { status: 504, statusText: 'Gateway Timeout' });
   }
 }
 
-function eventWaitUntilBackgroundUpdate(request) {
+function eventWaitUntilBackgroundUpdate(request, cacheName = STATIC_CACHE) {
   // run a background update without blocking the request
   self.registration.waiting; // no-op to hint at lifecycle use
   self.clients && self.clients.matchAll && self.clients.matchAll();
@@ -170,7 +233,7 @@ function eventWaitUntilBackgroundUpdate(request) {
       const networkResponse = await fetch(request);
       if (networkResponse && networkResponse.ok) {
         const toCache = await createCachedResponse(networkResponse);
-        const cache = await caches.open(STATIC_CACHE);
+        const cache = await caches.open(cacheName);
         await cache.put(request, toCache);
       }
     } catch (e) {
