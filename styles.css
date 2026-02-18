@@ -621,6 +621,95 @@ a:hover {
     }
 }
 
+@media (max-width: 768px) {
+    /* Touch + readability improvements for tablet / small phones */
+    body {
+        padding: 10px;
+        font-size: 15px;
+    }
+
+    button {
+        width: 100%;
+        max-width: none;
+        padding: 14px 18px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .sliders {
+        padding: 18px 12px;
+        margin: 14px 0;
+    }
+
+    input[type="range"] {
+        height: 12px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb,
+    input[type="range"]::-moz-range-thumb {
+        width: 28px;
+        height: 28px;
+    }
+
+    .device-status {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        gap: 10px;
+    }
+
+    .theme-switch {
+        width: 70px;
+        height: 38px;
+    }
+
+    .theme-switch .slider:before {
+        height: 30px;
+        width: 30px;
+        left: 4px;
+        bottom: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small screens (phones) */
+    body {
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.25rem; }
+    h3 { font-size: 1.1rem; }
+
+    button {
+        padding: 16px 18px;
+        font-size: 17px;
+        border-radius: 10px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .sliders { padding: 14px 10px; }
+
+    input[type="range"] { height: 14px; }
+    input[type="range"]::-webkit-slider-thumb,
+    input[type="range"]::-moz-range-thumb {
+        width: 34px;
+        height: 34px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+    }
+
+    /* Show the DAF timer on small screens for easier access */
+    .timer-display { display: block; font-size: 1.4em; min-width: 84px; opacity: 1; }
+    #dafTimer { display: block; font-size: 1.05rem; min-width: 80px; opacity: 1; }
+
+    .device-status::after { right: 8px; }
+    .device-status:hover::before { font-size: 0.75rem; padding: 6px 8px; }
+
+    footer { padding: 16px 0; font-size: 0.95em; }
+
+    .theme-switch-wrapper { justify-content: space-between; }
+}
+
 /* Print styles */
 @media print {
     body {
