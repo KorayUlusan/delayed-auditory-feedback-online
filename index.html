@@ -56,10 +56,7 @@
     label{display:flex;justify-content:space-between;font-weight:600;margin:12px 0}
     #delayValue,#inputGainValue{font-weight:700;color:var(--primary);min-width:60px;text-align:right}
     #statusMessage{display:inline-block;padding:8px 12px;border-radius:8px;margin-top:10px;background:#eef3fb;color:var(--primary);border:1px solid rgba(0,62,126,0.08)}
-    /* Prevent layout shift when full stylesheet loads */
-    .timer-display{display:none}
-    /* Reserve reasonable space for illustrative graphs before images load */
-    .themed-graph{max-width:100%;height:auto;display:block;min-height:120px}
+    /* to add new css, add it do styles.css and then use build.sh to minify it. */
   </style>
 
   <!-- Preload the full minified stylesheet; apply after load to avoid blocking render -->
@@ -207,7 +204,7 @@
 
   <header>
     <h1>Free Online DAF Tool: Delayed Auditory Feedback for Stuttering</h1>
-    <p>Professional speech fluency aid for therapists and individuals.</p>
+    <p id="belowh1">Professional speech fluency aid for therapists and individuals.</p>
   </header>
 
   <main>

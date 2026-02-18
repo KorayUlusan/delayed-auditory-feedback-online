@@ -602,6 +602,23 @@ a:hover {
     .boxed-section {
         padding: 5px 12px;
     }
+
+    #statusMessage {
+        padding: 6px 10px;
+        margin: 3px;
+    }
+
+    .sliders{padding: 15px 10px;
+    margin: 15px 0;
+    }
+
+    #belowh1, header {
+        margin-bottom: 0px;
+    }
+
+    .sliders label:first-of-type {
+        margin-top: 2px;
+    }
 }
 
 /* Print styles */
@@ -620,7 +637,8 @@ a:hover {
     #infoBox,
     #testimonials,
     #faq,
-    #use-cases, .boxed-section {
+    #use-cases,
+    .boxed-section {
         page-break-inside: avoid;
         margin: 20px 0;
         border: 1px solid #ddd;
@@ -644,6 +662,7 @@ a:hover {
     list-style: none;
     /* remove bullets */
     padding-left: 0;
+    margin-left: 0.7em;
 }
 
 .leadsto-list li {
@@ -660,4 +679,53 @@ a:hover {
     position: absolute;
     left: 0;
     font-weight: bold;
+}
+
+/* Flash/glow animation applied when status text changes */
+/* Smooth glow/lift animation */
+@keyframes statusFlash {
+    0% {
+        transform: translateY(0);
+        box-shadow: 0 0 0 rgba(0, 86, 179, 0);
+    }
+
+    30% {
+        transform: translateY(-1px);
+        box-shadow: 0 0 14px rgba(0, 86, 179, 0.45);
+    }
+
+    60% {
+        transform: translateY(0);
+        box-shadow: 0 0 8px rgba(0, 86, 179, 0.3);
+    }
+
+    100% {
+        transform: translateY(0);
+        box-shadow: 0 0 0 rgba(0, 86, 179, 0);
+    }
+}
+
+.status-flash {
+    animation: statusFlash 700ms cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: transform, box-shadow;
+}
+
+
+/* Timer display: keep in flow to avoid layout jumps and animate updates */
+#dafTimer {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    /* background: transparent; */
+    color: var(--primary);
+    min-width: 64px;
+    text-align: center;
+    transition: opacity 260ms ease, transform 260ms ease;
+    opacity: 0.6
+}
+
+/* When DAF is running, make timer fully visible and give subtle lift */
+#dafTimer.timer-running {
+    opacity: 1
 }

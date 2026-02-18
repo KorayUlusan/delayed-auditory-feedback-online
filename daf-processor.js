@@ -492,11 +492,11 @@ class SpeechProcessor {
         const timerElement = document.getElementById('dafTimer');
         if (!timerElement) return;
 
-        // Reset and show timer
+        // Reset and show timer (use class-based visibility to avoid layout jumps)
         this.startTime = Date.now();
         this.elapsedTime = 0;
         timerElement.textContent = '00:00';
-        timerElement.style.display = 'block';
+        timerElement.classList.add('timer-running');
 
         // Update timer every second
         this.timerInterval = setInterval(() => {
@@ -517,10 +517,10 @@ class SpeechProcessor {
             this.timerInterval = null;
         }
 
-        // Hide timer display
+        // Keep timer in layout but mark it not running (no display:none to avoid jumps)
         const timerElement = document.getElementById('dafTimer');
         if (timerElement) {
-            timerElement.style.display = 'none';
+            timerElement.classList.remove('timer-running');
         }
     }
 
