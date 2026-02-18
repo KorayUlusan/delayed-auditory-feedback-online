@@ -93,10 +93,11 @@ self.addEventListener('install', (event) => {
       // Cache static assets with long TTL
       await Promise.all(ASSETS_STATIC.map(async (url) => {
         try {
-          const resp = await fetch(url, { cache: 'no-cache' });
+          const full = new URL(url, self.location).href;
+          const resp = await fetch(full, { cache: 'no-cache' });
           if (resp && resp.ok) {
             const toCache = await createCachedResponse(resp);
-            await cache.put(url, toCache);
+            await cache.put(new Request(full), toCache);
           }
         } catch (e) {
           // ignore individual failures during install
@@ -105,10 +106,11 @@ self.addEventListener('install', (event) => {
       // Cache JS files (grouped separately)
       await Promise.all(ASSETS_JS.map(async (url) => {
         try {
-          const resp = await fetch(url, { cache: 'no-cache' });
+          const full = new URL(url, self.location).href;
+          const resp = await fetch(full, { cache: 'no-cache' });
           if (resp && resp.ok) {
             const toCache = await createCachedResponse(resp);
-            await cache.put(url, toCache);
+            await cache.put(new Request(full), toCache);
           }
         } catch (e) {
           // ignore individual failures during install
@@ -117,10 +119,12 @@ self.addEventListener('install', (event) => {
       // Cache HTML with short TTL
       await Promise.all(ASSETS_HTML.map(async (url) => {
         try {
-          const resp = await fetch(url, { cache: 'no-cache' });
+          // Special-case '/' to point to the service worker scope (project root)
+          const full = (url === '/') ? new URL('./', self.location).href : new URL(url, self.location).href;
+          const resp = await fetch(full, { cache: 'no-cache' });
           if (resp && resp.ok) {
             const toCache = await createCachedResponse(resp);
-            await cache.put(url, toCache);
+            await cache.put(new Request(full), toCache);
           }
         } catch (e) {
           // ignore individual failures during install
@@ -177,7 +181,8 @@ async function networkFirst(request) {
     throw new Error('Network response not ok');
   } catch (err) {
     const cache = await caches.open(STATIC_CACHE);
-    const cached = await cache.match('/index.html') || await cache.match(request);
+    const scopedIndexReq = new Request(new URL('index.html', self.location).href);
+    const cached = await cache.match(scopedIndexReq) || await cache.match(request);
     if (cached && !isExpired(cached, MAX_AGE_HTML)) {
       return cached;
     }
