@@ -152,19 +152,40 @@ self.addEventListener('activate', (event) => {
 // Fetch - network-first for navigations, cache-first (with stale-while-revalidate) for static resources
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  const url = new URL(request.url);
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch (e) {
+    // If parsing the URL fails, let the browser handle the request
+    return;
+  }
 
   // Only handle same-origin requests for app assets
   if (url.origin !== location.origin) return;
 
-  // Navigation requests (HTML) -> Network first with short cache lifetime
-  if (request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html')) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
+  // Use a safe wrapper so any unhandled rejection in handlers returns a fallback response
+  const safeHandler = async () => {
+    try {
+      // Navigation requests (HTML) -> Network first with short cache lifetime
+      if (request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html')) {
+        return await networkFirst(request);
+      }
+      // For other requests (CSS, JS, images) use cache-first with background update
+      return await cacheFirstWithStaleWhileRevalidate(request);
+    } catch (err) {
+      console.error('Service Worker fetch handler error for', request && request.url, err);
+      // Attempt a direct network fetch as a last resort
+      try {
+        const net = await fetch(request);
+        if (net && net.ok) return net;
+      } catch (e) {
+        // ignore network fallback errors
+      }
+      return new Response('Service Worker Error', { status: 503, statusText: 'Service Worker Error' });
+    }
+  };
 
-  // For other requests (CSS, JS, images) use cache-first with background update
-  event.respondWith(cacheFirstWithStaleWhileRevalidate(request));
+  event.respondWith(safeHandler());
 });
 
 async function networkFirst(request) {
