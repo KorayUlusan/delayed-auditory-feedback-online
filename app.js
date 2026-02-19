@@ -17,11 +17,24 @@ let wakeLock = null;
 // Helper to safely send Google tag events if gtag is available
 function sendGtagEvent(action, params = {}) {
     try {
-        if (typeof gtag === 'function') {
-            gtag('event', action, params);
+        // Prefer the real gtag if available
+        if (typeof window.gtag === 'function') {
+            window.gtag('event', action, params);
+            return;
         }
+
+        // If the analytics wrapper is present, use its robust sender
+        if (typeof window.sendAnalyticsEvent === 'function') {
+            window.sendAnalyticsEvent(action, params);
+            return;
+        }
+
+        // Fallback: ensure dataLayer exists and push an event so it is queued
+        window.dataLayer = window.dataLayer || [];
+        // Use the array-style push compatible with gtag/dataLayer
+        window.dataLayer.push(['event', action, params]);
     } catch (e) {
-        // fail silently if analytics isn't available
+        // Last-resort: log so developers can debug missing analytics
         console.warn('gtag event failed:', e);
     }
 }
