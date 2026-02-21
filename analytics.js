@@ -39,7 +39,7 @@
         };
 
         if (options.debounce) {
-            debounce(normalized.name, doSend, options.debounceMs || 300);
+            debounce(normalized.name, doSend, options.debounceMs || 800);
         } else {
             doSend();
         }
@@ -92,7 +92,7 @@
 
     function trackControlEvent(controlName, value) {
         // Debounce high-frequency control adjustments
-        sendEvent('adjust_settings', { event_label: `${controlName}: ${value}`, control: controlName, value }, { debounce: true, debounceMs: 300 });
+        sendEvent('adjust_settings', { event_label: `${controlName}: ${value}`, control: controlName, value }, { debounce: true, debounceMs: 800 });
     }
 
     function trackErrorEvent(errorType, errorMessage) {
