@@ -31,6 +31,9 @@ class SpeechProcessor {
         this.timerInterval = null;
         this.startTime = 0;
         this.elapsedTime = 0;
+        // Analytics heartbeat (send gtag every 60s while DAF active)
+        this.analyticsIntervalId = null;
+        this.analyticsIntervalMs = 60000; // 60 seconds
         
         // Device selection
         this.selectedDeviceId = null;
@@ -103,6 +106,8 @@ class SpeechProcessor {
             this._updateStatus('Speech Processing Active', 'success');
             this._updateUIControls(true);
             this._startTimer();
+            // start periodic analytics heartbeat for active DAF
+            this._startAnalyticsHeartbeat();
         }
     }
 
@@ -120,6 +125,8 @@ class SpeechProcessor {
         this._updateStatus('Speech Processing Stopped', 'warning');
         this._updateUIControls(false);
         this._stopTimer();
+        // stop periodic analytics heartbeat when DAF stops
+        this._stopAnalyticsHeartbeat();
     }
 
     // AUDIO SETUP METHODS
@@ -524,6 +531,57 @@ class SpeechProcessor {
         }
     }
 
+    // ANALYTICS HEARTBEAT METHODS
+
+    _startAnalyticsHeartbeat() {
+        // Avoid duplicate intervals
+        if (this.analyticsIntervalId) return;
+
+        // Only start if DAF is active
+        if (!this.isAudioRunning) return;
+
+        const sendEvent = () => {
+            try {
+                const elapsedSeconds = Math.floor(this.elapsedTime / 1000);
+
+                // Use the project's preferred analytics wrapper if available
+                if (typeof sendGtagEvent === 'function') {
+                    sendGtagEvent('daf_active', { elapsedSeconds });
+                    return;
+                }
+
+                // Fallback to window-level helper if present
+                if (typeof window.sendGtagEvent === 'function') {
+                    window.sendGtagEvent('daf_active', { elapsedSeconds });
+                    return;
+                }
+
+                // Final fallback: use gtag directly if available
+                if (typeof window.gtag === 'function') {
+                    window.gtag('event', 'daf_active', {
+                        event_category: 'DAF',
+                        event_label: 'heartbeat',
+                        value: elapsedSeconds
+                    });
+                }
+            } catch (e) {
+                // swallow analytics errors
+                console.warn('Analytics heartbeat failed:', e);
+            }
+        };
+
+        // Send first event immediately if we've already been running for >=60s
+        // otherwise wait for the first interval tick
+        this.analyticsIntervalId = setInterval(sendEvent, this.analyticsIntervalMs);
+    }
+
+    _stopAnalyticsHeartbeat() {
+        if (this.analyticsIntervalId) {
+            clearInterval(this.analyticsIntervalId);
+            this.analyticsIntervalId = null;
+        }
+    }
+
     // DEVICE SELECTION METHODS
 
     /**
@@ -800,12 +858,17 @@ class SpeechProcessor {
         console.log(`Switching from device ${previousDevice ? previousDevice.label : 'default'} to ${nextDevice.label}`);
         // Analytics: record device switches if analytics helper is present
         try {
-            if (typeof window.sendGtagEvent === 'function') {
-                window.sendGtagEvent('device_switch', {
-                    from: previousDevice ? previousDevice.label : 'default',
-                    to: nextDevice.label
-                });
-            }
+                if (typeof sendGtagEvent === 'function') {
+                    sendGtagEvent('device_switch', {
+                        from: previousDevice ? previousDevice.label : 'default',
+                        to: nextDevice.label
+                    });
+                } else if (typeof window.sendGtagEvent === 'function') {
+                    window.sendGtagEvent('device_switch', {
+                        from: previousDevice ? previousDevice.label : 'default',
+                        to: nextDevice.label
+                    });
+                }
         } catch (e) {
             // ignore analytics failures
         }
