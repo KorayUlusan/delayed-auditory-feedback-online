@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>DAF Online Tool</title>
+    <title>DAF Online App</title>
     <link>https://korayulusan.github.io/delayed-auditory-feedback-online/</link>
-    <description>Free online Delayed Auditory Feedback (DAF) tool to improve speech fluency and reduce stuttering. Works instantly in your browser with adjustable delay settings.</description>
+    <description>Free online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Works instantly in your browser with adjustable delay settings.</description>
     <language>en-US</language>
     <managingEditor>Koray Ulusan</managingEditor>
     <webMaster>Koray Ulusan</webMaster>
-    <pubDate>Fri, 20 Feb 2026 00:00:00 +0000</pubDate>
-    <lastBuildDate>Fri, 20 Feb 2026 00:00:00 +0000</lastBuildDate>
-    <generator>Static RSS generator</generator>
+    <pubDate>Fri, 23 Feb 2026 00:00:00 +0000</pubDate>
+    <lastBuildDate>Fri, 23 Feb 2026 00:00:00 +0000</lastBuildDate>
+    <generator>Manual RSS generator</generator>
 
     <item>
-      <title>DAF Online Tool</title>
+      <title>DAF Online App</title>
       <link>https://korayulusan.github.io/delayed-auditory-feedback-online/</link>
       <guid isPermaLink="true">https://korayulusan.github.io/delayed-auditory-feedback-online/</guid>
-      <pubDate>Fri, 20 Feb 2026 00:00:00 +0000</pubDate>
-      <description>Real-time delayed auditory feedback tool — adjustable delay (0-500ms), local processing for privacy, works in your browser.</description>
+      <pubDate>Fri, 23 Feb 2026 00:00:00 +0000</pubDate>
+      <description>Delayed Auditory Feedback (DAF) Online App for Speech Fluency is a free, browser-based tool designed to help improve speech fluency and reduce stuttering.</description>
     </item>
 
   </channel>
