@@ -818,3 +818,10 @@ a:hover {
 #dafTimer.timer-running {
     opacity: 1
 }
+
+
+#bluetoothWarning{
+    width: 1em;
+    max-height: 24px;
+    display: inline;
+}
