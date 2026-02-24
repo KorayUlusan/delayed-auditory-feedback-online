@@ -28,7 +28,6 @@
     // Normalize and send event to gtag (or queued dataLayer)
     function sendEvent(name, params = {}, options = {}) {
         const normalized = normalizeEvent(name, params);
-
         const doSend = () => {
             try {
                 window.gtag('event', normalized.name, normalized.params);
@@ -51,13 +50,11 @@
         let normalizedName = String(name);
 
         switch (normalizedName) {
-            case 'delay_time':
             case 'adjust_delay':
                 normalizedName = 'adjust_delay';
                 p.event_category = p.event_category || 'user_action';
                 p.event_label = p.event_label || `delay:${p.value || p}`;
                 break;
-            case 'input_gain':
             case 'adjust_input_gain':
                 normalizedName = 'adjust_input_gain';
                 p.event_category = p.event_category || 'user_action';
@@ -92,7 +89,7 @@
 
     function trackControlEvent(controlName, value) {
         // Debounce high-frequency control adjustments
-        sendEvent('adjust_settings', { event_label: `${controlName}: ${value}`, control: controlName, value }, { debounce: true, debounceMs: 800 });
+        sendEvent('adjust_settings', { event_label: `${controlName}: ${value}`, control: controlName, value }, { debounce: true, debounceMs: 5000 });
     }
 
     function trackErrorEvent(errorType, errorMessage) {
