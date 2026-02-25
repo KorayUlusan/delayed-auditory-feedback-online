@@ -608,11 +608,13 @@ a:hover {
         margin: 3px;
     }
 
-    .sliders{padding: 15px 10px;
-    margin: 15px 0;
+    .sliders {
+        padding: 15px 10px;
+        margin: 15px 0;
     }
 
-    #belowh1, header {
+    #belowh1,
+    header {
         margin-bottom: 0px;
     }
 
@@ -622,6 +624,7 @@ a:hover {
 }
 
 @media (max-width: 768px) {
+
     /* Touch + readability improvements for tablet / small phones */
     body {
         padding: 10px;
@@ -671,43 +674,79 @@ a:hover {
 }
 
 @media (max-width: 480px) {
+
     /* Extra small screens (phones) */
     body {
         padding: 8px;
         font-size: 16px;
     }
 
-    h1 { font-size: 1.6rem; }
-    h2 { font-size: 1.25rem; }
-    h3 { font-size: 1.1rem; }
+    h1 {
+        font-size: 1.6rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
 
     button {
         padding: 16px 18px;
         font-size: 17px;
         border-radius: 10px;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
     }
 
-    .sliders { padding: 14px 10px; }
+    .sliders {
+        padding: 14px 10px;
+    }
 
-    input[type="range"] { height: 14px; }
+    input[type="range"] {
+        height: 14px;
+    }
+
     input[type="range"]::-webkit-slider-thumb,
     input[type="range"]::-moz-range-thumb {
         width: 34px;
         height: 34px;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
     }
 
     /* Show the DAF timer on small screens for easier access */
-    .timer-display { display: block; font-size: 1.4em; min-width: 84px; opacity: 1; }
-    #dafTimer { display: block; font-size: 1.05rem; min-width: 80px; opacity: 1; }
+    .timer-display {
+        display: block;
+        font-size: 1.4em;
+        min-width: 84px;
+        opacity: 1;
+    }
 
-    .device-status::after { right: 8px; }
-    .device-status:hover::before { font-size: 0.75rem; padding: 6px 8px; }
+    #dafTimer {
+        display: block;
+        font-size: 1.05rem;
+        min-width: 80px;
+        opacity: 1;
+    }
 
-    footer { padding: 16px 0; font-size: 0.95em; }
+    .device-status::after {
+        right: 8px;
+    }
 
-    .theme-switch-wrapper { justify-content: space-between; }
+    .device-status:hover::before {
+        font-size: 0.75rem;
+        padding: 6px 8px;
+    }
+
+    footer {
+        padding: 16px 0;
+        font-size: 0.95em;
+    }
+
+    .theme-switch-wrapper {
+        justify-content: space-between;
+    }
 }
 
 /* Print styles */
@@ -820,8 +859,37 @@ a:hover {
 }
 
 
-#bluetoothWarning{
+#bluetoothWarning {
     width: 1em;
     max-height: 24px;
     display: inline;
+}
+
+
+/* Minimal style for FAQ toggle to match page tone */
+.faq-toggle {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    margin: 0.5rem 0 1rem 0;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+    /* button allign center */
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.faq-toggle:hover {
+    background: rgba(0, 62, 126, 0.06);
+}
+
+.faq-toggle:focus {
+    outline: 3px solid rgba(0, 62, 126, 0.12);
+    outline-offset: 2px;
 }
