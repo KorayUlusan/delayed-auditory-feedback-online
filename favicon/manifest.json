@@ -1,7 +1,7 @@
 {
   "name": "Delayed Auditory Feedback (DAF) Online",
   "short_name": "DAF Online",
-  "description": "A web-based tool for delayed auditory feedback to improve speech fluency",
+  "description": "A web-based app for delayed auditory feedback to improve speech fluency",
   "icons": [
     {
       "src": "/favicon/android-icon-36x36.png",

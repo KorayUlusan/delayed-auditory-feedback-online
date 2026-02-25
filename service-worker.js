@@ -1,4 +1,4 @@
-// Service Worker for Delayed Auditory Feedback (DAF) Online Tool
+// Service Worker for Delayed Auditory Feedback (DAF) Online App
 const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `daf-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `daf-runtime-${CACHE_VERSION}`;
