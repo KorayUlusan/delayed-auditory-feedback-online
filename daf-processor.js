@@ -1,4 +1,4 @@
-// Speech Processing and Delayed Auditory Feedback (DAF) Module
+// Delayed Auditory Feedback (DAF) Module
 class SpeechProcessor {
     constructor() {
         // Core audio processing components
@@ -12,7 +12,7 @@ class SpeechProcessor {
             channelMerger: null,
         };
 
-        // Speech processing configuration
+        // Auditory Feedback configuration
         this.config = {
             delayTime: 50,        // ms, optimal for speech DAF
             gain: 1,              // unified gain control
@@ -103,7 +103,7 @@ class SpeechProcessor {
                 }
             }
 
-            this._updateStatus('Speech Processing Active', 'success');
+            this._updateStatus('Auditory Feedback Active', 'success');
             this._updateUIControls(true);
             this._startTimer();
             // start periodic analytics heartbeat for active DAF
@@ -122,7 +122,7 @@ class SpeechProcessor {
         // Reset device UI to show microphone is no longer in use
         this._updateDeviceUI('Click "Start DAF" to select your microphone', false);
 
-        this._updateStatus('Speech Processing Stopped', 'warning');
+        this._updateStatus('Auditory Feedback Stopped', 'warning');
         this._updateUIControls(false);
         this._stopTimer();
         // stop periodic analytics heartbeat when DAF stops

@@ -342,6 +342,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // When user clicks the device status area while DAF is not active,
+    // display a helpful message in the statusMessage element.
+    const deviceStatusEl = document.getElementById('deviceStatus');
+    if (deviceStatusEl) {
+        deviceStatusEl.addEventListener('click', () => {
+            const statusEl = document.getElementById('statusMessage');
+
+            // If there is no active speech processor or audio isn't running,
+            // instruct the user to start DAF to enable device detection.
+            if (!window.speechProcessor || !window.speechProcessor.isAudioRunning) {
+                if (statusEl) {
+                    statusEl.textContent = "DAF is not active — click 'Start DAF' to enable device detection and microphone status.";
+                    // ensure a visible state class (styling may be defined elsewhere)
+                    statusEl.classList.remove('status-default');
+                    statusEl.classList.add('status-info');
+                }
+                sendGtagEvent('device_status_click_inactive');
+                return;
+            }
+
+            // If DAF is active, show the currently selected device name if available
+            try {
+                const deviceNameEl = document.getElementById('deviceName');
+                const deviceName = (window.speechProcessor && window.speechProcessor.currentDeviceName) || (deviceNameEl && deviceNameEl.textContent) || 'Unknown device';
+                if (statusEl) {
+                    statusEl.textContent = `Active device: ${deviceName}`;
+                    statusEl.classList.remove('status-default', 'status-info');
+                    statusEl.classList.add('status-success');
+                }
+                sendGtagEvent('device_status_click_active', { device: deviceName });
+            } catch (e) {
+                console.warn('Error handling deviceStatus click:', e);
+            }
+        });
+    }
+
     // Initialize FAQ accordion functionality
     const faqQuestions = document.querySelectorAll('#faq [itemscope][itemprop="mainEntity"] h3');
     faqQuestions.forEach(question => {
