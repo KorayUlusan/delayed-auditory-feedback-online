@@ -35,3 +35,28 @@ window.onload = function () {
 
     observer.observe(status, { characterData: true, childList: true, subtree: true });
 })();
+
+
+// Fequently Asked Questions "More FAQs" toggle
+(function () {
+    function toggleFaq() {
+        var btn = document.getElementById('faqToggle');
+        var more = document.getElementById('moreFaq');
+        if (!btn || !more) return;
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        if (expanded) {
+            more.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            btn.textContent = 'Show more FAQs';
+        } else {
+            more.hidden = false;
+            btn.setAttribute('aria-expanded', 'true');
+            btn.textContent = 'Hide extra FAQs';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.getElementById('faqToggle');
+        if (!btn) return;
+        btn.addEventListener('click', toggleFaq);
+    });
+})();
