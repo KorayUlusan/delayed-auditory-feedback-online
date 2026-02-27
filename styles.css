@@ -911,7 +911,7 @@ a:hover {
     border-radius: 8px;
     margin-top: 10px;
     /* background: transparent; */
-    color: var(--primary);
+    color: var(--primary-color);
     min-width: 64px;
     text-align: center;
     transition: opacity 260ms ease, transform 260ms ease;
