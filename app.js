@@ -316,6 +316,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Attach click handler to the main DAF toggle button so the UI button
+    // triggers the shared `toggleDAF` logic defined on `window`.
+    const dafButton = document.getElementById('dafButton');
+    if (dafButton) {
+        dafButton.addEventListener('click', function () {
+            try {
+                if (typeof window.toggleDAF === 'function') {
+                    window.toggleDAF(this);
+                }
+            } catch (err) {
+                console.error('Error invoking toggleDAF from button:', err);
+            }
+        });
+    }
+
     // Add click handler to the status message to resume audio context
     document.getElementById('statusMessage').addEventListener('click', () => {
         if (window.speechProcessor &&
