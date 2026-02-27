@@ -82,33 +82,9 @@
         return { name: normalizedName, params: p };
     }
 
-    // Public helpers
-    function trackDAFEvent(action, label) {
-        sendEvent(action, { event_label: label, event_category: 'daf_usage' });
-    }
-
-    function trackControlEvent(controlName, value) {
-        // Debounce high-frequency control adjustments
-        sendEvent('adjust_settings', { event_label: `${controlName}: ${value}`, control: controlName, value }, { debounce: true, debounceMs: 5000 });
-    }
-
-    function trackErrorEvent(errorType, errorMessage) {
-        sendEvent('error', { event_category: 'daf_errors', event_label: `${errorType}: ${errorMessage}` });
-    }
-
-    function trackPageView(pagePath, additionalParams = {}) {
-        try {
-            window.gtag('event', 'page_view', Object.assign({ page_path: pagePath }, additionalParams));
-        } catch (e) {
-            window.dataLayer.push(['event', 'page_view', Object.assign({ page_path: pagePath }, additionalParams)]);
-        }
-    }
-
-    // Expose on window
-    window.trackDAFEvent = trackDAFEvent;
-    window.trackControlEvent = trackControlEvent;
-    window.trackErrorEvent = trackErrorEvent;
-    window.trackPageView = trackPageView;
+    // Expose only the normalized sendEvent helper on window. Other
+    // convenience wrappers are intentionally NOT exposed to ensure a
+    // single, consistent analytics surface across the app.
     window.sendAnalyticsEvent = sendEvent;
 
 })();

@@ -544,21 +544,9 @@ class SpeechProcessor {
             try {
                 const elapsedSeconds = Math.floor(this.elapsedTime / 1000);
 
-                // Use the project's preferred analytics wrapper if available
-                if (typeof sendGtagEvent === 'function') {
-                    sendGtagEvent('daf_active', { elapsedSeconds });
-                    return;
-                }
-
-                // Fallback to window-level helper if present
-                if (typeof window.sendGtagEvent === 'function') {
-                    window.sendGtagEvent('daf_active', { elapsedSeconds });
-                    return;
-                }
-
-                // Final fallback: use gtag directly if available
-                if (typeof window.gtag === 'function') {
-                    window.gtag('event', 'daf_active', {
+                // Send heartbeat via canonical analytics API
+                if (typeof window.sendAnalyticsEvent === 'function') {
+                    window.sendAnalyticsEvent('daf_active', {
                         event_category: 'DAF',
                         event_label: 'heartbeat',
                         value: elapsedSeconds
@@ -858,13 +846,8 @@ class SpeechProcessor {
         console.log(`Switching from device ${previousDevice ? previousDevice.label : 'default'} to ${nextDevice.label}`);
         // Analytics: record device switches if analytics helper is present
         try {
-            if (typeof sendGtagEvent === 'function') {
-                sendGtagEvent('device_switch', {
-                    from: previousDevice ? previousDevice.label : 'default',
-                    to: nextDevice.label
-                });
-            } else if (typeof window.sendGtagEvent === 'function') {
-                window.sendGtagEvent('device_switch', {
+            if (typeof window.sendAnalyticsEvent === 'function') {
+                window.sendAnalyticsEvent('device_switch', {
                     from: previousDevice ? previousDevice.label : 'default',
                     to: nextDevice.label
                 });

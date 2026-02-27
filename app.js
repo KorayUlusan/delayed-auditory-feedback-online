@@ -14,33 +14,8 @@ if ('serviceWorker' in navigator) {
 // Wake Lock variable to store reference
 let wakeLock = null;
 
-// Helper to safely send Google tag events if gtag is available
-function sendGtagEvent(action, params = {}) {
-    try {
-        // Prefer the real gtag if available
-        if (typeof window.gtag === 'function') {
-            window.gtag('event', action, params);
-            return;
-        }
-
-        // If the analytics wrapper is present, use its robust sender
-        if (typeof window.sendAnalyticsEvent === 'function') {
-            window.sendAnalyticsEvent(action, params);
-            return;
-        }
-
-        // Fallback: ensure dataLayer exists and push an event so it is queued
-        window.dataLayer = window.dataLayer || [];
-        // Use the array-style push compatible with gtag/dataLayer
-        window.dataLayer.push(['event', action, params]);
-    } catch (e) {
-        // Last-resort: log so developers can debug missing analytics
-        console.warn('gtag event failed:', e);
-    }
-}
-
-// Expose helper globally so other modules can use it
-try { window.sendGtagEvent = sendGtagEvent; } catch (e) { /* ignore */ }
+// NOTE: analytics should be sent via `window.sendAnalyticsEvent` only.
+// Other helpers were removed to enforce a single analytics surface.
 
 // Lazy-load the speech processor script when needed to avoid blocking initial load
 function loadSpeechProcessorScript() {
@@ -115,7 +90,9 @@ document.addEventListener('visibilitychange', function () {
     const isVisible = document.visibilityState === 'visible';
     console.log(`Page visibility changed: ${isVisible ? 'visible' : 'hidden'}`);
     // Report visibility changes to analytics
-    sendGtagEvent('page_visibility', { visibility: isVisible ? 'visible' : 'hidden' });
+    if (typeof window.sendAnalyticsEvent === 'function') {
+        window.sendAnalyticsEvent('page_visibility', { visibility: isVisible ? 'visible' : 'hidden' });
+    }
 
     // If page is visible and we have active audio that's suspended, try to resume it
     if (isVisible && window.speechProcessor &&
@@ -143,7 +120,9 @@ window.addEventListener('beforeunload', function () {
     // Release wake lock when page is closed
     releaseWakeLock();
     // Log session end
-    sendGtagEvent('session_end');
+    if (typeof window.sendAnalyticsEvent === 'function') {
+        window.sendAnalyticsEvent('session_end');
+    }
 });
 
 // Functions to handle UI controls and pass values to the speech processor
@@ -177,11 +156,13 @@ document.addEventListener('click', function () {
 window.toggleDAF = async function (button) {
     const isStarting = button.textContent === 'Start DAF';
 
-    // Track DAF button click as a key event in Google Analytics
-    sendGtagEvent(isStarting ? 'start_daf' : 'stop_daf', {
-        event_category: 'user_action',
-        event_label: isStarting ? 'DAF Started' : 'DAF Stopped'
-    });
+    // Track DAF button click via canonical analytics API
+    if (typeof window.sendAnalyticsEvent === 'function') {
+        window.sendAnalyticsEvent(isStarting ? 'start_daf' : 'stop_daf', {
+            event_category: 'user_action',
+            event_label: isStarting ? 'DAF Started' : 'DAF Stopped'
+        });
+    }
     console.log(`DAF ${isStarting ? 'start' : 'stop'} event tracked`);
 
     // Prevent creating multiple instances or starting multiple times
@@ -299,8 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.speechProcessor.updateDelayTime(val);
         }
         // Track control adjustment
-        if (typeof trackControlEvent === 'function') {
-            trackControlEvent('adjust_delay', `${val} ms`);
+        if (typeof window.sendAnalyticsEvent === 'function') {
+            window.sendAnalyticsEvent('adjust_delay', { value: val }, { debounce: true, debounceMs: 5000 });
         }
     });
 
@@ -311,8 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.speechProcessor.updateInputGain(val);
         }
         // Track control adjustment
-        if (typeof trackControlEvent === 'function') {
-            trackControlEvent('adjust_input_gain', `${val}x`);
+        if (typeof window.sendAnalyticsEvent === 'function') {
+            window.sendAnalyticsEvent('adjust_input_gain', { value: val }, { debounce: true, debounceMs: 5000 });
         }
     });
 
@@ -338,7 +319,9 @@ document.addEventListener('DOMContentLoaded', () => {
             window.speechProcessor.audioContext.state === 'suspended') {
 
             window.speechProcessor._attemptResumeAudio();
-            sendGtagEvent('resume_audio_attempt');
+            if (typeof window.sendAnalyticsEvent === 'function') {
+                window.sendAnalyticsEvent('resume_audio_attempt');
+            }
         }
     });
 
@@ -358,7 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     statusEl.classList.remove('status-default');
                     statusEl.classList.add('status-info');
                 }
-                sendGtagEvent('device_status_click_inactive');
+                if (typeof window.sendAnalyticsEvent === 'function') {
+                    window.sendAnalyticsEvent('device_status_click_inactive');
+                }
                 return;
             }
 
@@ -371,7 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     statusEl.classList.remove('status-default', 'status-info');
                     statusEl.classList.add('status-success');
                 }
-                sendGtagEvent('device_status_click_active', { device: deviceName });
+                if (typeof window.sendAnalyticsEvent === 'function') {
+                    window.sendAnalyticsEvent('device_status_click_active', { device: deviceName });
+                }
             } catch (e) {
                 console.warn('Error handling deviceStatus click:', e);
             }
@@ -395,7 +382,9 @@ document.addEventListener('DOMContentLoaded', () => {
             question.classList.toggle('active', !isVisible);
 
             // Analytics
-            sendGtagEvent('faq_interaction', { question: question.textContent });
+            if (typeof window.sendAnalyticsEvent === 'function') {
+                window.sendAnalyticsEvent('faq_interaction', { question: question.textContent });
+            }
         });
 
         // Add accessibility attributes
