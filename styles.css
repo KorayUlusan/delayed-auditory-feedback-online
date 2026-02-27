@@ -174,8 +174,10 @@ input:checked+.slider {
     background-color: var(--primary-color);
 }
 
+/* Position the thumb using left so it adapts to varying thumb/container sizes */
 input:checked+.slider:before {
-    transform: translateX(26px);
+    left: calc(100% - 26px - 4px);
+    transform: none;
 }
 
 .slider.round {
@@ -686,6 +688,12 @@ a:hover {
         width: 30px;
         left: 4px;
         bottom: 4px;
+    }
+
+    /* Mobile-specific checked position for the larger thumb */
+    input:checked + .slider:before {
+        left: calc(100% - 30px - 4px);
+        transform: none;
     }
 }
 
