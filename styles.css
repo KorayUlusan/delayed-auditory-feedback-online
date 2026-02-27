@@ -169,6 +169,8 @@ button:active {
     left: 4px;
     position: absolute;
     transition: 0.4s;
+    top: 50%;
+    transform: translateY(-50%);
     width: 26px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
