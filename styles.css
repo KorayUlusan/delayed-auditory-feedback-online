@@ -13,6 +13,7 @@
     --slider-thumb-hover-color: #004494;
     --border-radius: 8px;
     --transition-speed: 0.3s;
+    --app-background-color: #f2f4f8;
 }
 
 [data-theme="dark"] {
@@ -30,6 +31,7 @@
     --slider-track-color: #444;
     --slider-thumb-color: #3d85c6;
     --slider-thumb-hover-color: #2d6da3;
+    --app-background-color: #1e1e1e;
 }
 
 * {
@@ -623,6 +625,20 @@ a:hover {
     }
 }
 
+#toc a {
+    text-decoration: none;
+    white-space: nowrap;
+    /* This replaces your &nbsp; safely */
+    margin: 0 3px;
+}
+
+/* This automatically adds the middle dots between links */
+#toc a:not(:last-child)::after {
+    content: " ·";
+    margin-left: 4px;
+    color: #888;
+}
+
 @media (max-width: 768px) {
 
     /* Touch + readability improvements for tablet / small phones */
@@ -747,6 +763,40 @@ a:hover {
     .theme-switch-wrapper {
         justify-content: space-between;
     }
+
+    #toc {
+        display: flex;
+        flex-wrap: wrap;
+        /* Allows links to jump to the next line on mobile */
+        align-items: center;
+        gap: 8px;
+        /* Consistent spacing without manual margins */
+        padding: 10px 0;
+        justify-content: center;
+    }
+
+    #toc a {
+        text-decoration: none;
+        white-space: nowrap;
+        /* Keeps "Use the App" on one line */
+        background: #f0f0f0;
+        /* Optional: makes them look like clickable buttons */
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    /* Hide the dots on mobile since they are now on separate lines */
+    #toc a:not(:last-child)::after {
+        /* Remove the dots for mobile; they look messy when links wrap */
+        /* Instead, we use the 'background' and 'gap' above for a cleaner look */
+        content: "";
+        margin: 0;
+    }
+
+
+
 }
 
 /* Print styles */
@@ -893,3 +943,12 @@ a:hover {
     outline: 3px solid rgba(0, 62, 126, 0.12);
     outline-offset: 2px;
 }
+
+#controls {
+    background-color: var(--box-background-color);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px var(--box-shadow-color);
+    transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+  

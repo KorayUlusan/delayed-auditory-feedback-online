@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Free Online DAF App: Delayed Auditory Feedback for Stuttering</title>
+  <title>Online DAF App: Delayed Auditory Feedback for Stuttering</title>
   <meta name="description"
-    content="Improve speech fluency instantly with our Free Online DAF App. Designed for stuttering treatment and speech therapy, this browser-based app offers 0-500ms adjustable delay. No downloads, 100% private, and therapist-recommended. Try it now.">
+    content="Improve speech fluency with a professional browser-based DAF app. Designed for stuttering treatment and speech therapy, this private, no-install app offers 0-500ms adjustable delay. Accessible at no cost and recommended by therapists.">
   <meta name="keywords"
     content="DAF app, delayed auditory feedback online, stuttering treatment, speech therapy app, fluency disorder help, online DAF, free stuttering app, speech delay feedback, DAF therapy, stuttering exercises, speech fluency app, altered auditory feedback, stuttering aid">
   <meta name="author" content="Koray Ulusan">
@@ -26,7 +26,7 @@
   <meta property="og:url" content="https://korayulusan.github.io/delayed-auditory-feedback-online/">
   <meta property="og:title" content="Delayed Auditory Feedback (DAF) Online App for Speech Fluency">
   <meta property="og:description"
-    content="Free Online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Works instantly in your browser with no downloads required.">
+    content="Online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Private, browser-based, and accessible at no cost.">
   <meta property="og:image" content="https://korayulusan.github.io/delayed-auditory-feedback-online/images/daf-social-preview.png">
   <meta property="og:site_name" content="DAF Online App">
   <meta property="og:locale" content="en_US">
@@ -36,7 +36,7 @@
   <meta name="twitter:url" content="https://korayulusan.github.io/delayed-auditory-feedback-online/">
   <meta name="twitter:title" content="Delayed Auditory Feedback (DAF) Online App for Speech Fluency">
   <meta name="twitter:description"
-    content="Free Online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Works instantly in your browser with no downloads required.">
+    content="Online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Private, browser-based, and accessible at no cost.">
   <meta name="twitter:image" content="https://korayulusan.github.io/delayed-auditory-feedback-online/images/daf-social-preview.png">
 
   <!-- Canonical URL -->
@@ -133,7 +133,9 @@
   <noscript>
     <link rel="stylesheet" href="styles.min.css">
   </noscript>
-  <!-- Favicon setup for better Google search results -->
+  <!-- <link rel="preload" href="styles.css" as="style" onload="this.rel='stylesheet'"> -->
+
+  <!-- favicons -->
   <link rel="icon" href="favicon/favicon-32x32.png" type="image/png">
   <link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
   <link rel="apple-touch-icon" sizes="57x57" href="favicon/apple-icon-57x57.png">
@@ -157,115 +159,73 @@
   <link rel="preconnect" href="https://www.googletagmanager.com">
   <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 
-  <!-- Structured data for better SEO -->
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Delayed Auditory Feedback (DAF) Online App",
-      "alternateName": "DAF Online App for Stuttering",
-      "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/",
-      "description": "Free online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Works instantly in your browser with adjustable delay settings from 0-500ms.",
-      "applicationCategory": "HealthApplication",
-      "operatingSystem": "Any",
-      "browserRequirements": "Requires a modern browser with microphone access (Chrome, Firefox, Safari, Edge)",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "creator": {
-        "@type": "Organization",
-        "name": "DAF Online",
-        "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.7",
-        "ratingCount": "143",
-        "bestRating": "5",
-        "worstRating": "1"
-      },
-      "featureList": [
-        "Real-time delayed auditory feedback",
-        "Adjustable delay from 0-500 milliseconds",
-        "Microphone gain control",
-        "No installation required",
-        "Works on mobile and desktop",
-        "Completely free to use",
-        "Privacy-focused - all processing done locally"
-      ],
-      "screenshot": "https://korayulusan.github.io/delayed-auditory-feedback-online/images/daf-social-preview.png"
-    }
-    </script>
-
-  <!-- Breadcrumb structured data -->
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [{
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://korayulusan.github.io/delayed-auditory-feedback-online/"
-      }]
-    }
-    </script>
+  <!-- Merged structured data (single JSON-LD graph) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Online DAF App",
-    "operatingSystem": "Web Browser",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.7",
-      "ratingCount": "143"
-    },
-    "applicationCategory": "HealthApplication",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://korayulusan.github.io/delayed-auditory-feedback-online/#app",
+        "name": "DAF Online App",
+        "alternateName": "Delayed Auditory Feedback (DAF) for Stuttering",
+        "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/",
+        "description": "Professional browser-based Delayed Auditory Feedback (DAF) tool for speech fluency and stuttering management. Private, secure, and runs locally.",
+        "applicationCategory": "HealthApplication, Speech Therapy Tool",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires microphone access",
+        "softwareVersion": "1.0",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.7",
+          "ratingCount": "143"
+        },
+        "author": { "@id": "https://github.com/korayulusan" },
+        "publisher": { "@id": "#daf-org" },
+        "mainEntityOfPage": { "@id": "https://korayulusan.github.io/delayed-auditory-feedback-online/#medical-disclaimer" }
+      },  
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://korayulusan.github.io/delayed-auditory-feedback-online/" }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to use the Online DAF App",
+        "step": [
+          { "@type": "HowToStep", "text": "Plug in wired headphones to avoid audio latency." },
+          { "@type": "HowToStep", "text": "Click 'Start DAF Session' and allow microphone access." },
+          { "@type": "HowToStep", "text": "Adjust the delay slider to your comfort level (usually 50-150ms)." }
+        ]
+      },
+      {
+        "@id": "#daf-org",
+        "@type": "Organization",
+        "name": "DAF Online App",
+        "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/",
+        "logo": "https://korayulusan.github.io/delayed-auditory-feedback-online/favicon/android-icon-192x192.png",
+        "description": "Provider of accessible online delayed auditory feedback apps for speech therapy and stuttering treatment",
+        "foundingDate": "2024"
+      }
+      ,
+      {
+        "@type": "MedicalWebPage",
+        "name": "Medical Disclaimer — DAF Online App",
+        "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/#medical-disclaimer",
+        "description": "The DAF Online App is provided as an informational and practice tool to assist with speech fluency. It is not a substitute for professional medical advice, diagnosis, or treatment.",
+        "author": { "@id": "#daf-org" },
+        "datePublished": "2024-01-01",
+        "dateModified": "2026-02-25"
+      }
+    ]
   }
-    </script>
-
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      "name": "How to use the Online DAF App",
-      "step": [
-        {
-          "@type": "HowToStep",
-          "text": "Plug in wired headphones to avoid audio latency."
-        },
-        {
-          "@type": "HowToStep",
-          "text": "Click 'Start DAF Session' and allow microphone access."
-        },
-        {
-          "@type": "HowToStep",
-          "text": "Adjust the delay slider to your comfort level (usually 50-150ms)."
-        }
-      ]
-    }
-    </script>
-
-  <!-- Organization structured data -->
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "DAF Online App",
-      "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/",
-      "logo": "https://korayulusan.github.io/delayed-auditory-feedback-online/favicon/android-icon-192x192.png",
-      "description": "Provider of free online delayed auditory feedback apps for speech therapy and stuttering treatment",
-      "foundingDate": "2024"
-    }
-    </script>
+  </script>
   <!-- RSS feed -->
   <link rel="alternate" type="application/rss+xml" title="DAF Online - RSS Feed" href="rss.xml">
 </head>
@@ -275,14 +235,27 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-J3ZKY02K30"></script>
 
   <header>
-    <h1>Free Online DAF App: Delayed Auditory Feedback for Stuttering</h1>
-    <p id="belowh1">Professional speech fluency aid for therapists and individuals.</p>
+    <h1>Online DAF App: Delayed Auditory Feedback for Speech Fluency</h1>
+    <p id="belowh1">Professional browser-based speech fluency aid for therapists and individuals.</p>
+
+    <nav id="toc" aria-label="Table of contents">
+      <strong>Contents:</strong>
+      <a href="#controls">Use the App</a>
+      <a href="#about-heading">What is DAF</a>
+      <!-- <a href="#benefits-heading">Benefits</a> -->
+      <a href="#usage-tips-heading">Usage Tips</a>
+      <a href="#science-heading">Science</a>
+      <a href="#faq-heading">FAQ</a>
+      <!-- <a href="#resources-heading">Resources</a> -->
+      <!-- <a href="#medical-disclaimer">Medical Disclaimer</a> -->
+    </nav>
   </header>
 
   <main>
-    <section id="controls">
+    <!-- controls needs to feel different from rest of the page.as if its an app-->
+    <section id="controls" aria-label="Delayed Auditory Feedback App Controls">
       <!-- <hr /> -->
-      <button id="dafButton" aria-pressed="false">Start DAF</button>
+      <button id="dafButton" aria-pressed="false" aria-label="Start Delayed Auditory Feedback session">Start DAF</button>
       <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
       <p id="dafTimer" class="timer-display">00:00</p>
       <div class="sliders">
@@ -307,19 +280,16 @@
       <div id="quick-info">
         <p><strong>Privacy-First:</strong> Your Voice Never Leaves Your Device!</p>
       </div>
-      <hr />
-      <div class="theme-switch-wrapper">
-        <em>Dark Mode</em>
-        <label class="theme-switch" for="checkbox">
-          <input type="checkbox" id="checkbox">
-          <div class="slider round"></div>
-        </label>
-      </div>
-      <!-- <hr /> -->
-
     </section>
 
-
+    <hr />
+    <div class="theme-switch-wrapper">
+      <em>Dark Mode</em>
+      <label class="theme-switch" for="checkbox">
+        <input type="checkbox" id="checkbox">
+        <div class="slider round"></div>
+      </label>
+    </div>
 
     <section class="boxed-section" id="infoBox" aria-labelledby="about-heading">
       <h2 id="about-heading">What is Delayed Auditory Feedback (DAF) for Stuttering?</h2>
@@ -329,7 +299,8 @@
       </p>
       <p>
         That tiny delay naturally encourages the speaker to slow down. For those seeking effective stuttering management, this effect can be transformative.
-        Professional Speech-Language Pathologists (SLPs) have used DAF for decades because research consistently shows it assists in fluency shaping and reduces the
+        Professional Speech-Language Pathologists (SLPs) <a href="https://www.stutteringhelp.org" rel="noopener noreferrer" target="_blank">have used DAF for decades</a> because
+        research consistently shows it assists in fluency shaping and reduces the
         frequency of stuttering blocks.
       </p>
 
@@ -340,8 +311,18 @@
         We built this app to provide a non-pharmacological treatment aid that is accessible to anyone. No downloads, no signup forms, and no payment information required.
       </p>
 
+      <p id="medical-disclaimer">
+        <strong>Medical Disclaimer:</strong>
+        The DAF Online App is provided as an informational and practice tool to assist with speech fluency. It is not a substitute for <a
+          href="https://www.asha.org/public/speech/disorders/stuttering/" target="_blank" rel="noopener">professional medical
+          advice, diagnosis, or
+          treatment</a>. If you or someone you care for has significant concerns about stuttering or other speech disorders, please consult a qualified speech-language pathologist
+        (SLP)
+        or licensed healthcare professional.
+      </p>
 
-      <h3 id="how-it-works-heading">How does Delayed Auditory Feedback work?</h3>
+
+      <h3 id="how-it-works-heading">How does <a href="#top">Auditory Feedback</a> work in this DAF Tool?</h3>
       <p>
         Normally, your brain hears your voice the instant you speak. DAF introduces a delay of 20 to 500 milliseconds.
         Your brain notices the timing shift, and you unconsciously adjust your speech rate, slowing down and becoming more aware of articulation.
@@ -360,8 +341,12 @@
 
       <h3 id="benefits-heading">Why Use This Online Stuttering Aid?</h3>
 
+      <p>This <a href="#controls">DAF software</a> functions as a web-based <a href="#controls">DAF app</a>, eliminating the need for downloads while providing professional-grade
+        delayed auditory
+        feedback.</p>
+
       <ul class="leadsto-list">
-        <li>It's completely free with no premium paywalls.</li>
+        <li>Accessible at no cost with no premium paywalls.</li>
         <li>Works in your browser on mobile, tablet, or desktop.</li>
         <li>100% privacy: audio never leaves your device.</li>
         <li>Adjustable delay (0-500ms) to find your perfect setting.</li>
@@ -416,14 +401,15 @@
 
     </section>
 
-
     <section class="boxed-section" id="science" aria-labelledby="science-heading">
       <h2 id="science-heading">The Science Behind DAF</h2>
 
       <p>
-        Delayed Auditory Feedback isn't new. Researchers first studied it in the
-        1950s. Back then, they noticed that when people who stutter heard their own voice on a tiny delay, their speech often cleared up instantly.
+        Delayed Auditory Feedback isn't new. Researchers
+        <a href="https://pubs.asha.org/doi/10.1044/jshd.2004.333" target="_blank" rel="noopener">first studied it in the 1950s</a>.
+        Back then, they noticed that when people who stutter heard their own voice on a tiny delay, their speech often cleared up instantly.
       </p>
+
       <p>
         Modern neuroscience has given us a better look at why this actually happens:
       </p>
@@ -434,24 +420,27 @@
       <h3>Fixing the "Feedback Loop"</h3>
       <p>
         Stuttering is often linked to how the brain processes its own speech timing. DAF shifts that timing, forcing the brain to stop over-relying on external sound and lean more
-        on its <strong>internal timing mechanisms</strong>. Research on speech motor
-        control shows this can bypass the "glitch" that causes a block.
+        on its <a href="https://doi.org/10.3389/fnhum.2025.1628114" target="_blank" rel="noopener"><strong>internal timing mechanisms</strong></a>.
+        Research on speech motor control shows this can bypass the "glitch" that causes a block.
       </p>
 
       <h3>The Natural Slow-Down</h3>
       <p>
-        It's almost impossible to speak fast when you hear your voice trailing behind you. This app naturally encourages <strong>Speech Rate Reduction</strong>. By slowing down,
-        you're giving your brain the extra milliseconds it needs for speech motor planning, which makes disfluencies much less likely.
+        It's almost impossible to speak fast when you hear your voice trailing behind you. This app naturally encourages
+        <a href="https://doi.org/10.1044/jshr.2502.208" target="_blank" rel="noopener"><strong>Speech Rate Reduction</strong></a>.
+        By slowing down, you're giving your brain the extra milliseconds it needs for speech motor planning, which makes disfluencies much less likely.
       </p>
 
       <h3>The "Choral Speech" Effect</h3>
       <p>
-        Have you ever noticed that most people don't stutter when they sing or speak in a crowd? That's called the choral effect. DAF mimics this by making it sound like someone is
-        speaking right along with you, which can dramatically boost fluency.
+        Have you ever noticed that most people don't stutter <a href="https://doi.org/10.1016/j.jfludis.2025.106168" target="_blank" rel="noopener">when they sing or speak in a
+          crowd?</a> That's called the
+        <strong>choral effect</strong>.
+        DAF mimics this by making it sound like someone is speaking right along with you, which can dramatically boost fluency.
       </p>
 
       <p>
-        <strong>A quick note:</strong> While the science is solid, everyone's brain is wired differently. Some people see a huge change immediately, while others use it as a
+        While the science is solid, everyone's brain is wired differently. Some people see a huge change immediately, while others use it as a
         secondary app. It's always best to use this as one part of a bigger plan with a qualified speech therapist.
       </p>
     </section>
@@ -521,7 +510,7 @@
         </div>
 
         <button id="faqToggle" class="faq-toggle" aria-expanded="false" aria-controls="moreFaq">Show more FAQs</button>
-        
+
         <div id="moreFaq" hidden>
 
 
@@ -734,7 +723,8 @@
 
     <section class="boxed-section" id="resources" aria-labelledby="resources-heading">
       <h2 id="resources-heading">Want to Dive Deeper?</h2>
-      <p>While this app is a great place to start, there is a wealth of expert knowledge available if you're looking for long-term support or the hard science behind the
+      <p>While this app is a great place to start, there is a <a href="https://pubmed.ncbi.nlm.nih.gov/?term=delayed+auditory+feedback" target="_blank"
+          rel="noopener noreferrer">wealth of expert knowledge available</a> if you're looking for long-term support or the hard science behind the
         technology.</p>
 
       <ul class="leadsto-list resources-list">
