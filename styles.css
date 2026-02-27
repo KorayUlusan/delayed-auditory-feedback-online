@@ -126,7 +126,11 @@ button:active {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    margin-bottom: 20px;
+    /* center within the page content and match other component padding */
+    margin: 0 auto 20px;
+    padding: 0 25px;
+    width: 100%;
+    max-width: 800px;
 }
 
 .theme-switch-wrapper em {
@@ -160,7 +164,6 @@ button:active {
 
 .slider:before {
     background-color: white;
-    bottom: 4px;
     content: "";
     height: 26px;
     left: 4px;
@@ -177,7 +180,7 @@ input:checked+.slider {
 /* Position the thumb using left so it adapts to varying thumb/container sizes */
 input:checked+.slider:before {
     left: calc(100% - 26px - 4px);
-    transform: none;
+    transform: translateY(-50%);
 }
 
 .slider.round {
@@ -693,7 +696,7 @@ a:hover {
     /* Mobile-specific checked position for the larger thumb */
     input:checked + .slider:before {
         left: calc(100% - 30px - 4px);
-        transform: none;
+        transform: translateY(-50%);
     }
 }
 
@@ -769,7 +772,11 @@ a:hover {
     }
 
     .theme-switch-wrapper {
-        justify-content: space-between;
+        justify-content: flex-end;
+        gap: 10px;
+        /* align with page padding on small screens */
+        padding-left: 0;
+        padding-right: 0;
     }
 
     #toc {
