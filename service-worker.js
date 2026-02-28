@@ -14,19 +14,19 @@ const MAX_RUNTIME_ENTRIES = 50; // max number of runtime cached items
 const ASSETS_STATIC = [
   'favicon/favicon.ico',
   'favicon/favicon-32x32.png',
-  // Illustrations and themed SVGs (pre-cache to ensure long-lived client-side caching)
-  'images/daf-beneficiaries-illustration-dark.svg',
-  'images/daf-beneficiaries-illustration-light.svg',
-  'images/daf-science-chart-light.svg',
-  'images/daf-science-chart-dark.svg',
-  'images/daf-usage-cycle-illustration-dark.svg',
-  'images/daf-usage-cycle-illustration-light.svg',
-  'images/speech-fluency-progress-graph-dark.svg',
-  'images/speech-fluency-progress-graph-light.svg',
-  'images/daf-benefits-infographic-light.svg',
-  'images/daf-benefits-infographic-dark.svg',
-  'images/daf-usage-tips-infographic-dark.svg',
-  'images/daf-usage-tips-infographic-light.svg'
+  // Illustrations and themed pngs (pre-cache to ensure long-lived client-side caching)
+  'images/daf-beneficiaries-illustration-dark.png',
+  'images/daf-beneficiaries-illustration-light.png',
+  'images/daf-science-chart-light.png',
+  'images/daf-science-chart-dark.png',
+  'images/daf-usage-cycle-illustration-dark.png',
+  'images/daf-usage-cycle-illustration-light.png',
+  'images/speech-fluency-progress-graph-dark.png',
+  'images/speech-fluency-progress-graph-light.png',
+  'images/daf-benefits-infographic-light.png',
+  'images/daf-benefits-infographic-dark.png',
+  'images/daf-usage-tips-infographic-dark.png',
+  'images/daf-usage-tips-infographic-light.png'
 ];
 
 // JavaScript files separated so we can treat them as distinct precache group
