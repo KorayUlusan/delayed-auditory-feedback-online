@@ -5,8 +5,8 @@ const RUNTIME_CACHE = `daf-runtime-${CACHE_VERSION}`;
 
 // Cache lifetime settings (milliseconds)
 const MAX_AGE_STATIC = 30 * 24 * 60 * 60 * 1000; // 30 days
-const MAX_AGE_HTML = 60 * 60 * 1000; // 1 hour
-const MAX_AGE_RUNTIME = 7 * 24 * 60 * 60 * 1000; // 7 days
+const MAX_AGE_HTML = 1 * 60 * 60 * 1000; // 1 hour
+const MAX_AGE_RUNTIME = 1 * 24 * 60 * 60 * 1000; // 1 day
 const MAX_RUNTIME_ENTRIES = 50; // max number of runtime cached items
 
 // Split precache lists by expected TTL/use-case so we can apply different
