@@ -213,7 +213,7 @@ window.toggleDAF = async function (button) {
                 // Inform the user that we're beginning the audio connection
                 try {
                     if (window.speechProcessor && typeof window.speechProcessor._updateStatus === 'function') {
-                        window.speechProcessor._updateStatus('Starting audio connection...', 'info');
+                        window.speechProcessor._updateStatus('Starting audio connection...', 'loading');
                     }
                 } catch (e) {
                     console.warn('Failed to set starting status message:', e);
