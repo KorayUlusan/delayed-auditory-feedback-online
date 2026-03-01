@@ -549,7 +549,7 @@ class SpeechProcessor {
                     window.sendAnalyticsEvent('daf_active', {
                         event_category: 'DAF',
                         event_label: 'heartbeat',
-                        value: elapsedSeconds
+                        daf_usage_s: elapsedSeconds
                     });
                 }
             } catch (e) {
