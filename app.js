@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Track control adjustment
         if (typeof window.sendAnalyticsEvent === 'function') {
-            window.sendAnalyticsEvent('adjust_delay', { value: val }, { debounce: true, debounceMs: 5000 });
+            window.sendAnalyticsEvent('adjust_delay', { current_delay_ms: val }, { debounce: true, debounceMs: 5000 });
         }
     });
 
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Track control adjustment
         if (typeof window.sendAnalyticsEvent === 'function') {
-            window.sendAnalyticsEvent('adjust_input_gain', { value: val }, { debounce: true, debounceMs: 5000 });
+            window.sendAnalyticsEvent('adjust_input_gain', { current_input_gain: val }, { debounce: true, debounceMs: 5000 });
         }
     });
 
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Analytics
             if (typeof window.sendAnalyticsEvent === 'function') {
-                window.sendAnalyticsEvent('faq_interaction', { question: question.textContent });
+                window.sendAnalyticsEvent('faq_interaction', { faq_question: question.textContent });
             }
         });
 

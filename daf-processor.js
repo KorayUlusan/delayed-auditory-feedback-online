@@ -849,7 +849,7 @@ class SpeechProcessor {
             if (typeof window.sendAnalyticsEvent === 'function') {
                 window.sendAnalyticsEvent('device_switch', {
                     from: previousDevice ? previousDevice.label : 'default',
-                    to: nextDevice.label
+                    to_device_name: nextDevice.label
                 });
             }
         } catch (e) {
