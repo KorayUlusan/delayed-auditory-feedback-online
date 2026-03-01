@@ -111,9 +111,6 @@ class SpeechProcessor {
             }
 
             this._updateUIControls(true);
-            this._startTimer();
-            // start periodic analytics heartbeat for active DAF
-            this._startAnalyticsHeartbeat();
         }
     }
 
