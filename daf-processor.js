@@ -468,14 +468,17 @@ class SpeechProcessor {
 
         statusElement.textContent = message;
 
-        // Remove all status classes
-        statusElement.classList.remove('status-success', 'status-error', 'status-default');
+        // Remove all status classes including loading
+        statusElement.classList.remove('status-success', 'status-error', 'status-default', 'status-loading');
 
         // Add appropriate class based on status type
         if (type === 'success') {
             statusElement.classList.add('status-success');
         } else if (type === 'error') {
             statusElement.classList.add('status-error');
+        } else if (type === 'loading') {
+            // Use a distinct loading style that pulses to indicate activity
+            statusElement.classList.add('status-loading');
         } else {
             statusElement.classList.add('status-default');
         }
