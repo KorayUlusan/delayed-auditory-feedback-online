@@ -297,6 +297,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Preload speech processor after page has loaded to improve responsiveness.
+    // Use requestIdleCallback when available to avoid blocking initial rendering.
+    if (typeof loadSpeechProcessorScript === 'function') {
+        const preload = () => {
+            // Avoid unnecessary work if already loaded or loading
+            if (window.SpeechProcessor || document.querySelector('script[data-daf-processor]')) return;
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => loadSpeechProcessorScript().catch(err => console.warn('Preload failed:', err)));
+            } else {
+                setTimeout(() => loadSpeechProcessorScript().catch(err => console.warn('Preload failed:', err)), 2000);
+            }
+        };
+
+        // Schedule preload after initial UI setup completes
+        setTimeout(preload, 0);
+    }
+
     // Attach click handler to the main DAF toggle button so the UI button
     // triggers the shared `toggleDAF` logic defined on `window`.
     const dafButton = document.getElementById('dafButton');
