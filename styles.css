@@ -326,15 +326,15 @@ input[type="range"]:focus {
 
 /* Loading status: pulsing to indicate activity */
 .status-loading {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: #f0f0f0;
+    color: #555;
     border: none;
     animation: status-pulse 1.4s ease-in-out infinite;
 }
 
 [data-theme="dark"] .status-loading {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: #333;
+    color: #ccc;
 }
 
 @keyframes status-pulse {
@@ -342,10 +342,12 @@ input[type="range"]:focus {
         box-shadow: 0 0 0 0 rgba(0, 86, 179, 0);
         transform: translateY(0);
     }
+
     50% {
         box-shadow: 0 0 14px 6px rgba(0, 86, 179, 0.12);
         transform: translateY(-1px);
     }
+
     100% {
         box-shadow: 0 0 0 0 rgba(0, 86, 179, 0);
         transform: translateY(0);
