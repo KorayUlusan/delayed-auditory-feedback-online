@@ -110,7 +110,6 @@ class SpeechProcessor {
                 }
             }
 
-            this._updateStatus('Auditory Feedback Active', 'success');
             this._updateUIControls(true);
             this._startTimer();
             // start periodic analytics heartbeat for active DAF

@@ -239,6 +239,14 @@ window.toggleDAF = async function (button) {
             // Initialize device detection to automatically find headphone microphones
             window.speechProcessor.initializeDeviceDetection().then(() => {
                 console.log('Audio device detection initialized');
+                // Inform the user that we're beginning the audio connection
+                try {
+                    if (window.speechProcessor && typeof window.speechProcessor._updateStatus === 'function') {
+                        window.speechProcessor._updateStatus('Auditory Feedback Active', 'success');
+                    }
+                } catch (e) {
+                    console.warn('Failed to set starting status message:', e);
+                }
             });
         };
 
