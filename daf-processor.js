@@ -64,6 +64,13 @@ class SpeechProcessor {
         } catch (error) {
             console.error('Speech Processor Initialization Error:', error);
 
+            // TODO: i need a good way to log errors. 
+            window.sendAnalyticsEvent('daf_initialization_error', {
+                event_category: 'DAF',
+                event_label: error.name || 'Unknown Error',
+                error_message: error.message || 'No message'
+            });
+
             const isLocalFile = window.location.href.includes('file://');
 
             // Check if the error is related to AudioContext
