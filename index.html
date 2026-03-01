@@ -42,7 +42,21 @@
 
   <!-- Canonical URL -->
   <link rel="canonical" href="https://korayulusan.github.io/delayed-auditory-feedback-online/">
-  <base href="/delayed-auditory-feedback-online/">
+  <base id="site-base" href="/delayed-auditory-feedback-online/">
+  <script>
+    // adjusts base url when accessed as local file to not break relative links
+    (function () {
+      try {
+        var b = document.getElementById('site-base');
+        if (!b) return;
+        if (location && location.protocol === 'file:') {
+          b.setAttribute('href', './');
+        }
+      } catch (e) {
+        /* fail silently */
+      }
+    })();
+  </script>
 
   <!-- Inline critical CSS to reduce render-blocking and improve LCP -->
   <style>
@@ -52,7 +66,7 @@
       --background-color: #f9f9f9;
       --text-color: #333;
       --box-background-color: white;
-      --box-shadow-color: rgba(0, 0, 0, 0.1);
+      --box-shadow-color: rgba(0, 0, 0, 0.1)
     }
 
     html,
@@ -230,12 +244,24 @@
   <header>
     <h1>Online DAF App: Delayed Auditory Feedback for Stuttering</h1>
     <p id="belowh1">Professional browser-based speech fluency aid for therapists and individuals.</p>
+
+
+    <nav id="toc" aria-label="Table of contents">
+      <strong>Contents:</strong>
+      <a href="#controls">Use the App</a>
+      <a href="#about-heading">What is DAF</a>
+      <!-- <a href="#benefits-heading">Benefits</a> -->
+      <a href="#usage-tips-heading">Usage Tips</a>
+      <a href="#science-heading">Science</a>
+      <a href="#faq-heading">FAQ</a>
+      <!-- <a href="#resources-heading">Resources</a> -->
+      <!-- <a href="#medical-disclaimer">Medical Disclaimer</a> -->
+    </nav>
+
   </header>
 
   <main>
-    <!-- controls needs to feel different from rest of the page.as if its an app-->
     <section id="controls" aria-label="Delayed Auditory Feedback App Controls">
-      <!-- <hr /> -->
       <button id="dafButton" aria-pressed="false" aria-label="Start Delayed Auditory Feedback session">Start DAF</button>
       <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
       <p id="dafTimer" class="timer-display">00:00</p>
@@ -273,7 +299,7 @@
     </div>
 
     <section class="boxed-section" id="infoBox" aria-labelledby="about-heading">
-      <h2 id="about-heading">What is Delayed Auditory Feedback (DAF) for Stuttering?</h2>
+      <h2 id="about-heading">Online DAF App for Stuttering</h2>
       <p>
         If you've ever worn headphones while speaking and heard your voice played back with a slight delay, you've experienced the sensation that DAF creates.
         <strong>Delayed Auditory Feedback</strong> is a form of altered auditory processing where you hear yourself speak a fraction of a second later than usual.
@@ -392,7 +418,7 @@
       </p>
 
       <p>
-        Modern neuroscience has given us a better look at why this actually happens:
+        Modern science has given us a better look at why this actually happens:
       </p>
 
       <img class="themed-graph" width="734" height="532" data-light="images/daf-science-chart-light.png" data-dark="images/daf-science-chart-dark.png"
