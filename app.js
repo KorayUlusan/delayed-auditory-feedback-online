@@ -210,6 +210,14 @@ window.toggleDAF = async function (button) {
             // audio context immediately in the same user gesture path if needed.
             try {
                 console.log('startWithProcessor: calling start()');
+                // Inform the user that we're beginning the audio connection
+                try {
+                    if (window.speechProcessor && typeof window.speechProcessor._updateStatus === 'function') {
+                        window.speechProcessor._updateStatus('Starting audio connection...', 'info');
+                    }
+                } catch (e) {
+                    console.warn('Failed to set starting status message:', e);
+                }
                 await window.speechProcessor.start();
                 console.log('startWithProcessor: start() completed');
 
