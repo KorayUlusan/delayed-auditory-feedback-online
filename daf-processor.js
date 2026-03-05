@@ -80,11 +80,11 @@ class SpeechProcessor {
                 error.message.includes('audio') ||
                 !window.AudioContext && !window.webkitAudioContext)) {
                 this._updateStatus('Sorry, we don\'t support your browser yet.', 'error');
-            } else {
-                this._updateStatus(`Error: ${error.message}`, 'error');
-            }
-
-            return false;
+            } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                this._updateStatus('Microphone access is required to use DAF. Please allow access and try again.', 'error');
+            } 
+            // we handle this case outside the class in app.js
+            throw new Error('Failed to start audio processing');
         }
     }
 
@@ -98,18 +98,13 @@ class SpeechProcessor {
 
             // Ensure applied audio node values reflect the current config
             if (this.audioContext && this.audioNodes) {
-                try {
-                    if (typeof this.updateGain === 'function') {
-                        this.updateGain(this.config.gain);
-                    }
-                    if (typeof this.updateDelayTime === 'function') {
-                        this.updateDelayTime(this.config.delayTime);
-                    }
-                } catch (e) {
-                    console.warn('Failed to apply initial gain/delay settings:', e);
+                if (typeof this.updateGain === 'function') {
+                    this.updateGain(this.config.gain);
+                }
+                if (typeof this.updateDelayTime === 'function') {
+                    this.updateDelayTime(this.config.delayTime);
                 }
             }
-
             this._updateUIControls(true);
         }
     }

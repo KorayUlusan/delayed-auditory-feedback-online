@@ -221,24 +221,6 @@ window.toggleDAF = async function (button) {
                 await window.speechProcessor.start();
                 console.log('startWithProcessor: start() completed');
 
-                // Some browsers leave the newly-created AudioContext in a suspended
-                // state unless resumed directly from a user gesture. Attempt to resume
-                // deterministically here.
-                if (window.speechProcessor.audioContext &&
-                    window.speechProcessor.audioContext.state === 'suspended') {
-                    try {
-                        await window.speechProcessor._attemptResumeAudio();
-                    } catch (e) {
-                        console.warn('AudioContext resume attempt failed:', e);
-                    }
-                }
-            } catch (startErr) {
-                console.error('Failed to start speech processor:', startErr);
-            }
-
-            // Initialize device detection to automatically find headphone microphones
-            window.speechProcessor.initializeDeviceDetection().then(() => {
-                console.log('Audio device detection initialized');
                 try {
                     if (window.speechProcessor && typeof window.speechProcessor._updateStatus === 'function') {
                         window.speechProcessor._updateStatus('Auditory Feedback Active', 'success');
@@ -248,7 +230,22 @@ window.toggleDAF = async function (button) {
                 } catch (e) {
                     console.warn('Failed to set starting status message:', e);
                 }
-            });
+
+                // Initialize device detection to automatically find headphone microphones
+                await window.speechProcessor.initializeDeviceDetection();
+                console.log('Audio device detection initialized');
+
+            } catch (startErr) {
+                console.error('Failed to start speech processor:', startErr);
+
+                // statusMessage element
+                const statusEl = document.getElementById('statusMessage');
+
+                if (!statusEl.classList.contains('status-error')) {
+                    window.speechProcessor._updateStatus('Please refresh the page and try again', 'error');
+                }
+            }
+
         };
 
         // Await the async starter so any thrown errors are visible in this user gesture
