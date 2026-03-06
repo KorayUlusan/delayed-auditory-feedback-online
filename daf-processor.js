@@ -50,9 +50,17 @@ class SpeechProcessor {
 
     // LIFECYCLE METHODS
 
-    async initializeAudio() {
+    // Accept an optional preAcquiredStream so getUserMedia can be called
+    // synchronously within a user gesture (avoids UA blocking the request).
+    async initializeAudio(preAcquiredStream = null) {
         try {
-            await this._requestMicrophoneAccess();
+            // If a stream was provided (pre-acquired during a click), use it
+            if (preAcquiredStream) {
+                this.audioStream = preAcquiredStream;
+                this.micAccessGranted = true;
+            } else {
+                await this._requestMicrophoneAccess();
+            }
             this._createAudioContext();
             this._logAudioContextInfo();
             this._createAudioNodes();
@@ -721,14 +729,53 @@ class SpeechProcessor {
         // Store previous device ID for logging
         const previousDeviceId = this.selectedDeviceId;
 
-        // Update the selected device ID
-        this.selectedDeviceId = deviceId;
-
-        // If already running, properly close previous connection and restart
+        // If already running, try to pre-acquire the new device stream
+        // during the user gesture, so the UA won't block getUserMedia.
         if (this.isAudioRunning) {
             console.log(`Switching from device ${previousDeviceId} to ${deviceId}`);
-            return await this.restartWithNewDevice();
+            try {
+                const constraints = {
+                    audio: {
+                        echoCancellation: false,
+                        autoGainControl: false,
+                        noiseSuppression: false,
+                        channelCount: 1,
+                        latencyHint: 'interactive',
+                        deviceId: { exact: deviceId }
+                    }
+                };
+
+                // Call getUserMedia immediately (inside the click handler callstack)
+                const preAcquiredStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                // Pass the pre-acquired stream into the restart flow so we don't
+                // trigger another getUserMedia after async awaits (which may be blocked).
+                const restarted = await this.restartWithNewDevice(preAcquiredStream);
+                if (restarted) {
+                    // Only set as selected if restart succeeded
+                    this.selectedDeviceId = deviceId;
+                } else {
+                    // revert selectedDeviceId on failure
+                    this.selectedDeviceId = previousDeviceId;
+                }
+                return restarted;
+            } catch (err) {
+                console.error('Failed to acquire selected device stream:', err);
+                // Give the user actionable feedback
+                if (err && err.name === 'NotAllowedError') {
+                    this._updateStatus('Microphone permission denied for that device', 'error');
+                } else {
+                    this._updateStatus('Could not switch microphone', 'error');
+                }
+                // revert selectedDeviceId on failure
+                this.selectedDeviceId = previousDeviceId;
+                return false;
+            }
         }
+
+        // If not running, simply update selectedDeviceId
+        this.selectedDeviceId = deviceId;
+        return true;
 
         return true;
     }
@@ -737,7 +784,13 @@ class SpeechProcessor {
      * Restart the audio processing with a new input device
      * @returns {Promise<boolean>} - Success or failure
      */
-    async restartWithNewDevice() {
+    /**
+     * Restart the audio processing with a new input device.
+     * If `preAcquiredStream` is provided it will be used instead of calling
+     * getUserMedia again (useful to keep the call inside a user gesture).
+     * @returns {Promise<boolean>}
+     */
+    async restartWithNewDevice(preAcquiredStream = null) {
         try {
             // Save current configuration
             const currentConfig = { ...this.config };
@@ -745,13 +798,21 @@ class SpeechProcessor {
             // Stop current processing and release previous microphone
             await this.stop();
 
+
             // Small delay to ensure clean shutdown and release of previous mic
             await new Promise(resolve => setTimeout(resolve, 300));
 
             // Restore configuration
             this.config = currentConfig;
 
-            // Start with new device
+            // If a pre-acquired stream was provided, set it so initializeAudio
+            // will reuse it instead of requesting permission again.
+            if (preAcquiredStream) {
+                this.audioStream = preAcquiredStream;
+                this.micAccessGranted = true;
+            }
+
+            // Start with (possibly pre-acquired) new device
             await this.start();
 
             return true;
@@ -857,14 +918,20 @@ class SpeechProcessor {
             // ignore analytics failures
         }
 
-        // Select and display the device - this will handle closing the previous mic connection
-        await this.selectAudioDevice(nextDevice.deviceId);
-        const isHeadphoneMic = this._isHeadphoneMic(nextDevice.label);
-        this._updateDeviceUI(nextDevice.label, isHeadphoneMic);
+        // Try to select the device. If selection fails, don't overwrite UI.
+        const switched = await this.selectAudioDevice(nextDevice.deviceId);
+        if (switched) {
+            const isHeadphoneMic = this._isHeadphoneMic(nextDevice.label);
+            this._updateDeviceUI(nextDevice.label, isHeadphoneMic);
 
-        // Show feedback to the user
-        this._updateStatus(`Switched to: ${nextDevice.label}`, 'success');
+            // Show feedback to the user
+            this._updateStatus(`Switched to: ${nextDevice.label}`, 'success');
 
-        return true;
+            return true;
+        } else {
+            // Selection failed; inform the user and keep previous UI state
+            this._updateStatus(`Failed to switch to: ${nextDevice.label}`, 'error');
+            return false;
+        }
     }
 }
