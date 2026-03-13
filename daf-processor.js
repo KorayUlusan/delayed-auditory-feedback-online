@@ -568,10 +568,47 @@ class SpeechProcessor {
 
         const sendEvent = () => {
             try {
+                // Only send heartbeat when audio is actively running and audible
+                if (!this.isAudioRunning) return;
+                if (!this.audioContext || this.audioContext.state !== 'running') return;
+
+                // If we don't have audio nodes or a stream, don't send heartbeats
+                if (!this.audioNodes) return;
+                if (!this.audioStream) return;
+
+                // If we have a gain node, treat gain === 0 as muted
+                if (this.audioNodes && this.audioNodes.gainNode && this.audioNodes.gainNode.gain) {
+                    const gainVal = this.audioNodes.gainNode.gain.value;
+                    if (typeof gainVal === 'number' && gainVal <= 0) return;
+                }
+
+                // Best-effort: treat tab as muted if all HTMLMediaElements are muted or at zero volume
+                // (There is no direct Web API to read a browser tab's mute state.)
+                try {
+                    const mediaEls = (typeof document !== 'undefined') ? document.querySelectorAll('audio,video') : [];
+                    if (mediaEls && mediaEls.length > 0) {
+                        let anyUnmuted = false;
+                        for (let i = 0; i < mediaEls.length; i++) {
+                            const el = mediaEls[i];
+                            try {
+                                if (!el.muted && el.volume > 0) { anyUnmuted = true; break; }
+                            } catch (e) { /* ignore stale/cross-origin elements */ }
+                        }
+                        if (!anyUnmuted) return;
+                    }
+                } catch (e) { /* ignore DOM access errors */ }
+
+                // If microphone tracks exist, ensure at least one is enabled
+                if (this.audioStream && this.audioStream.getAudioTracks) {
+                    const anyEnabled = this.audioStream.getAudioTracks().some(t => t.enabled !== false);
+                    if (!anyEnabled) return;
+                }
+
                 const elapsedSeconds = Math.floor(this.elapsedTime / 1000);
 
                 // Send heartbeat via canonical analytics API
                 if (typeof window.sendAnalyticsEvent === 'function') {
+                    // console.log('Sending DAF heartbeat analytics event at time elapsed:', elapsedSeconds, 'seconds');
                     window.sendAnalyticsEvent('daf_active', {
                         event_category: 'DAF',
                         event_label: 'heartbeat',
