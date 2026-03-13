@@ -79,6 +79,9 @@ class SpeechProcessor {
                 error_message: error.message || 'No message'
             });
 
+            // Ensure analytics heartbeat is stopped when initialization fails
+            try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
+
             const isLocalFile = window.location.href.includes('file://');
 
             // Check if the error is related to AudioContext
@@ -294,6 +297,8 @@ class SpeechProcessor {
 
             // Always set to null to prevent reuse of a closed context
             this.audioContext = null;
+            // Stop analytics heartbeat when the audio context is closed
+            try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
         }
     }
 
@@ -306,26 +311,36 @@ class SpeechProcessor {
         this.isAudioRunning = false;
         this.audioSuspendedByBackground = false;
         this.resumeAttempts = 0;
+        // Ensure analytics heartbeat is stopped whenever we fully reset audio state
+        try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
     }
 
     // EVENT HANDLERS
 
     _setupEventListeners() {
-        // Setup visibility change handler
-        document.addEventListener('visibilitychange', this._handleVisibilityChange.bind(this));
+        // Setup visibility change handler (store bound handlers so we can remove them later)
+        this._onVisibilityChange = this._handleVisibilityChange.bind(this);
+        document.addEventListener('visibilitychange', this._onVisibilityChange);
 
         // Setup freeze/resume handlers if supported
         if ('onfreeze' in document) {
-            document.addEventListener('freeze', this._handleFreeze.bind(this));
+            this._onFreeze = this._handleFreeze.bind(this);
+            document.addEventListener('freeze', this._onFreeze);
         }
 
         if ('onresume' in document) {
-            document.addEventListener('resume', this._handleResume.bind(this));
+            this._onResume = this._handleResume.bind(this);
+            document.addEventListener('resume', this._onResume);
         }
 
-        // Setup service worker message handler
+        // Setup service worker message handler (store bound handler)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.addEventListener('message', this._handleServiceWorkerMessage.bind(this));
+            this._onServiceWorkerMessage = this._handleServiceWorkerMessage.bind(this);
+            try {
+                navigator.serviceWorker.addEventListener('message', this._onServiceWorkerMessage);
+            } catch (e) {
+                // Some environments may not expose addEventListener; ignore removal in destroy
+            }
         }
     }
 
@@ -411,6 +426,8 @@ class SpeechProcessor {
                 setTimeout(() => this._attemptResumeAudio(), delay);
             } else {
                 this._updateStatus('Tap to resume audio', 'error');
+                // If we couldn't resume audio after retries, stop heartbeat
+                try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
                 return false;
             }
         }
@@ -668,6 +685,8 @@ class SpeechProcessor {
         } catch (error) {
             console.error('Error enumerating audio devices:', error);
             this._updateDeviceUI('Default microphone', false);
+            // If device enumeration fails while DAF isn't running, ensure heartbeat is stopped
+            try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
             return [];
         }
     }
@@ -769,6 +788,7 @@ class SpeechProcessor {
                 }
                 // revert selectedDeviceId on failure
                 this.selectedDeviceId = previousDeviceId;
+                try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
                 return false;
             }
         }
@@ -818,6 +838,8 @@ class SpeechProcessor {
             return true;
         } catch (error) {
             console.error('Error restarting with new device:', error);
+            // Ensure heartbeat is stopped when a restart attempt fails
+            try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
             return false;
         }
     }
@@ -833,7 +855,7 @@ class SpeechProcessor {
         await this.enumerateAudioDevices();
 
         // Set up device change listener
-        navigator.mediaDevices.addEventListener('devicechange', async () => {
+        this._onDeviceChange = async () => {
             console.log('Audio devices changed, re-enumerating...');
 
             // Only react to device changes if DAF is active
@@ -842,11 +864,19 @@ class SpeechProcessor {
             } else {
                 console.log('DAF not active, ignoring microphone change');
             }
-        });
+        };
+
+        try {
+            navigator.mediaDevices.addEventListener('devicechange', this._onDeviceChange);
+        } catch (e) {
+            // Some browsers may not support addEventListener on mediaDevices
+            console.warn('Could not attach devicechange listener:', e);
+            this._onDeviceChange = null;
+        }
 
         // Monitor headphone connection events when supported
         if ('onheadphoneschange' in navigator) {
-            navigator.onheadphoneschange = async () => {
+            this._onHeadphonesChange = async () => {
                 console.log('Headphone connection state changed');
 
                 // Only react to headphone changes if DAF is active
@@ -856,6 +886,12 @@ class SpeechProcessor {
                     console.log('DAF not active, ignoring headphone change');
                 }
             };
+
+            try {
+                navigator.onheadphoneschange = this._onHeadphonesChange;
+            } catch (e) {
+                this._onHeadphonesChange = null;
+            }
         }
 
         // Set up click handler for device switching
@@ -866,9 +902,8 @@ class SpeechProcessor {
             // Add a hint to the title attribute
             deviceStatusEl.title = 'Click to cycle through available microphones';
 
-            deviceStatusEl.addEventListener('click', () => {
-                this.cycleToNextAudioDevice();
-            });
+            this._onDeviceStatusClick = () => { this.cycleToNextAudioDevice(); };
+            deviceStatusEl.addEventListener('click', this._onDeviceStatusClick);
         }
 
         this._deviceDetectionInitialized = true;
@@ -933,5 +968,75 @@ class SpeechProcessor {
             this._updateStatus(`Failed to switch to: ${nextDevice.label}`, 'error');
             return false;
         }
+    }
+
+    /**
+     * Destroy the SpeechProcessor instance: stop audio, remove event listeners,
+     * stop timers and analytics, and clear internal references so the instance
+     * can be GC'd.
+     */
+    async destroy() {
+        // mark destroyed to avoid spurious reactions
+        this._destroyed = true;
+
+        try {
+            await this.stop();
+        } catch (e) {
+            // ignore stop errors but ensure we continue cleanup
+        }
+
+        // Remove document-level handlers
+        try { if (this._onVisibilityChange) document.removeEventListener('visibilitychange', this._onVisibilityChange); } catch (e) { /* ignore */ }
+        try { if (this._onFreeze) document.removeEventListener('freeze', this._onFreeze); } catch (e) { /* ignore */ }
+        try { if (this._onResume) document.removeEventListener('resume', this._onResume); } catch (e) { /* ignore */ }
+
+        // Service worker
+        try {
+            if ('serviceWorker' in navigator && this._onServiceWorkerMessage && navigator.serviceWorker) {
+                navigator.serviceWorker.removeEventListener('message', this._onServiceWorkerMessage);
+            }
+        } catch (e) { /* ignore */ }
+
+        // Media devices
+        try {
+            if (this._onDeviceChange && navigator.mediaDevices && typeof navigator.mediaDevices.removeEventListener === 'function') {
+                navigator.mediaDevices.removeEventListener('devicechange', this._onDeviceChange);
+            }
+        } catch (e) { /* ignore */ }
+
+        // Headphones change
+        try {
+            if ('onheadphoneschange' in navigator && this._onHeadphonesChange) {
+                if (navigator.onheadphoneschange === this._onHeadphonesChange) navigator.onheadphoneschange = null;
+            }
+        } catch (e) { /* ignore */ }
+
+        // UI element click handler
+        try {
+            const deviceStatusEl = document.getElementById('deviceStatus');
+            if (deviceStatusEl && this._onDeviceStatusClick) {
+                deviceStatusEl.removeEventListener('click', this._onDeviceStatusClick);
+            }
+        } catch (e) { /* ignore */ }
+
+        // Stop timers and analytics redundantly
+        try { this._stopTimer(); } catch (e) { /* ignore */ }
+        try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
+
+        // Clear stored handler references
+        this._onVisibilityChange = null;
+        this._onFreeze = null;
+        this._onResume = null;
+        this._onServiceWorkerMessage = null;
+        this._onDeviceChange = null;
+        this._onHeadphonesChange = null;
+        this._onDeviceStatusClick = null;
+
+        // Clear device detection state
+        this._deviceDetectionInitialized = false;
+        this.availableDevices = [];
+        this.selectedDeviceId = null;
+
+        console.log('SpeechProcessor destroyed');
     }
 }
