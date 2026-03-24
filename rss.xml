@@ -1,23 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
-  <channel>
+<channel>
+  <title>Online DAF App</title>
+  <link>https://korayulusan.github.io/delayed-auditory-feedback-online/</link>
+  <description>Free online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Works instantly in your browser with adjustable delay settings.</description>
+  <language>en-US</language>
+  <managingEditor>Koray Ulusan</managingEditor>
+  <webMaster>Koray Ulusan</webMaster>
+  <pubDate>Fri, 23 Feb 2026 00:00:00 +0000</pubDate>
+  <lastBuildDate>Fri, 24 Mar 2026 00:00:00 +0000</lastBuildDate>
+  <generator>Manual RSS generator</generator>
+
+  <item>
+    <title>What is Delayed Auditory Feedback (DAF)?</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#about-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#what-is-daf</guid>
+    <pubDate>Fri, 24 Mar 2026 00:00:00 +0000</pubDate>
+    <description>Delayed Auditory Feedback (DAF) is a speech therapy technique that plays your voice back with a brief delay. That slight timing shift naturally slows speech down, making it a powerful tool for fluency shaping and reducing stuttering blocks.</description>
+  </item>
+
+  <item>
+    <title>How Does the DAF App Work?</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#controls</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#how-it-works</guid>
+    <pubDate>Fri, 23 Mar 2026 00:00:00 +0000</pubDate>
+    <description>The app captures your voice through the browser microphone and plays it back with a customizable delay of 0 to 500 milliseconds. All audio processing happens locally on your device — nothing is ever sent to a server.</description>
+  </item>
+
+  <item>
+    <title>100% Free and Private — No Downloads Required</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#free-private</guid>
+    <pubDate>Fri, 22 Mar 2026 00:00:00 +0000</pubDate>
+    <description>The Online DAF App requires no installation, no sign-up, and no payment. It runs entirely in your browser on mobile, tablet, or desktop, with full privacy — your audio never leaves your device.</description>
+  </item>
+
+  <item>
+    <title>Usage Tips: Getting the Best Results with DAF</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#usage-tips-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#usage-tips</guid>
+    <pubDate>Fri, 15 Mar 2026 00:00:00 +0000</pubDate>
+    <description>For best results, use wired headphones to avoid Bluetooth latency. Start with a delay around 150–200 ms and gradually lower it to find your comfort zone. Practice by reading simple passages or everyday conversations for 10–15 minutes, 2–3 times a day.</description>
+  </item>
+
+  <item>
+    <title>The Science Behind DAF: Why It Reduces Stuttering</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#science-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#science</guid>
+    <pubDate>Fri, 12 Mar 2026 00:00:00 +0000</pubDate>
+    <description>Researched since the 1950s, DAF works by shifting the brain's auditory timing, encouraging natural speech rate reduction and mimicking the "choral speech" effect — the well-known phenomenon where stuttering diminishes when speaking in a group or while singing.</description>
+  </item>
+
+  <item>
+    <title>Who Can Benefit from DAF Therapy?</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#about-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#who-benefits</guid>
+    <pubDate>Fri, 4 Mar 2026 00:00:00 +0000</pubDate>
+    <description>DAF is beneficial for people who stutter, individuals with cluttering or speech apraxia, those with Parkinson's-related speech difficulties, public speakers seeking clearer delivery, and language learners working on pronunciation and rhythm.</description>
+  </item>
+
+  <item>
+    <title>Can Speech Therapists Use This App with Clients?</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#faq-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#slp-use</guid>
+    <pubDate>Fri, 1 Mar 2026 00:00:00 +0000</pubDate>
+    <description>Yes. Speech-language pathologists can use this app for in-clinic demonstrations, therapy sessions, and as a home-practice tool for clients. It delivers professional-grade DAF functionality at no cost, making it an ideal companion between appointments.</description>
+  </item>
+
+  <item>
+    <title>Why Avoid Bluetooth Headphones with DAF?</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#faq-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#bluetooth-warning</guid>
+    <pubDate>Fri, 26 Feb 2026 00:00:00 +0000</pubDate>
+    <description>Bluetooth headphones add 100–300 ms of audio latency on top of the DAF delay, making it impossible to achieve precise feedback timing. Wired headphones are strongly recommended for consistent, accurate delayed auditory feedback.</description>
+  </item>
+
+  <item>
+    <title>DAF vs. Dedicated DAF Devices: Is the App Effective?</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#faq-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#vs-devices</guid>
+    <pubDate>Fri, 25 Feb 2026 00:00:00 +0000</pubDate>
+    <description>Dedicated DAF devices can cost hundreds of dollars and offer wearability throughout the day. This free online app provides the same core DAF functionality for practice sessions and therapy exercises — making it equally effective without the high price tag.</description>
+  </item>
+
+  <item>
+    <title>Browser and Device Compatibility for the DAF App</title>
+    <link>https://korayulusan.github.io/delayed-auditory-feedback-online/#faq-heading</link>
+    <guid isPermaLink="false">https://korayulusan.github.io/delayed-auditory-feedback-online/#compatibility</guid>
+    <pubDate>Fri, 24 Feb 2026 00:00:00 +0000</pubDate>
+    <description>The DAF app works on all modern browsers including Chrome, Firefox, Edge, and Safari, across desktop, tablet, and mobile devices. Chrome and Edge offer the most consistent audio processing. On iOS, Safari is recommended; on Android, use Chrome.</description>
+  </item>
+
+
+  <item>
     <title>Online DAF App</title>
     <link>https://korayulusan.github.io/delayed-auditory-feedback-online/</link>
-    <description>Free online Delayed Auditory Feedback (DAF) app to improve speech fluency and reduce stuttering. Works instantly in your browser with adjustable delay settings.</description>
-    <language>en-US</language>
-    <managingEditor>Koray Ulusan</managingEditor>
-    <webMaster>Koray Ulusan</webMaster>
+    <guid isPermaLink="true">https://korayulusan.github.io/delayed-auditory-feedback-online/</guid>
     <pubDate>Fri, 23 Feb 2026 00:00:00 +0000</pubDate>
-    <lastBuildDate>Fri, 23 Feb 2026 00:00:00 +0000</lastBuildDate>
-    <generator>Manual RSS generator</generator>
+    <description>Delayed Auditory Feedback (DAF) Online App for Speech Fluency is a free, browser-based app designed to help improve speech fluency and reduce stuttering.</description>
+  </item>
 
-    <item>
-      <title>Online DAF App</title>
-      <link>https://korayulusan.github.io/delayed-auditory-feedback-online/</link>
-      <guid isPermaLink="true">https://korayulusan.github.io/delayed-auditory-feedback-online/</guid>
-      <pubDate>Fri, 23 Feb 2026 00:00:00 +0000</pubDate>
-      <description>Delayed Auditory Feedback (DAF) Online App for Speech Fluency is a free, browser-based app designed to help improve speech fluency and reduce stuttering.</description>
-    </item>
-
-  </channel>
+</channel>
 </rss>
