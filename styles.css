@@ -282,7 +282,6 @@ input[type="range"]:focus {
 #faq,
 #try-it-now,
 #science,
-#testimonials,
 .boxed-section {
     text-align: left;
     margin: 30px auto;
@@ -658,7 +657,6 @@ a:hover {
     #faq,
     #try-it-now,
     #science,
-    #testimonials,
     .boxed-section {
         padding: 5px 12px;
     }
@@ -867,7 +865,6 @@ a:hover {
     }
 
     #infoBox,
-    #testimonials,
     #faq,
     #use-cases,
     .boxed-section {
