@@ -120,7 +120,7 @@ class SpeechProcessor {
         }
     }
 
-    async stop() {
+    async stop(preserveTimer = false) {
         this._stopAudioStream();
         await this._closeAudioContext();
         this._resetAudioState();
@@ -133,7 +133,8 @@ class SpeechProcessor {
 
         this._updateStatus('Auditory Feedback Stopped', 'warning');
         this._updateUIControls(false);
-        this._stopTimer();
+        // Only stop the visible session timer when not preserving (e.g. full stop/destroy).
+        if (!preserveTimer) this._stopTimer();
         // stop periodic analytics heartbeat when DAF stops
         this._stopAnalyticsHeartbeat();
     }
@@ -852,8 +853,9 @@ class SpeechProcessor {
             // Save current configuration
             const currentConfig = { ...this.config };
 
-            // Stop current processing and release previous microphone
-            await this.stop();
+            // Stop current processing and release previous microphone, but preserve the
+            // visible session timer so device switches don't reset the timer display.
+            await this.stop(true);
 
 
             // Small delay to ensure clean shutdown and release of previous mic
