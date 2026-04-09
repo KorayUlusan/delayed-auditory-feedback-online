@@ -1002,3 +1002,122 @@ a:hover {
     box-shadow: 0 4px 12px var(--box-shadow-color);
     transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
+
+/* Rating stars and feedback form styles (improved) */
+#ratingWrap {
+    background: var(--box-background-color);
+    /* padding: 14px; */
+    padding-top: 0;
+    border-radius: 10px;
+    /* box-shadow: 0 6px 18px var(--box-shadow-color); */
+    /* margin-top: 12px; */
+}
+
+#ratingStars {
+    display: inline-flex;
+    /* gap: 8px; */
+    margin: 0;
+    box-shadow: none;
+    align-items: center;
+
+
+
+
+}
+
+#ratingStars .star {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: 30px;
+    cursor: pointer;
+    line-height: 1;
+    color: #cfcfcf;
+    border-radius: 8px;
+    margin: 0;
+    box-shadow: none;
+    transition: transform .08s ease, color .12s ease, background .12s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#ratingStars .star:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.10);
+}
+
+#ratingStars .star:hover {
+    transform: translateY(-2px);
+}
+
+#ratingStars .star.hover {
+    color: #f2b400;
+    background: rgba(242, 180, 0, 0.06);
+}
+
+#ratingStars .star.filled {
+    color: #f5b301;
+    transform: none;
+    background: transparent;
+}
+
+#ratingStars .star:active {
+    transform: translateY(0);
+}
+
+.feedback-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 96px;
+}
+
+.feedback-form button[type="submit"] {
+    margin-top: 12px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--primary-color);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    transition: background .12s ease, transform .08s ease;
+}
+
+.feedback-form button[type="submit"]:hover {
+    background: #004a9a;
+    transform: translateY(-1px);
+}
+
+.feedback-form button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+[data-fs-error] {
+    color: #b00020;
+    font-size: 0.9em;
+    margin-top: 6px;
+    display: block;
+}
+
+[data-fs-success] {
+    color: #117a00;
+    font-size: 0.95em;
+    margin-bottom: 6px;
+    display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    #ratingStars .star,
+    .feedback-form button {
+        transition: none;
+    }
+}

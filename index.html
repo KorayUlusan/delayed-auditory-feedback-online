@@ -398,7 +398,7 @@
     </section>
 
     <section class="boxed-section" id="testimonials" aria-labelledby="testimonials-heading">
-      <h2 id="testimonials">What Users Are Saying</h2>
+      <h2 id="testimonials-heading">What Users Are Saying</h2>
       <blockquote>
         “This app helped me slow down and speak more clearly. I use it before every presentation.” <br /> - Alex R.
       </blockquote>
@@ -800,6 +800,41 @@
       </div>
     </section>
 
+
+    <!-- Rating & Feedback Form (Formspree) -->
+    <section id="feedback" class="boxed-section" aria-labelledby="feedback-heading">
+      <h2 id="feedback-heading">Rate this app</h2>
+
+      <div id="ratingWrap">
+        <form id="ratingForm" class="feedback-form" data-fs-form>
+          <div id="fs-success" data-fs-success hidden></div>
+          <div id="fs-error" data-fs-error></div>
+
+          <div id="ratingStars" role="radiogroup" aria-labelledby="feedback-heading">
+            <button type="button" class="star" aria-checked="false" aria-label="1 star">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="2 stars">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="3 stars">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="4 stars">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="5 stars">☆</button>
+          </div>
+
+          <input type="hidden" id="ratingInput" name="rating" value="" required>
+
+          <textarea id="message" name="message" rows="4" data-fs-field placeholder="Tell us what you liked or what could be improved"></textarea>
+          <span data-fs-error="message"></span>
+
+          <p style="font-weight:400; font-size:0.9em; color:#444; margin-top:8px;">By clicking "Send feedback" you consent to the processing of the feedback and any data you
+            provide
+            for the purposes of improving the app.</p>
+
+          <div style="margin-top:12px;">
+            <button type="submit" data-fs-submit-btn>Send feedback</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+
     <section class="boxed-section" id="try-it-now" aria-labelledby="try-it-now-heading">
       <h2>Start Your Speech Fluency Practice</h2>
       <p>Ready to begin?
@@ -878,8 +913,9 @@
   <!-- Load daf-processor.js on demand to avoid blocking LCP -->
   <script src="app.js" defer></script>
   <script src="init.js" defer></script>
-  <!-- Analytics can be loaded async -->
   <script src="analytics.js" async></script>
+  <!-- Formspree AJAX (CDN) and feedback initialization -->
+  <script src="https://unpkg.com/@formspree/ajax@1" defer></script>
 </body>
 
 </html>
