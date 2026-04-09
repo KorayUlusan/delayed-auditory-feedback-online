@@ -209,7 +209,7 @@
         "step": [
           { "@type": "HowToStep", "text": "Plug in wired headphones to avoid audio latency." },
           { "@type": "HowToStep", "text": "Click 'Start DAF Session' and allow microphone access." },
-          { "@type": "HowToStep", "text": "Adjust the delay slider to your comfort level (usually 50-150ms)." }
+          { "@type": "HowToStep", "text": "Adjust the delay slider to your comfort level (usually 50-200ms)." }
         ]
       },
       {
@@ -277,9 +277,9 @@
       <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
       <p id="dafTimer" class="timer-display">00:00</p>
       <div class="sliders">
-        <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">20 ms</span></label>
-        <input type="range" id="delaySlider" min="0" max="500" step="1" value="20" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="500" aria-valuenow="20"
-          aria-valuetext="20 milliseconds">
+        <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">200 ms</span></label>
+        <input type="range" id="delaySlider" min="0" max="500" step="1" value="200" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="500" aria-valuenow="200"
+          aria-valuetext="200 milliseconds">
         <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">1x</span></label>
         <input id="inputGainSlider" type="range" min="1" max="20" value="1" step="1" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20" aria-valuenow="1"
           aria-valuetext="1x">
@@ -354,7 +354,7 @@
 
 
       <p>
-        The sweet spot for the delay varies; many find 50ms to 150ms ideal.
+        The sweet spot for the delay varies; many find 50ms to 200ms ideal.
       </p>
 
 
@@ -382,19 +382,19 @@
       <h3 id="usage-tips-heading">Getting the Best Results</h3>
 
       <p><strong>Use wired headphones.</strong> Bluetooth adds 100-300ms of extra latency, which interferes with the app.</p>
-      <p><strong>Start at 150ms.</strong> Gradually decrease the delay until you find what feels most comfortable.</p>
+      <p><strong>Start at 200ms.</strong> Gradually decrease the delay until you find what feels most comfortable.</p>
       <p><strong>Practice with purpose.</strong> Try reading a paragraph or practicing a speech to notice fluency improvements.</p>
 
       <img class="themed-graph" width="620" height="363" data-light="images/daf-usage-tips-infographic-light.png" data-dark="images/daf-usage-tips-infographic-dark.png"
-        src="images/daf-usage-tips-infographic-light.png" alt="Infographic: tips for using DAF for stuttering — use wired headphones, start around 150ms, practice reading">
+        src="images/daf-usage-tips-infographic-light.png" alt="Infographic: tips for using DAF for stuttering — use wired headphones, start around 200ms, practice reading">
 
 
       <p>
         Ready to give it a shot? <a href="#controls">Jump to the app above</a> and start experimenting with what works for you.
+      <p>
+        Normally, your brain hears your voice the instant you speak. DAF introduces a delay of 20 to 500 milliseconds.
+        Your brain notices the timing shift, and you unconsciously adjust your speech rate, slowing down and becoming more aware of articulation.
       </p>
-    </section>
-
-    <section class="boxed-section" id="testimonials" aria-labelledby="testimonials-heading">
       <h2 id="testimonials-heading">What Users Are Saying</h2>
       <blockquote>
         “This app helped me slow down and speak more clearly. I use it before every presentation.” <br /> - Alex R.
@@ -422,7 +422,9 @@
       <p>
         DAF’s most well-documented use is reducing stuttering blocks and repetitions. By providing a slightly delayed version of your own voice, DAF helps <strong>compensate for
           timing discrepancies</strong> in the brain's auditory feedback loop. This creates a "choral-speech" effect, allowing fluency to emerge naturally during practice sessions.
+        Results vary by individual; we recommend a trial period to see if your speech profile responds to DAF.
       </p>
+
 
       <h3>Parkinson's Disease & Hypokinetic Dysarthria</h3>
       <p>
@@ -457,9 +459,9 @@
       <h2 id="science-heading">The Science Behind DAF</h2>
 
       <p>
-        Delayed Auditory Feedback isn't new. Researchers
-        <a href="https://pubs.asha.org/doi/10.1044/jshd.2004.333" target="_blank" rel="noopener nofollow">first studied it in the 1950s</a>.
-        Back then, they noticed that when people who stutter heard their own voice on a tiny delay, their speech often cleared up instantly.
+        Delayed Auditory Feedback isn't new. It was first studied in 1950 (Lee, 1950); see reviews and classic summaries such as Fairbanks and later reviews
+        (<a href="https://pubs.asha.org/doi/10.1044/jshd.2004.333" target="_blank" rel="noopener nofollow">review</a>) for historical context.
+        Early work noticed that when people who stutter heard their own voice on a tiny delay, their speech often cleared up instantly.
       </p>
 
       <p>
@@ -488,15 +490,13 @@
 
       <h3>The "Choral Speech" Effect at Normal Rates</h3>
       <p>
-        Have you ever noticed that most people don't stutter
-        <a href="https://doi.org/10.1016/j.jfludis.2025.106168" target="_blank" rel="noopener nofollow">when they sing or speak in a crowd?</a>
-        This is known as the <strong>choral effect</strong>. DAF mimics this by playing your voice back to you, making it sound as if someone is speaking in unison with you, which
-        can dramatically boost fluency.
+        Have you ever noticed that most people don't stutter when they sing or speak in unison? This is known as the <strong>choral effect</strong> and is one of the strongest
+        fluency-inducing manipulations in stuttering research — choral speech can reduce stuttering by roughly 90–100% in reading tasks.
       </p>
       <p>
-        By showing that a slowed rate of speech is <strong>not a necessary antecedent</strong> for improvement, the science confirms you can benefit from this "choral" boost during
-        natural, everyday conversations.
-        See <a href="#resources">studies by Kalinowski (1993/1996) in our references below ↓</a>
+        Delayed Auditory Feedback mimics aspects of the choral effect by returning an altered version of the speaker's voice, but DAF typically produces more moderate reductions
+        in stuttering than true choral speech. Lab reading studies such as Kalinowski (1993) and Kalinowski &amp; Stuart (1996) demonstrate substantial DAF effects at normal
+        speech rates (see the Resources section), but those studies are DAF reading tasks rather than demonstrations of choral speech in natural conversation.
       </p>
 
       <p>
@@ -803,9 +803,9 @@
           <h3>Clinical Research & Studies</h3>
           <ul class="leadsto-list">
             <li>
-              <strong>The "Choral Effect" & Stuttering:</strong> Kalinowski et al. (1993) demonstrated <a href="https://pubmed.ncbi.nlm.nih.gov/8146141/" target="_blank"
-                rel="nofollow noopener">DAF reducing stuttering by up to 80% through choral speech</a>. Later <a href="https://pubmed.ncbi.nlm.nih.gov/8944848/" target="_blank"
-                rel="noopener nofollow">Kalinowski & Stuart (1996)</a> confirmed that this effect occurs at normal speech rates, not just when intentionally slowing down.
+              <strong>DAF (Kalinowski et al., 1993):</strong> Kalinowski, J., Armson, J., Roland-Mieszkowski, M., Stuart, A., &amp; Gracco, V. (1993). Language and Speech, 36, 1–16
+              — reported an approximately 72% reduction in stuttering during oral reading at normal speech rates. Later <a href="https://pubmed.ncbi.nlm.nih.gov/8944848/"
+                target="_blank" rel="noopener nofollow">Kalinowski &amp; Stuart (1996)</a> confirmed that DAF can be effective at normal speech rates.
             </li>
             <li>
               <strong>Parkinson’s Disease:</strong> Research published in the <em>Journal of Medical Speech-Language Pathology</em> (Lowit et al.) suggests that DAF is an effective
