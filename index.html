@@ -274,6 +274,9 @@
   <main>
     <section id="controls" aria-label="Delayed Auditory Feedback App Controls">
       <button id="dafButton" aria-pressed="false" aria-label="Start Delayed Auditory Feedback session">Start DAF</button>
+      <noscript>
+        <p style="color: red; font-weight: bold;">JavaScript is required to use the DAF app. Please enable JavaScript in your browser settings.</p>
+      </noscript>
       <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
       <p id="dafTimer" class="timer-display">00:00</p>
       <div class="sliders">
@@ -830,6 +833,10 @@
           <div style="margin-top:12px;">
             <button type="submit" data-fs-submit-btn>Send feedback</button>
           </div>
+          
+          <noscript>
+            <p style="color: red; margin-top: 10px;">JavaScript is required to submit feedback. Please enable JavaScript and try again.</p>
+          </noscript>
         </form>
       </div>
     </section>
