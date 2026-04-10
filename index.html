@@ -408,8 +408,47 @@
       <blockquote>
         “As a speech therapist, I recommend this to clients who need at-home fluency practice.” <br /> - Dr. L. Moreno
       </blockquote>
-
     </section>
+
+
+
+    <!-- Rating & Feedback Form (Formspree) -->
+    <section id="feedback" class="boxed-section" aria-labelledby="feedback-heading">
+      <h2 id="feedback-heading">Found this helpful? Let us know!</h2>
+
+      <div id="ratingWrap">
+        <form id="ratingForm" class="feedback-form" data-fs-form>
+          <div id="fs-success" data-fs-success hidden></div>
+          <div id="fs-error" data-fs-error></div>
+
+          <div id="ratingStars" role="radiogroup" aria-label="Rate your experience from 1 to 5 stars" aria-labelledby="feedback-heading">
+            <button type="button" class="star" aria-checked="false" aria-label="1 star">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="2 stars">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="3 stars">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="4 stars">☆</button>
+            <button type="button" class="star" aria-checked="false" aria-label="5 stars">☆</button>
+          </div>
+
+          <input type="hidden" id="ratingInput" name="rating" value="" required>
+
+          <textarea id="message" name="message" rows="4" data-fs-field placeholder="Tell us what you liked or what could be improved"></textarea>
+          <span data-fs-error="message"></span>
+
+          <p class="notice-text">By clicking "Send feedback" you consent to the processing of the feedback and any data you
+            provide
+            for the purposes of improving the app.</p>
+
+          <div style="margin-top:12px;">
+            <button type="submit" data-fs-submit-btn>Send feedback</button>
+          </div>
+
+          <noscript>
+            <p style="color: red; margin-top: 10px;">JavaScript is required to submit feedback. Please enable JavaScript and try again.</p>
+          </noscript>
+        </form>
+      </div>
+    </section>
+
 
     <section class="boxed-section" id="use-cases" aria-labelledby="use-cases-heading">
       <h2 id="use-cases-heading">Who Can Benefit from DAF?</h2>
@@ -802,45 +841,6 @@
         </div>
       </div>
     </section>
-
-
-    <!-- Rating & Feedback Form (Formspree) -->
-    <section id="feedback" class="boxed-section" aria-labelledby="feedback-heading">
-      <h2 id="feedback-heading">Rate This App</h2>
-
-      <div id="ratingWrap">
-        <form id="ratingForm" class="feedback-form" data-fs-form>
-          <div id="fs-success" data-fs-success hidden></div>
-          <div id="fs-error" data-fs-error></div>
-
-          <div id="ratingStars" role="radiogroup" aria-labelledby="feedback-heading">
-            <button type="button" class="star" aria-checked="false" aria-label="1 star">☆</button>
-            <button type="button" class="star" aria-checked="false" aria-label="2 stars">☆</button>
-            <button type="button" class="star" aria-checked="false" aria-label="3 stars">☆</button>
-            <button type="button" class="star" aria-checked="false" aria-label="4 stars">☆</button>
-            <button type="button" class="star" aria-checked="false" aria-label="5 stars">☆</button>
-          </div>
-
-          <input type="hidden" id="ratingInput" name="rating" value="" required>
-
-          <textarea id="message" name="message" rows="4" data-fs-field placeholder="Tell us what you liked or what could be improved"></textarea>
-          <span data-fs-error="message"></span>
-
-          <p class="notice-text">By clicking "Send feedback" you consent to the processing of the feedback and any data you
-            provide
-            for the purposes of improving the app.</p>
-
-          <div style="margin-top:12px;">
-            <button type="submit" data-fs-submit-btn>Send feedback</button>
-          </div>
-
-          <noscript>
-            <p style="color: red; margin-top: 10px;">JavaScript is required to submit feedback. Please enable JavaScript and try again.</p>
-          </noscript>
-        </form>
-      </div>
-    </section>
-
 
     <section class="boxed-section" id="try-it-now" aria-labelledby="try-it-now-heading">
       <h2>Start Your Speech Fluency Practice</h2>
