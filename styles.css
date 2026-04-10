@@ -23,7 +23,7 @@
     /* Changed from #64b5f6 to a darker hover blue */
     --background-color: #121212;
     --text-color: #e0e0e0;
-    --secondary-text-color: #b0b0b0;
+    --secondary-text-color: #c1c1c1;
     --box-background-color: #1e1e1e;
     --box-shadow-color: rgba(255, 255, 255, 0.1);
     --success-color: #4CAF50;
@@ -1069,11 +1069,14 @@ a:hover {
     box-sizing: border-box;
     padding: 10px;
     margin-top: 6px;
-    border: 1px solid #e6e6e6;
+    border: 1px solid var(--slider-track-color);
     border-radius: 8px;
     font-family: inherit;
     resize: vertical;
     min-height: 96px;
+    background: var(--box-background-color);
+    color: var(--text-color);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .feedback-form button[type="submit"] {
@@ -1090,7 +1093,7 @@ a:hover {
 }
 
 .feedback-form button[type="submit"]:hover {
-    background: #004a9a;
+    background: var(--primary-color-hover);
     transform: translateY(-1px);
 }
 
@@ -1101,14 +1104,14 @@ a:hover {
 }
 
 [data-fs-error] {
-    color: #b00020;
+    color: var(--error-color);
     font-size: 0.9em;
     margin-top: 6px;
     display: block;
 }
 
 [data-fs-success] {
-    color: #117a00;
+    color: var(--success-color);
     font-size: 0.95em;
     margin-bottom: 6px;
     display: block;
@@ -1120,4 +1123,18 @@ a:hover {
     .feedback-form button {
         transition: none;
     }
+}
+
+.notice-text {
+    font-weight: 400;
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+    margin-top: 8px;
+}
+
+#medical-disclaimer {
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+    border-left: 3px solid var(--secondary-text-color);
+    padding-left: 10px;
 }
