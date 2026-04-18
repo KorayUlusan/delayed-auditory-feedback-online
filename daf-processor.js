@@ -466,7 +466,8 @@ class SpeechProcessor {
             this.audioContext.currentTime
         );
 
-        this._updateUIDisplay('gainValue', `${value}x`);
+        // Update the UI element used in the page: `inputGainValue`
+        this._updateUIDisplay('inputGainValue', `${value}x`);
     }
 
     // For backward compatibility with existing UI controls
