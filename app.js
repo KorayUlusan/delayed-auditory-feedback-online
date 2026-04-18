@@ -188,6 +188,25 @@ window.toggleDAF = async function (button) {
                 window.speechProcessor._startAnalyticsHeartbeat();
             } catch (e) { /* ignore */ }
 
+                // Clamp the delay slider minimum to the measured hardware floor
+                try {
+                    const floor = window.speechProcessor.measuredFloorMs ?? 0;
+                    if (floor > 5) {
+                        const slider = document.getElementById('delaySlider');
+                        if (slider) {
+                            const minFloor = Math.ceil(floor);
+                            slider.min = String(minFloor);
+                            if (Number(slider.value) < minFloor) {
+                                slider.value = String(minFloor);
+                                // ensure processor reflects bumped value
+                                try { window.speechProcessor.updateDelayTime(minFloor); } catch (e) { /* ignore */ }
+                            }
+                            const label = document.querySelector('label[for="delaySlider"]');
+                            if (label) label.title = `Hardware floor: ~${floor.toFixed(0)}ms. Effective delay = slider + floor.`;
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+
             await window.speechProcessor.initializeDeviceDetection();
         } catch (startErr) {
             console.error('Failed to start speech processor:', startErr);

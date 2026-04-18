@@ -39,6 +39,8 @@ class SpeechProcessor {
         this.availableDevices = [];
         this.micAccessGranted = false;
         this._deviceDetectionInitialized = false;
+        // Measured round-trip floor in milliseconds (input + output)
+        this.measuredFloorMs = null;
 
         // Add event listeners for visibility and freeze/resume events
         this._setupEventListeners();
@@ -318,8 +320,30 @@ class SpeechProcessor {
         // Log latency floor once the context is running (more accurate than logging on creation)
         if (this.audioContext.state === 'running') {
             try {
-                const floorMs = ((this.audioContext.baseLatency ?? 0) + (this.audioContext.outputLatency ?? 0)) * 1000;
-                console.log(`Latency floor: ${floorMs.toFixed(1)}ms`);
+                const outputMs = ((this.audioContext.baseLatency ?? 0) + (this.audioContext.outputLatency ?? 0)) * 1000;
+
+                // Estimate input latency from the acquired track settings when available
+                let inputMs = 0;
+                try {
+                    const track = this.audioStream?.getAudioTracks?.()[0];
+                    const settings = track?.getSettings?.();
+                    if (settings?.latency) inputMs = settings.latency * 1000; // spec: seconds
+                } catch (e) {
+                    // ignore per-browser differences
+                }
+
+                const totalMs = (inputMs || 0) + (outputMs || 0);
+                this.measuredFloorMs = totalMs;
+
+                console.log(
+                    `Latency floor: ${outputMs.toFixed(1)}ms (output)` +
+                    (inputMs ? ` + ${inputMs.toFixed(1)}ms (input)` : ' + 0 (input latency unknown)') +
+                    ` = ${totalMs.toFixed(1)}ms total`
+                );
+
+                if (totalMs > 25) {
+                    console.warn(`Round-trip floor ${totalMs.toFixed(1)}ms exceeds 25ms threshold — slap-back likely at low delay settings`);
+                }
             } catch (e) {
                 // Ignore logging failures
             }
@@ -422,7 +446,14 @@ class SpeechProcessor {
             this.audioContext.currentTime
         );
 
-        this._updateUIDisplay('delayValue', `${value} ms`);
+        // Show effective total when floor is known
+        const floor = this.measuredFloorMs ?? 0;
+        if (floor > 5) {
+            const effective = Math.round(value + floor);
+            this._updateUIDisplay('delayValue', `${value} ms (~${effective} ms effective)`);
+        } else {
+            this._updateUIDisplay('delayValue', `${value} ms`);
+        }
     }
 
     updateGain(value) {
