@@ -6,15 +6,14 @@ class SpeechProcessor {
         this.audioStream = null;
         this.audioNodes = {
             source: null,
-            gainNode: null, // Single gain node instead of separate input/output
+            gainNode: null,
             delayNode: null,
-            channelSplitter: null,
-            channelMerger: null,
+            // Removed: channelSplitter, channelMerger
         };
 
         // Auditory Feedback configuration
         this.config = {
-            delayTime: 50,        // ms, optimal for speech DAF
+            delayTime: 200,        // ms, optimal for speech DAF
             gain: 1,              // unified gain control
         };
 
@@ -58,13 +57,14 @@ class SpeechProcessor {
             if (preAcquiredStream) {
                 this.audioStream = preAcquiredStream;
                 this.micAccessGranted = true;
+            } else if (this.audioStream && this.micAccessGranted) {
+                // Reuse an already-set stream (e.g. from restartWithNewDevice)
             } else {
                 await this._requestMicrophoneAccess();
             }
+
             this._createAudioContext();
-            this._logAudioContextInfo();
             this._createAudioNodes();
-            this._configureAudioNodes();
             this._connectAudioNodes();
 
             this.isAudioRunning = true;
@@ -93,7 +93,7 @@ class SpeechProcessor {
                 this._updateStatus('Sorry, we don\'t support your browser yet.', 'error');
             } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
                 this._updateStatus('Microphone access is required to use DAF. Please allow access and try again.', 'error');
-            } 
+            }
             // we handle this case outside the class in app.js
             throw new Error('Failed to start audio processing');
         }
@@ -107,15 +107,14 @@ class SpeechProcessor {
                 this.config.gain = this.config.inputGain;
             }
 
-            // Ensure applied audio node values reflect the current config
-            if (this.audioContext && this.audioNodes) {
-                if (typeof this.updateGain === 'function') {
-                    this.updateGain(this.config.gain);
-                }
-                if (typeof this.updateDelayTime === 'function') {
-                    this.updateDelayTime(this.config.delayTime);
-                }
+            // Apply current config to live nodes (values may have changed before start)
+            try {
+                if (typeof this.updateGain === 'function') this.updateGain(this.config.gain);
+                if (typeof this.updateDelayTime === 'function') this.updateDelayTime(this.config.delayTime);
+            } catch (e) {
+                console.warn('Failed to apply initial config to nodes:', e);
             }
+
             this._updateUIControls(true);
         }
     }
@@ -143,15 +142,14 @@ class SpeechProcessor {
 
     async _requestMicrophoneAccess() {
         try {
-            // First get available audio formats for the selected device
-            const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+            // Build getUserMedia constraints for the selected device
             let constraints = {
                 audio: {
                     echoCancellation: false,
                     autoGainControl: false,
                     noiseSuppression: false,
                     channelCount: 1,
-                    latencyHint: 'interactive',
+                    // Removed: latencyHint — not a valid MediaTrackConstraint, silently ignored
                     deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined
                 }
             };
@@ -169,6 +167,22 @@ class SpeechProcessor {
             // Store the actual sample rate for creating a matching audio context
             this.deviceSampleRate = settings.sampleRate;
 
+            // Record the actual device id and label from the acquired track so the
+            // UI reflects the microphone that is actually in use (fixes cases
+            // where enumerateDevices/UI guessed the active device incorrectly).
+            try {
+                if (settings && settings.deviceId) {
+                    this.selectedDeviceId = settings.deviceId;
+                }
+                const trackLabel = audioTrack.label || (settings && settings.label) || '';
+                this.currentDeviceName = trackLabel || 'Default microphone';
+                const isHeadphone = this._isHeadphoneMic(trackLabel);
+                this._updateDeviceUI(this.currentDeviceName, isHeadphone);
+            } catch (e) {
+                // Non-fatal: some browsers don't expose deviceId/label even with permission
+                console.warn('Could not determine active device id/label:', e);
+            }
+
             return this.audioStream;
         } catch (error) {
             console.error('Error accessing microphone:', error);
@@ -177,84 +191,44 @@ class SpeechProcessor {
     }
 
     _createAudioContext() {
-        // Create audio context with settings that match the input device
         const contextOptions = {
-            latencyHint: 'interactive'
+            latencyHint: 0, // Request absolute minimum (was 'interactive' ~50ms)
         };
-        // Only set sampleRate when the device explicitly reports one.
-        // For many browsers the device sample rate is not exposed and forcing
-        // a sampleRate can cause "different sample-rate" errors when creating
-        // a MediaStreamSource. Let the UA pick a compatible sample rate when
-        // none is available.
         if (this.deviceSampleRate && Number.isFinite(this.deviceSampleRate)) {
             contextOptions.sampleRate = this.deviceSampleRate;
-            console.log(`Creating audio context with matching sample rate: ${this.deviceSampleRate}Hz`);
         }
-
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
+        // Single statechange listener — handler will log running latency and handle resumes
         this.audioContext.addEventListener('statechange', this._handleAudioContextStateChange.bind(this));
     }
 
-    _logAudioContextInfo() {
-        // Reduced console logs to essential information only
-        console.log(`Audio context: ${this.audioContext.state}, Sample rate: ${this.audioContext.sampleRate}Hz`);
-    }
+    // _logAudioContextInfo removed: statechange handler logs after context is running
 
     _createAudioNodes() {
         const ctx = this.audioContext;
         const nodes = this.audioNodes;
 
         nodes.source = ctx.createMediaStreamSource(this.audioStream);
-
-        // Single gain node for all gain control
         nodes.gainNode = ctx.createGain();
 
-        // Create delay node with minimal delay buffer size
-        nodes.delayNode = ctx.createDelay(0.5); // Reduce max delay to 500ms for better performance
-
-        // Use the smallest possible delay value when setting to zero
-        const minDelay = 0.000001; // 1 microsecond, effectively zero
+        const minDelay = 0.000001;
+        nodes.delayNode = ctx.createDelay(0.5);
         nodes.delayNode.delayTime.value = Math.max(minDelay, this.config.delayTime / 1000);
 
-        // For stereo output (both ears)
-        // Create a stereo splitter even though our source is mono
-        nodes.channelSplitter = ctx.createChannelSplitter(1);
-        nodes.channelMerger = ctx.createChannelMerger(2);
+        // Removed: channelSplitter, channelMerger — browser handles mono→stereo upmix automatically
     }
 
-    _configureAudioNodes() {
-        const nodes = this.audioNodes;
-        const cfg = this.config;
-        const ctx = this.audioContext;
-
-        // Use the minimum possible delay value when setting to zero
-        const minDelay = 0.000001; // 1 microsecond, effectively zero
-        const actualDelay = cfg.delayTime <= 0 ? minDelay : cfg.delayTime / 1000;
-
-        // Set gain and delay settings with immediate application
-        nodes.gainNode.gain.setValueAtTime(cfg.gain, ctx.currentTime);
-        nodes.delayNode.delayTime.setValueAtTime(actualDelay, ctx.currentTime);
-    }
+    // _configureAudioNodes removed: initial node creation already applies configured values
 
     _connectAudioNodes() {
         const nodes = this.audioNodes;
 
-        // Connect source to delay node
+        // Before: source → delay → splitter → merger → gain → destination (4 hops)
+        // After:  source → delay → gain → destination (2 hops)
         nodes.source.connect(nodes.delayNode);
-
-        // Apply stereo output through splitter and merger for proper stereo panning
-        nodes.delayNode.connect(nodes.channelSplitter);
-
-        // Connect the mono source to both left and right channels
-        // This ensures the audio is heard in both ears
-        nodes.channelSplitter.connect(nodes.channelMerger, 0, 0); // Left channel
-        nodes.channelSplitter.connect(nodes.channelMerger, 0, 1); // Right channel
-
-        // Connect merger to gain node then to destination
-        nodes.channelMerger.connect(nodes.gainNode);
+        nodes.delayNode.connect(nodes.gainNode);
         nodes.gainNode.connect(this.audioContext.destination);
 
-        // Mark as direct mode
         this.directModeEnabled = true;
     }
 
@@ -305,6 +279,7 @@ class SpeechProcessor {
 
     _resetAudioState() {
         this.audioContext = null;
+        this.deviceSampleRate = null;
         Object.keys(this.audioNodes).forEach(key => {
             this.audioNodes[key] = null;
         });
@@ -334,19 +309,21 @@ class SpeechProcessor {
             document.addEventListener('resume', this._onResume);
         }
 
-        // Setup service worker message handler (store bound handler)
-        if ('serviceWorker' in navigator) {
-            this._onServiceWorkerMessage = this._handleServiceWorkerMessage.bind(this);
-            try {
-                navigator.serviceWorker.addEventListener('message', this._onServiceWorkerMessage);
-            } catch (e) {
-                // Some environments may not expose addEventListener; ignore removal in destroy
-            }
-        }
+        // Service worker message handling removed — no-op placeholder omitted
     }
 
     _handleAudioContextStateChange() {
         if (!this.audioContext) return;
+
+        // Log latency floor once the context is running (more accurate than logging on creation)
+        if (this.audioContext.state === 'running') {
+            try {
+                const floorMs = ((this.audioContext.baseLatency ?? 0) + (this.audioContext.outputLatency ?? 0)) * 1000;
+                console.log(`Latency floor: ${floorMs.toFixed(1)}ms`);
+            } catch (e) {
+                // Ignore logging failures
+            }
+        }
 
         this._notifyServiceWorker('AUDIO_STATE', this.audioContext.state);
 
@@ -390,22 +367,7 @@ class SpeechProcessor {
         }
     }
 
-    _handleServiceWorkerMessage(event) {
-        // Handle keep-alive confirmation
-        if (event.data && event.data.type === 'KEEP_ALIVE_CONFIRMATION') {
-            // Processing without logging
-        }
-
-        // Handle visibility updates from other tabs/instances
-        if (event.data && event.data.type === 'VISIBILITY_UPDATE') {
-            // Processing without logging
-        }
-
-        // Handle audio state updates from other tabs/instances
-        if (event.data && event.data.type === 'AUDIO_STATE_UPDATE') {
-            // Processing without logging
-        }
-    }
+    // Service worker message handler removed (no-op branches were present).
 
     // AUDIO CONTROL METHODS
 
@@ -489,20 +451,15 @@ class SpeechProcessor {
 
         statusElement.textContent = message;
 
-        // Remove all status classes including loading
-        statusElement.classList.remove('status-success', 'status-error', 'status-default', 'status-loading');
-
-        // Add appropriate class based on status type
-        if (type === 'success') {
-            statusElement.classList.add('status-success');
-        } else if (type === 'error') {
-            statusElement.classList.add('status-error');
-        } else if (type === 'loading') {
-            // Use a distinct loading style that pulses to indicate activity
-            statusElement.classList.add('status-loading');
-        } else {
-            statusElement.classList.add('status-default');
-        }
+        // Normalize classes via a small map for maintainability
+        statusElement.classList.remove('status-success', 'status-error', 'status-warning', 'status-default', 'status-loading');
+        const classMap = {
+            success: 'status-success',
+            error: 'status-error',
+            loading: 'status-loading',
+            warning: 'status-warning'
+        };
+        statusElement.classList.add(classMap[type] || 'status-default');
     }
 
     _updateUIDisplay(elementId, value) {
@@ -583,21 +540,7 @@ class SpeechProcessor {
                     if (typeof gainVal === 'number' && gainVal <= 0) return;
                 }
 
-                // Best-effort: treat tab as muted if all HTMLMediaElements are muted or at zero volume
-                // (There is no direct Web API to read a browser tab's mute state.)
-                try {
-                    const mediaEls = (typeof document !== 'undefined') ? document.querySelectorAll('audio,video') : [];
-                    if (mediaEls && mediaEls.length > 0) {
-                        let anyUnmuted = false;
-                        for (let i = 0; i < mediaEls.length; i++) {
-                            const el = mediaEls[i];
-                            try {
-                                if (!el.muted && el.volume > 0) { anyUnmuted = true; break; }
-                            } catch (e) { /* ignore stale/cross-origin elements */ }
-                        }
-                        if (!anyUnmuted) return;
-                    }
-                } catch (e) { /* ignore DOM access errors */ }
+                // Removed tab-mute defensive check (not applicable to this app)
 
                 // If microphone tracks exist, ensure at least one is enabled
                 if (this.audioStream && this.audioStream.getAudioTracks) {
@@ -646,12 +589,14 @@ class SpeechProcessor {
             // Some browsers require an active getUserMedia call to expose device labels.
             // Use a temporary stream and stop it immediately to avoid leaving the mic active.
             let tempStream = null;
-            try {
-                tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch (permErr) {
-                // If permission denied or not available, proceed to enumerateDevices which
-                // may still return limited information.
-                console.warn('Temporary getUserMedia failed during device enumeration:', permErr);
+            if (!this.micAccessGranted) {
+                try {
+                    tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                } catch (permErr) {
+                    // If permission denied or not available, proceed to enumerateDevices which
+                    // may still return limited information.
+                    console.warn('Temporary getUserMedia failed during device enumeration:', permErr);
+                }
             }
 
             // Get all media devices
@@ -674,14 +619,12 @@ class SpeechProcessor {
 
             console.log('Available audio input devices:', this.availableDevices);
 
-            // Look for likely headset/headphone mics
+            // Look for likely wired headset/headphone mics (skip Bluetooth/airpods)
             const headphoneMic = this.availableDevices.find(device => {
-                const label = device.label.toLowerCase();
-                return label.includes('headphone') ||
-                    label.includes('headset') ||
-                    label.includes('earphone') ||
-                    label.includes('airpod') ||
-                    label.includes('bluetooth');
+                const label = (device.label || '').toLowerCase();
+                const isBluetooth = label.includes('bluetooth') || label.includes('airpod');
+                if (isBluetooth) return false; // don't auto-select Bluetooth devices
+                return label.includes('headphone') || label.includes('headset') || label.includes('earphone');
             });
 
             // Auto-select headphone mic if available and not already selected
@@ -736,12 +679,10 @@ class SpeechProcessor {
      */
     _isHeadphoneMic(label) {
         if (!label) return false;
-        const lowerLabel = label.toLowerCase();
-        return lowerLabel.includes('headphone') ||
-            lowerLabel.includes('headset') ||
-            lowerLabel.includes('earphone') ||
-            lowerLabel.includes('airpod') ||
-            lowerLabel.includes('bluetooth');
+        const l = label.toLowerCase();
+        // Treat Bluetooth/airpod devices as not suitable for low-latency DAF
+        if (l.includes('bluetooth') || l.includes('airpod')) return false;
+        return l.includes('headphone') || l.includes('headset') || l.includes('earphone');
     }
 
     /**
@@ -756,12 +697,9 @@ class SpeechProcessor {
 
         if (!deviceNameEl || !deviceIconEl || !deviceStatusEl) return;
 
-        // Simplify the device name for displayw
-        let displayName = deviceName || 'Default microphone';
-        let lengthCutoff = 55;
-        if (displayName.length > lengthCutoff) {
-            displayName = displayName.substring(0, lengthCutoff) + '...';
-        }
+        // Simplify the device name for display
+        const raw = deviceName || 'Default microphone';
+        const displayName = raw.length > 55 ? raw.slice(0, 55) + '...' : raw;
 
         // Update the name and icon
         deviceNameEl.textContent = displayName;
@@ -797,7 +735,6 @@ class SpeechProcessor {
                         autoGainControl: false,
                         noiseSuppression: false,
                         channelCount: 1,
-                        latencyHint: 'interactive',
                         deviceId: { exact: deviceId }
                     }
                 };
@@ -834,16 +771,10 @@ class SpeechProcessor {
         // If not running, simply update selectedDeviceId
         this.selectedDeviceId = deviceId;
         return true;
-
-        return true;
     }
 
     /**
-     * Restart the audio processing with a new input device
-     * @returns {Promise<boolean>} - Success or failure
-     */
-    /**
-     * Restart the audio processing with a new input device.
+    * Restart the audio processing with a new input device.
      * If `preAcquiredStream` is provided it will be used instead of calling
      * getUserMedia again (useful to keep the call inside a user gesture).
      * @returns {Promise<boolean>}
@@ -873,6 +804,17 @@ class SpeechProcessor {
 
             // Start with (possibly pre-acquired) new device
             await this.start();
+
+            // Restart services that app.js normally starts when DAF is first enabled
+            try {
+                this._startAnalyticsHeartbeat();
+            } catch (e) { /* ignore */ }
+
+            // Resume timer counting without resetting the visible display
+            try {
+                this.startTime = Date.now() - (this.elapsedTime || 0);
+                if (!this.timerInterval) this._startTimer();
+            } catch (e) { /* ignore */ }
 
             return true;
         } catch (error) {
@@ -933,17 +875,7 @@ class SpeechProcessor {
             }
         }
 
-        // Set up click handler for device switching
-        const deviceStatusEl = document.getElementById('deviceStatus');
-        if (deviceStatusEl) {
-            deviceStatusEl.style.cursor = 'pointer'; // Show it's clickable
-
-            // Add a hint to the title attribute
-            deviceStatusEl.title = 'Click to cycle through available microphones';
-
-            this._onDeviceStatusClick = () => { this.cycleToNextAudioDevice(); };
-            deviceStatusEl.addEventListener('click', this._onDeviceStatusClick);
-        }
+        // Device status click handler is registered in app.js to keep UI logic centralized.
 
         this._deviceDetectionInitialized = true;
     }
@@ -1029,12 +961,7 @@ class SpeechProcessor {
         try { if (this._onFreeze) document.removeEventListener('freeze', this._onFreeze); } catch (e) { /* ignore */ }
         try { if (this._onResume) document.removeEventListener('resume', this._onResume); } catch (e) { /* ignore */ }
 
-        // Service worker
-        try {
-            if ('serviceWorker' in navigator && this._onServiceWorkerMessage && navigator.serviceWorker) {
-                navigator.serviceWorker.removeEventListener('message', this._onServiceWorkerMessage);
-            }
-        } catch (e) { /* ignore */ }
+        // Service worker cleanup removed (no message handler was attached)
 
         // Media devices
         try {
@@ -1050,13 +977,7 @@ class SpeechProcessor {
             }
         } catch (e) { /* ignore */ }
 
-        // UI element click handler
-        try {
-            const deviceStatusEl = document.getElementById('deviceStatus');
-            if (deviceStatusEl && this._onDeviceStatusClick) {
-                deviceStatusEl.removeEventListener('click', this._onDeviceStatusClick);
-            }
-        } catch (e) { /* ignore */ }
+        // UI element click handler cleanup removed; app.js owns the handler.
 
         // Stop timers and analytics redundantly
         try { this._stopTimer(); } catch (e) { /* ignore */ }
@@ -1069,7 +990,6 @@ class SpeechProcessor {
         this._onServiceWorkerMessage = null;
         this._onDeviceChange = null;
         this._onHeadphonesChange = null;
-        this._onDeviceStatusClick = null;
 
         // Clear device detection state
         this._deviceDetectionInitialized = false;

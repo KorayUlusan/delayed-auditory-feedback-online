@@ -125,20 +125,7 @@ window.addEventListener('beforeunload', function () {
     }
 });
 
-// Functions to handle UI controls and pass values to the speech processor
-function updateDelayTime(value) {
-    document.getElementById('delayValue').textContent = `${value} ms`;
-    if (window.speechProcessor && typeof window.speechProcessor.updateDelayTime === 'function') {
-        window.speechProcessor.updateDelayTime(value);
-    }
-}
-
-function updateInputGain(value) {
-    document.getElementById('inputGainValue').textContent = `${value}x`;
-    if (window.speechProcessor && typeof window.speechProcessor.updateInputGain === 'function') {
-        window.speechProcessor.updateInputGain(value);
-    }
-}
+// UI-to-processor helpers removed: the processor methods update the UI directly.
 
 // Create a document-level tap handler to help resume audio on iOS
 document.addEventListener('click', function () {
@@ -154,7 +141,7 @@ document.addEventListener('click', function () {
 
 // Make toggleDAF function globally available for HTML onclick attribute
 window.toggleDAF = async function (button) {
-    const isStarting = button.textContent === 'Start DAF';
+    const isStarting = !window.speechProcessor?.isAudioRunning;
 
     // Track DAF button click via canonical analytics API
     if (typeof window.sendAnalyticsEvent === 'function') {
@@ -167,89 +154,48 @@ window.toggleDAF = async function (button) {
 
     // Prevent creating multiple instances or starting multiple times
     if (isStarting) {
-        if (window.speechProcessor && window.speechProcessor.isAudioRunning) {
-            console.log('DAF is already running, ignoring start request');
+
+        // Load processor if needed
+        try {
+            if (!window.SpeechProcessor) await loadSpeechProcessorScript();
+        } catch (err) {
+            console.error('Failed to load DAF processor:', err);
             return;
         }
 
-        // Lazy start flow: load processor script if needed, then instantiate and start
-        const startWithProcessor = async () => {
-            console.log('startWithProcessor: begin');
+        try {
+            window.speechProcessor = new SpeechProcessor();
+        } catch (e) {
+            console.error('Failed to construct SpeechProcessor instance:', e);
+            return;
+        }
+
+        // Initialize with current slider values before starting (ensure numbers)
+        window.speechProcessor.config.delayTime = Number(document.getElementById('delaySlider').value);
+        window.speechProcessor.config.inputGain = Number(document.getElementById('inputGainSlider').value);
+
+        // Request wake lock when starting DAF
+        requestWakeLock();
+
+        // Inform the user that we're beginning the audio connection
+        try { window.speechProcessor._updateStatus('Starting audio connection...', 'loading'); } catch (e) { /* ignore */ }
+
+        try {
+            await window.speechProcessor.start();
             try {
-                if (!window.SpeechProcessor) {
-                    console.log('startWithProcessor: loading daf-processor.js');
-                    await loadSpeechProcessorScript();
-                    console.log('startWithProcessor: daf-processor.js loaded');
-                }
-            } catch (err) {
-                console.error('Failed to load DAF processor:', err);
-                return;
+                window.speechProcessor._updateStatus('Auditory Feedback Active', 'success');
+                window.speechProcessor._startTimer();
+                window.speechProcessor._startAnalyticsHeartbeat();
+            } catch (e) { /* ignore */ }
+
+            await window.speechProcessor.initializeDeviceDetection();
+        } catch (startErr) {
+            console.error('Failed to start speech processor:', startErr);
+            const statusEl = document.getElementById('statusMessage');
+            if (statusEl && !statusEl.classList.contains('status-error')) {
+                try { window.speechProcessor._updateStatus('Please refresh the page and try again', 'error'); } catch (e) { /* ignore */ }
             }
-
-            console.log('startWithProcessor: creating SpeechProcessor instance');
-            try {
-                window.speechProcessor = new SpeechProcessor();
-            } catch (e) {
-                console.error('Failed to construct SpeechProcessor instance:', e);
-                return;
-            }
-            console.log('startWithProcessor: SpeechProcessor instance created');
-
-            // Initialize with current slider values before starting
-            const delayValue = document.getElementById('delaySlider').value;
-            const inputGainValue = document.getElementById('inputGainSlider').value;
-
-            window.speechProcessor.config.delayTime = delayValue;
-            window.speechProcessor.config.inputGain = inputGainValue;
-
-            // Request wake lock when starting DAF
-            console.log('startWithProcessor: requesting wake lock');
-            requestWakeLock();
-
-            // Start the speech processor and await completion so we can resume the
-            // audio context immediately in the same user gesture path if needed.
-            try {
-                console.log('startWithProcessor: calling start()');
-                // Inform the user that we're beginning the audio connection
-                try {
-                    if (window.speechProcessor && typeof window.speechProcessor._updateStatus === 'function') {
-                        window.speechProcessor._updateStatus('Starting audio connection...', 'loading');
-                    }
-                } catch (e) {
-                    console.warn('Failed to set starting status message:', e);
-                }
-                await window.speechProcessor.start();
-                console.log('startWithProcessor: start() completed');
-
-                try {
-                    if (window.speechProcessor && typeof window.speechProcessor._updateStatus === 'function') {
-                        window.speechProcessor._updateStatus('Auditory Feedback Active', 'success');
-                        window.speechProcessor._startTimer();
-                        window.speechProcessor._startAnalyticsHeartbeat();
-                    }
-                } catch (e) {
-                    console.warn('Failed to set starting status message:', e);
-                }
-
-                // Initialize device detection to automatically find headphone microphones
-                await window.speechProcessor.initializeDeviceDetection();
-                console.log('Audio device detection initialized');
-
-            } catch (startErr) {
-                console.error('Failed to start speech processor:', startErr);
-
-                // statusMessage element
-                const statusEl = document.getElementById('statusMessage');
-
-                if (!statusEl.classList.contains('status-error')) {
-                    window.speechProcessor._updateStatus('Please refresh the page and try again', 'error');
-                }
-            }
-
-        };
-
-        // Await the async starter so any thrown errors are visible in this user gesture
-        await startWithProcessor();
+        }
     } else {
         if (window.speechProcessor) {
             try {
@@ -288,8 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup event listeners for sliders
     document.getElementById('delaySlider').addEventListener('input', (e) => {
-        const val = e.target.value;
-        document.getElementById('delayValue').textContent = `${val} ms`;
+        const val = Number(e.target.value);
+        // Processor method updates the UI display itself; avoid duplicate DOM writes here
         if (window.speechProcessor && typeof window.speechProcessor.updateDelayTime === 'function') {
             window.speechProcessor.updateDelayTime(val);
         }
@@ -300,8 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('inputGainSlider').addEventListener('input', (e) => {
-        const val = e.target.value;
-        document.getElementById('inputGainValue').textContent = `${val}x`;
+        const val = Number(e.target.value);
+        // Processor method updates the UI display itself; avoid duplicate DOM writes here
         if (window.speechProcessor && typeof window.speechProcessor.updateInputGain === 'function') {
             window.speechProcessor.updateInputGain(val);
         }
@@ -363,12 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
         deviceStatusEl.addEventListener('click', () => {
             const statusEl = document.getElementById('statusMessage');
 
-            // If there is no active speech processor or audio isn't running,
-            // instruct the user to start DAF to enable device detection.
+            // If DAF is not active, instruct the user to start it
             if (!window.speechProcessor || !window.speechProcessor.isAudioRunning) {
                 if (statusEl) {
                     statusEl.textContent = "DAF is not active — click 'Start DAF' to enable device detection and microphone status.";
-                    // ensure a visible state class (styling may be defined elsewhere)
                     statusEl.classList.remove('status-default');
                     statusEl.classList.add('status-info');
                 }
@@ -378,20 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // If DAF is active, show the currently selected device name if available
+            // If DAF is active, cycle to the next available microphone
             try {
-                const deviceNameEl = document.getElementById('deviceName');
-                const deviceName = (window.speechProcessor && window.speechProcessor.currentDeviceName) || (deviceNameEl && deviceNameEl.textContent) || 'Unknown device';
-                if (statusEl) {
-                    statusEl.textContent = `Active device: ${deviceName}`;
-                    statusEl.classList.remove('status-default', 'status-info');
-                    statusEl.classList.add('status-success');
-                }
-                if (typeof window.sendAnalyticsEvent === 'function') {
-                    window.sendAnalyticsEvent('device_status_click_active', { device: deviceName });
-                }
+                window.speechProcessor.cycleToNextAudioDevice();
             } catch (e) {
-                console.warn('Error handling deviceStatus click:', e);
+                console.warn('Error cycling audio device from UI click:', e);
             }
         });
     }
@@ -433,7 +368,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Keep this function but make it call window.toggleDAF to ensure we use the same logic
-function toggleDAF(button) {
-    window.toggleDAF(button);
-}
+// Note: `window.toggleDAF` is defined above and used by the UI; no local wrapper required.
