@@ -1138,3 +1138,19 @@ a:hover {
     border-left: 3px solid var(--secondary-text-color);
     padding-left: 10px;
 }
+
+#quick-info p:first-of-type {
+  font-size: 0.85rem;
+  background-color: #f0fdf4; /* Very light green "secure" tint */
+  border-left: 4px solid #22c55e; /* Green accent */
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: #166534;
+}
+
+#quick-info p {
+  font-size: 14px; /* Or 0.875rem */
+  line-height: 1.6;
+  color: #4a4a4a;
+  margin-bottom: 12px;
+}
