@@ -361,7 +361,7 @@ footer {
     border-top: 1px solid rgba(125, 125, 125, 0.1);
 }
 
-.timer-display {
+#dafTimer {
     font-family: monospace;
     font-size: 1.5em;
     font-weight: bold;
@@ -375,7 +375,7 @@ footer {
     width: 120px;
 }
 
-[data-theme="dark"] .timer-display {
+[data-theme="dark"] #dafTimer {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
@@ -780,7 +780,7 @@ a:hover {
     }
 
     /* Show the DAF timer on small screens for easier access */
-    .timer-display {
+    #dafTimer {
         display: block;
         font-size: 1.4em;
         min-width: 84px;

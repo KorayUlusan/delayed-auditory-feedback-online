@@ -346,6 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Toggle active class for styling
             question.classList.toggle('active', !isVisible);
+            // Update aria-expanded for screen readers
+            question.setAttribute('aria-expanded', (!isVisible).toString());
 
             // Analytics
             if (typeof window.sendAnalyticsEvent === 'function') {

@@ -109,8 +109,8 @@ class SpeechProcessor {
 
             // Apply current config to live nodes (values may have changed before start)
             try {
-                if (typeof this.updateGain === 'function') this.updateGain(this.config.gain);
-                if (typeof this.updateDelayTime === 'function') this.updateDelayTime(this.config.delayTime);
+                this.updateGain(this.config.gain);
+                this.updateDelayTime(this.config.delayTime);
             } catch (e) {
                 console.warn('Failed to apply initial config to nodes:', e);
             }
@@ -810,10 +810,21 @@ class SpeechProcessor {
                 this._startAnalyticsHeartbeat();
             } catch (e) { /* ignore */ }
 
-            // Resume timer counting without resetting the visible display
+            // Resume timer counting without resetting the visible display.
+            // Do not call _startTimer() because that resets elapsedTime.
             try {
-                this.startTime = Date.now() - (this.elapsedTime || 0);
-                if (!this.timerInterval) this._startTimer();
+                const timerEl = document.getElementById('dafTimer');
+                if (timerEl) {
+                    this.startTime = Date.now() - (this.elapsedTime || 0);
+                    if (!this.timerInterval) {
+                        timerEl.classList.add('timer-running');
+                        this.timerInterval = setInterval(() => {
+                            this.elapsedTime = Date.now() - this.startTime;
+                            const s = Math.floor(this.elapsedTime / 1000);
+                            timerEl.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+                        }, 1000);
+                    }
+                }
             } catch (e) { /* ignore */ }
 
             return true;
@@ -987,7 +998,6 @@ class SpeechProcessor {
         this._onVisibilityChange = null;
         this._onFreeze = null;
         this._onResume = null;
-        this._onServiceWorkerMessage = null;
         this._onDeviceChange = null;
         this._onHeadphonesChange = null;
 

@@ -278,13 +278,13 @@
         <p style="color: red; font-weight: bold;">JavaScript is required to use the DAF app. Please enable JavaScript in your browser settings.</p>
       </noscript>
       <p id="statusMessage" class="status-default">Waiting to connect to microphone</p>
-      <p id="dafTimer" class="timer-display">00:00</p>
+      <p id="dafTimer">00:00</p>
       <div class="sliders">
         <label for="delaySlider">⏱️ Delay Time: <span id="delayValue">200 ms</span></label>
-        <input type="range" id="delaySlider" min="0" max="500" step="1" value="200" oninput="updateDelayTime(this.value)" aria-valuemin="0" aria-valuemax="500" aria-valuenow="200"
+        <input type="range" id="delaySlider" min="0" max="500" step="1" value="200" aria-valuemin="0" aria-valuemax="500" aria-valuenow="200"
           aria-valuetext="200 milliseconds">
         <label for="inputGainSlider">🎤 Microphone Boost: <span id="inputGainValue">1x</span></label>
-        <input id="inputGainSlider" type="range" min="1" max="20" value="1" step="1" oninput="updateInputGain(this.value)" aria-valuemin="1" aria-valuemax="20" aria-valuenow="1"
+        <input id="inputGainSlider" type="range" min="1" max="20" value="1" step="1" aria-valuemin="1" aria-valuemax="20" aria-valuenow="1"
           aria-valuetext="1x">
         <div id="deviceStatus" class="device-status">
           <span id="deviceIcon">🎙️</span> <span id="deviceName">Built-in microphone</span>
