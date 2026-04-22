@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Star rating UI
     const stars = Array.from(document.querySelectorAll('#ratingStars .star'));
     const ratingInput = document.getElementById('ratingInput');
-    const fsError = document.querySelector('[data-fs-error]');
+    const fsError = document.getElementById('fs-error');
 
     function setStars(n) {
         stars.forEach((s, i) => {
