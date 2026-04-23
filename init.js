@@ -70,6 +70,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const ratingInput = document.getElementById('ratingInput');
     const fsError = document.getElementById('fs-error');
 
+    // 1. Clear the hidden input value
+    if (ratingInput) ratingInput.value = "";
+
+    // 2. Reset all stars in the ratingStars container
+    stars.forEach(star => {
+        star.setAttribute('aria-checked', 'false'); // Reset accessibility state
+        star.textContent = '☆';                      // Ensure star is empty (outline)
+        star.classList.remove('selected', 'active'); // Remove any highlighting classes
+    });
+
     function setStars(n) {
         stars.forEach((s, i) => {
             if (i < n) s.classList.add('filled'); else s.classList.remove('filled');
@@ -103,18 +113,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('ratingForm');
     form.addEventListener('submit', function (e) {
         fsError.textContent = '';
-        if (!ratingInput.value) {
+        if (!ratingInput.value || ratingInput.value === "") {
             e.preventDefault();
+            e.stopImmediatePropagation();
             fsError.textContent = 'Please select a star rating before submitting.';
-            return;
+            fsError.style.display = 'block';
+            console.warn('Form submission blocked: No star rating selected.'); // Log warning for debugging
+            return false;
         }
         // Clicking submit implies consent (consent paragraph shown in form)
     });
 
-    // Init Formspree when library is available
+    // Update your initFs function to handle the 422 error response
     function initFs() {
         if (window.formspree) {
-            formspree('initForm', { formElement: '#ratingForm', formId: 'meepwrew' });
+            formspree('initForm', {
+                formElement: '#ratingForm',
+                formId: 'meepwrew',
+            });
         }
     }
 
