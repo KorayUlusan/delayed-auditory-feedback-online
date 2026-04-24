@@ -25,10 +25,10 @@
   /* Changed from #90caf9 to a darker blue */
   --primary-color-hover: #2d6da3;
   /* Changed from #64b5f6 to a darker hover blue */
-  --background-color: #121212;
+  --background-color: #1b1b1b;
   --text-color: #e0e0e0;
   --secondary-text-color: #c1c1c1;
-  --box-background-color: #1e1e1e;
+  --box-background-color: #222222;
   --box-shadow-color: rgba(255, 255, 255, 0.1);
   --success-color: #4CAF50;
   --error-color: #C65D52;
@@ -1165,4 +1165,11 @@ a:hover {
   line-height: 1.6;
   color: var(--text-color);
   margin-bottom: 12px;
+}
+
+.footer-link {
+  white-space: nowrap;
+  /* Prevents the link from breaking into two lines */
+  display: inline-block;
+  /* Helps with spacing and clickability */
 }
