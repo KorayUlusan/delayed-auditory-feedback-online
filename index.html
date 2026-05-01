@@ -183,6 +183,12 @@
         "operatingSystem": "All",
         "browserRequirements": "Requires microphone access",
         "softwareVersion": "1.0",
+        "featureList": [
+          "Real-time audio processing",
+          "Adjustable delay (20ms-500ms)",
+          "Privacy-first local processing",
+          "No-install browser access"
+        ],
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -193,14 +199,49 @@
           "ratingValue": "4.7",
           "ratingCount": "143"
         },
-        "author": { "@id": "https://github.com/korayulusan" },
+        "author": { "@id": "https://korayulusan.github.io/#person" },
         "publisher": { "@id": "#daf-org" },
         "mainEntityOfPage": { "@id": "https://korayulusan.github.io/delayed-auditory-feedback-online/#medical-disclaimer" }
-      },  
+      },
+      {
+        "@type": "Person",
+        "@id": "https://korayulusan.github.io/#person",
+        "name": "Koray Ulusan",
+        "jobTitle": "Machine Learning Engineer",
+        "url": "https://korayulusan.github.io",
+        "image": "https://korayulusan.github.io/images/koray-ulusan-portrait.png",
+        "sameAs": [
+          "https://www.linkedin.com/in/korayulusan/",
+          "https://github.com/korayulusan"
+        ],
+        "knowsAbout": [
+          "Machine Learning",
+          "Generative AI",
+          "Synthetic Data",
+          "Speech Processing"
+        ]
+      },
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://korayulusan.github.io/delayed-auditory-feedback-online/" }
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Koray Ulusan",
+            "item": "https://korayulusan.github.io"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Projects",
+            "item": "https://korayulusan.github.io/#webpage" 
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Online DAF App",
+            "item": "https://korayulusan.github.io/delayed-auditory-feedback-online/"
+          }
         ]
       },
       {
@@ -226,20 +267,9 @@
         "name": "Online DAF App",
         "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/",
         "description": "The Online DAF App is provided as an informational and practice tool to assist with speech fluency. It is not a substitute for professional medical advice, diagnosis, or treatment.",
-        "author": { "@id": "#daf-org" },
+        "author": { "@id": "https://korayulusan.github.io/#person" },
         "datePublished": "2025-02-16",
-        "dateModified": "2026-03-26"
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "Delayed Auditory Feedback Online",
-        "operatingSystem": "Web",
-        "applicationCategory": "HealthApplication",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        }
+        "dateModified": "2026-05-01"
       }
     ]
   }
@@ -288,8 +318,8 @@
           <span id="deviceIcon">🎙️</span> <span id="deviceName">Built-in microphone</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px; margin-top: 1em;">
-          <img src="icons/no-bluetooth.svg" alt="" title="Bluetooth headphones may cause audio latency issues with DAF. For best results, use wired headphones."
-            style="width: 20px; height: 22px;" />
+          <img src="icons/no-bluetooth.svg" alt="Wired headphones recommended icon"
+            title="Bluetooth headphones may cause audio latency issues with DAF. For best results, use wired headphones." style="width: 20px; height: 22px;" />
           <!-- <p>Tip: This app works best with wired headphones.</p> -->
           <p style="margin: 0;">
             Works best with wired headphones.
@@ -400,9 +430,10 @@
 
       <p>
         Ready to give it a shot? <a href="#controls">Jump to the app above</a> and start experimenting with what works for you.
+      </p>
+
       <p>
-        Normally, your brain hears your voice the instant you speak. DAF introduces a delay of 20 to 500 milliseconds.
-        Your brain notices the timing shift, and you unconsciously adjust your speech rate, slowing down and becoming more aware of articulation.
+        By combining these adjustments with the auditory delay, many users find they can achieve a level of fluency that feels more natural and sustainable
       </p>
     </section>
 
@@ -912,10 +943,11 @@
   </main>
 
   <footer>
-    <p>Last updated: April 2026.</p>
+    <p>Last updated: May 2026.</p>
     <p>Online DAF App &copy; 2025 - <span id="currentYear">2026</span>. All rights reserved.</p>
     <p style="font-size: 0.85em;">
-      Developed by <a class="footer-link" href="https://www.linkedin.com/in/korayulusan/" target="_blank" rel="noopener" style="font-weight: 700; color: inherit; text-decoration: underline;">Koray
+      Developed by <a class="footer-link" href="https://www.linkedin.com/in/korayulusan/" target="_blank" rel="noopener"
+        style="font-weight: 700; color: inherit; text-decoration: underline;">Koray
         Ulusan</a> |
       <a class="footer-link" href="https://github.com/KorayUlusan/delayed-auditory-feedback-online" target="_blank" rel="noopener">
         View Source Code
