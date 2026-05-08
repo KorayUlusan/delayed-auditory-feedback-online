@@ -74,7 +74,25 @@ class SpeechProcessor {
         } catch (error) {
             console.error('Speech Processor Initialization Error:', error);
 
-            // TODO: i need a good way to log errors. 
+            if (window.Sentry) {
+                Sentry.captureException(error, {
+                    tags: {
+                        mechanism: 'audio_init',
+                        // This tells you if it was a HTTPS issue immediately
+                        secure_context: window.isSecureContext
+                    },
+                    extra: {
+                        audioContextState: this.audioContext ? this.audioContext.state : 'not_initialized',
+                        // Log the exact constraints used
+                        requestedDeviceId: this.selectedDeviceId,
+                        availableDeviceCount: this.availableDevices.length,
+                        preAcquired: !!preAcquiredStream,
+                        // Check if the browser actually has the API
+                        hasUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+                    }
+                });
+            }
+
             window.sendAnalyticsEvent('daf_initialization_error', {
                 event_category: 'DAF',
                 event_label: error.name || 'Unknown Error',
@@ -163,7 +181,15 @@ class SpeechProcessor {
             // Get actual track settings to match audio context settings
             const audioTrack = this.audioStream.getAudioTracks()[0];
             const settings = audioTrack.getSettings();
-
+            if (window.Sentry) {
+                Sentry.setContext("mic_settings", {
+                    autoGainControl: settings.autoGainControl,
+                    echoCancellation: settings.echoCancellation,
+                    noiseSuppression: settings.noiseSuppression,
+                    sampleRate: settings.sampleRate,
+                    label: audioTrack.label
+                });
+            }
             console.log('Selected microphone settings:', settings);
 
             // Store the actual sample rate for creating a matching audio context
@@ -360,6 +386,13 @@ class SpeechProcessor {
     _handleVisibilityChange() {
         const isVisible = document.visibilityState === 'visible';
         this.isAppVisible = isVisible;
+        if (window.Sentry) {
+            Sentry.addBreadcrumb({
+                category: 'ui.lifecycle',
+                message: `Visibility changed to ${document.visibilityState}`,
+                level: 'info'
+            });
+        }
 
         // Notify service worker about visibility change
         this._notifyServiceWorker('VISIBILITY_CHANGE', { isVisible });
@@ -407,6 +440,14 @@ class SpeechProcessor {
             this.resumeAttempts = 0;
             return true;
         } catch (error) {
+            if (this.resumeAttempts > 1) {
+                if (window.Sentry) {
+                    Sentry.captureMessage("Audio resumed after multiple attempts", {
+                        level: "warning",
+                        extra: { attempts: this.resumeAttempts }
+                    });
+                }
+            }
             // Try again with exponential backoff if we have attempts left
             if (this.resumeAttempts < this.maxResumeAttempts) {
                 const delay = Math.pow(2, this.resumeAttempts) * 100;
