@@ -181,14 +181,22 @@ class SpeechProcessor {
             // Get actual track settings to match audio context settings
             const audioTrack = this.audioStream.getAudioTracks()[0];
             const settings = audioTrack.getSettings();
-            if (window.Sentry) {
-                Sentry.setContext("mic_settings", {
-                    autoGainControl: settings.autoGainControl,
-                    echoCancellation: settings.echoCancellation,
-                    noiseSuppression: settings.noiseSuppression,
-                    sampleRate: settings.sampleRate,
-                    label: audioTrack.label
-                });
+            
+            if (audioTrack && window.Sentry) {
+                try {
+                    const settings = audioTrack.getSettings();
+                    Sentry.configureScope((scope) => {
+                        scope.setContext("mic_settings", {
+                            autoGainControl: settings?.autoGainControl,
+                            echoCancellation: settings?.echoCancellation,
+                            noiseSuppression: settings?.noiseSuppression,
+                            sampleRate: settings?.sampleRate,
+                            label: audioTrack?.label
+                        });
+                    });
+                } catch (e) {
+                    console.warn("Failed to log mic settings to Sentry", e);
+                }
             }
             console.log('Selected microphone settings:', settings);
 
