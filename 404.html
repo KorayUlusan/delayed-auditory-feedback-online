@@ -1,20 +1,118 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="refresh" content="0; url=https://korayulusan.github.io/delayed-auditory-feedback-online/">
-    <meta name="robots" content="noindex">
-    <title>Page not found — Redirecting...</title>
-    <!-- <script>window.location.replace('https://korayulusan.github.io/delayed-auditory-feedback-online/');</script> -->
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebPage",
+            "@id": "https://korayulusan.github.io/delayed-auditory-feedback-online/404/#webpage",
+            "url": "https://korayulusan.github.io/delayed-auditory-feedback-online/404",
+            "name": "404 Not Found | Koray Ulusan",
+            "description": "The page you are looking for does not exist. Redirecting to home.",
+            "publisher": {
+              "@type": "Person",
+              "name": "Koray Ulusan",
+              "url": "https://korayulusan.github.io"
+            },
+            "mainEntity": {
+              "@type": "ReadAction",
+              "actionStatus": "FailedActionStatus",
+              "target": "https://korayulusan.github.io/delayed-auditory-feedback-online/404",
+              "error": "HTTP 404 Not Found"
+            }
+          }
+        ]
+      }
+    </script>
+
+    <title>Redirecting...</title>
+
     <style>
-        p {font-size: 1.2em;}
-        main {max-width: 600px;margin: 100px auto;text-align: center;}
+      body {
+        background-color: #1c1c1d;
+        color: #9ca3af;
+        font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      .full-screen-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100vw;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      main {
+        text-align: center;
+      }
+
+      .highlight-text {
+        color: #70a5fd;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        text-decoration-color: rgba(112, 165, 253, 0.3);
+        transition: text-decoration-color 0.3s ease;
+      }
+
+      .full-screen-link:hover .highlight-text {
+        text-decoration-color: rgba(112, 165, 253, 1);
+      }
     </style>
-</head>
-<body>
-    <main>
-        <p>Page not found.</p>
-        <p>Please click <a href="https://korayulusan.github.io/delayed-auditory-feedback-online/">here</a> if you are not automatically redirected.</p>
-    </main>
-</body>
+
+    <script is:inline>
+
+      const destination = "https://korayulusan.github.io/delayed-auditory-feedback-online/";
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      const redirectWithProgress = async () => {
+        const p = document.getElementById("p-not-found");
+        // Loop 3 times to add dots
+        let waitTimeSeconds = 1; // Total wait time in seconds
+        let dotsToAdd = 10; // Total number of dots to add
+        let dotTimeWait = (waitTimeSeconds * 1000) / dotsToAdd; // Time between each dot (6 dots total)
+        for (let i = 0; i < dotsToAdd; i++) {
+          await sleep(dotTimeWait); // Wait based on calculated time
+          if (p) p.textContent += ".";
+        }
+        window.location.href = destination;
+      };
+
+      // Wait for the HTML to load before trying to find elements or start timers
+      document.addEventListener("DOMContentLoaded", () => {
+        const link = document.getElementById("main-redirect-link");
+        if (link) link.href = destination;
+
+        // Start the dot logic now that "p-not-found" is ready
+        redirectWithProgress();
+
+        // Global click listener as a backup
+        window.addEventListener("click", (e) => {
+          e.preventDefault(); // Prevent default if necessary
+          window.location.href = destination;
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <a href="https://korayulusan.github.io/delayed-auditory-feedback-online/" id="main-redirect-link" class="full-screen-link">
+      <main>
+        <p id="p-not-found">Page not found. Redirecting</p>
+        <p>
+          Click <span class="highlight-text">here</span> if nothing happens.
+        </p>
+      </main>
+    </a>
+  </body>
 </html>
