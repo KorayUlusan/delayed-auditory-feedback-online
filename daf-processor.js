@@ -77,7 +77,7 @@ class SpeechProcessor {
                 tag: 'permission_denied_system',
                 message:
                     'Your operating system is blocking microphone access. ' +
-                    'Please check your system privacy settings ' + 
+                    'Please check your system privacy settings ' +
                     '(macOS: System Settings → Privacy & Security → Microphone; ' +
                     'Windows: Settings → Privacy → Microphone) and allow access, then try again.',
             };
@@ -280,15 +280,19 @@ class SpeechProcessor {
 
             if (audioTrack && window.Sentry) {
                 try {
-                    Sentry.configureScope((scope) => {
-                        scope.setContext("mic_settings", {
-                            autoGainControl: settings?.autoGainControl,
-                            echoCancellation: settings?.echoCancellation,
-                            noiseSuppression: settings?.noiseSuppression,
-                            sampleRate: settings?.sampleRate,
-                            label: audioTrack?.label
-                        });
-                    });
+                    const micContext = {
+                        autoGainControl: settings?.autoGainControl,
+                        echoCancellation: settings?.echoCancellation,
+                        noiseSuppression: settings?.noiseSuppression,
+                        sampleRate: settings?.sampleRate,
+                        label: audioTrack?.label
+                    };
+                    // Sentry v8+ exposes setContext directly; v7 uses configureScope.
+                    if (typeof Sentry.setContext === 'function') {
+                        Sentry.setContext('mic_settings', micContext);
+                    } else if (typeof Sentry.configureScope === 'function') {
+                        Sentry.configureScope((scope) => scope.setContext('mic_settings', micContext));
+                    }
                 } catch (e) {
                     console.warn("Failed to log mic settings to Sentry", e);
                 }
