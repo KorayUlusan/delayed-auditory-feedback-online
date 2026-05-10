@@ -313,6 +313,16 @@ class SpeechProcessor {
                 console.warn('Could not determine active device id/label:', e);
             }
 
+            // Refresh the full device list now that permission is granted —
+            // browsers only expose all devices (with labels) after the first
+            // successful getUserMedia call.
+            try {
+                const allDevices = await navigator.mediaDevices.enumerateDevices();
+                this.availableDevices = allDevices.filter(d => d.kind === 'audioinput');
+            } catch (e) {
+                console.warn('Could not refresh device list after mic grant:', e);
+            }
+
             return this.audioStream;
         } catch (error) {
             console.error('Error accessing microphone:', error);
@@ -884,6 +894,11 @@ class SpeechProcessor {
             this._updateStatus('Please start DAF first to access microphones', 'warning');
             return false;
         }
+
+        // Re-enumerate now that permission is guaranteed. The list built during
+        // initializeDeviceDetection() may have run before permission was granted,
+        // at which point browsers only expose a single generic "default" entry.
+        await this.enumerateAudioDevices();
 
         if (this.availableDevices.length <= 1) {
             this._updateStatus('Only one microphone available', 'info');
