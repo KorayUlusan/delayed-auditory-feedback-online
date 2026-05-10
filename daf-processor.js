@@ -8,7 +8,6 @@ class SpeechProcessor {
             source: null,
             gainNode: null,
             delayNode: null,
-            // Removed: channelSplitter, channelMerger
         };
 
         // Auditory Feedback configuration
@@ -49,6 +48,103 @@ class SpeechProcessor {
         this._updateDeviceUI('Click "Start DAF" to select your microphone', false);
     }
 
+    // ---------------------------------------------------------------------------
+    // ERROR CLASSIFICATION
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Map a getUserMedia / AudioContext error to a short, actionable string
+     * and a Sentry fingerprint tag so similar errors group correctly.
+     *
+     * Covers every error class seen in the Sentry dashboard:
+     *   - NotAllowedError  (permission denied by user OR by OS/system)
+     *   - NotAllowedError  (permission prompt dismissed)
+     *   - NotAllowedError  (iOS "No AVAudioSessionCaptureDevice device")
+     *   - NotFoundError    (requested device not found / unplugged)
+     *   - Generic fallback
+     *
+     * @param {Error} error
+     * @returns {{ message: string, tag: string }}
+     */
+    _classifyMicError(error) {
+        const name = error?.name ?? '';
+        const message = (error?.message ?? '').toLowerCase();
+
+        // ── OS-level block (macOS/Windows privacy settings, managed devices) ───
+        // Sentry: "Permission denied by system"
+        if (name === 'NotAllowedError' && message.includes('system')) {
+            return {
+                tag: 'permission_denied_system',
+                message:
+                    'Your operating system is blocking microphone access. ' +
+                    'Please check your system privacy settings ' + 
+                    '(macOS: System Settings → Privacy & Security → Microphone; ' +
+                    'Windows: Settings → Privacy → Microphone) and allow access, then try again.',
+            };
+        }
+
+        // ── iOS / Safari: no capture device available ──────────────────────────
+        // Sentry: "No AVAudioSessionCaptureDevice device"
+        if (name === 'NotAllowedError' && message.includes('avaudiosession')) {
+            return {
+                tag: 'permission_denied_ios_no_device',
+                message:
+                    'No microphone was found on your device. ' +
+                    'Please plug in a headset or enable microphone access in ' +
+                    'Settings → Safari → Microphone, then try again.',
+            };
+        }
+
+        // ── User dismissed the permission prompt (didn't explicitly deny) ──────
+        // Sentry: "Permission dismissed"
+        if (name === 'NotAllowedError' && message.includes('dismiss')) {
+            return {
+                tag: 'permission_dismissed',
+                message:
+                    'Microphone access was dismissed. ' +
+                    'Please tap "Start DAF" again and click "Allow" when prompted.',
+            };
+        }
+
+        // ── User (or browser policy) explicitly denied permission ──────────────
+        // Sentry: "Permission denied", "The request is not allowed by the user agent…"
+        if (
+            name === 'NotAllowedError' ||
+            name === 'PermissionDeniedError' ||
+            message.includes('not allowed') ||
+            message.includes('denied')
+        ) {
+            return {
+                tag: 'permission_denied_user',
+                message:
+                    'Microphone access was denied. ' +
+                    'Please click the 🔒 / 🎙️ icon in your browser\'s address bar, ' +
+                    'set Microphone to "Allow", refresh the page, and try again.',
+            };
+        }
+
+        // ── Device not found (unplugged, switched off, wrong ID) ───────────────
+        // Sentry: "Requested device not found"
+        if (name === 'NotFoundError' || message.includes('not found') || message.includes('device')) {
+            return {
+                tag: 'device_not_found',
+                message:
+                    'The selected microphone could not be found. ' +
+                    'It may have been unplugged. Please check your microphone ' +
+                    'connection and try again.',
+            };
+        }
+
+        // ── Fallback ───────────────────────────────────────────────────────────
+        return {
+            tag: 'unknown',
+            message:
+                'Could not access your microphone. ' +
+                'Please make sure a microphone is connected and this page has ' +
+                'permission to use it, then try again.',
+        };
+    }
+
     // LIFECYCLE METHODS
 
     // Accept an optional preAcquiredStream so getUserMedia can be called
@@ -74,20 +170,21 @@ class SpeechProcessor {
         } catch (error) {
             console.error('Speech Processor Initialization Error:', error);
 
+            // Classify the error before reporting / displaying it
+            const classified = this._classifyMicError(error);
+
             if (window.Sentry) {
                 Sentry.captureException(error, {
                     tags: {
                         mechanism: 'audio_init',
-                        // This tells you if it was a HTTPS issue immediately
+                        mic_error_type: classified.tag,
                         secure_context: window.isSecureContext
                     },
                     extra: {
                         audioContextState: this.audioContext ? this.audioContext.state : 'not_initialized',
-                        // Log the exact constraints used
                         requestedDeviceId: this.selectedDeviceId,
                         availableDeviceCount: this.availableDevices.length,
                         preAcquired: !!preAcquiredStream,
-                        // Check if the browser actually has the API
                         hasUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
                     }
                 });
@@ -95,7 +192,7 @@ class SpeechProcessor {
 
             window.sendAnalyticsEvent('daf_initialization_error', {
                 event_category: 'DAF',
-                event_label: error.name || 'Unknown Error',
+                event_label: classified.tag,
                 error_message: error.message || 'No message'
             });
 
@@ -104,17 +201,22 @@ class SpeechProcessor {
 
             const isLocalFile = window.location.href.includes('file://');
 
-            // Check if the error is related to AudioContext
+            // AudioContext not supported at all
             if (!isLocalFile && (
                 error.name === 'NotSupportedError' ||
-                error.message.includes('AudioContext') ||
-                error.message.includes('audio') ||
-                !window.AudioContext && !window.webkitAudioContext)) {
-                this._updateStatus('Sorry, we don\'t support your browser yet.', 'error');
-            } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                this._updateStatus('Microphone access is required to use DAF. Please allow access and try again.', 'error');
+                error.message?.includes('AudioContext') ||
+                (!window.AudioContext && !window.webkitAudioContext)
+            )) {
+                this._updateStatus(
+                    "Sorry, your browser doesn't support audio processing. " +
+                    "Please try Chrome, Edge, or Safari.",
+                    'error'
+                );
+            } else {
+                // Use the human-readable classified message for everything else
+                this._updateStatus(classified.message, 'error');
             }
-            // we handle this case outside the class in app.js
+
             throw new Error('Failed to start audio processing');
         }
     }
@@ -152,9 +254,7 @@ class SpeechProcessor {
 
         this._updateStatus('Auditory Feedback Stopped', 'warning');
         this._updateUIControls(false);
-        // Only stop the visible session timer when not preserving (e.g. full stop/destroy).
         if (!preserveTimer) this._stopTimer();
-        // stop periodic analytics heartbeat when DAF stops
         this._stopAnalyticsHeartbeat();
     }
 
@@ -162,29 +262,24 @@ class SpeechProcessor {
 
     async _requestMicrophoneAccess() {
         try {
-            // Build getUserMedia constraints for the selected device
             let constraints = {
                 audio: {
                     echoCancellation: false,
                     autoGainControl: false,
                     noiseSuppression: false,
                     channelCount: 1,
-                    // Removed: latencyHint — not a valid MediaTrackConstraint, silently ignored
                     deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined
                 }
             };
 
-            // Get the stream with initial constraints
             this.audioStream = await navigator.mediaDevices.getUserMedia(constraints);
             this.micAccessGranted = true;
 
-            // Get actual track settings to match audio context settings
             const audioTrack = this.audioStream.getAudioTracks()[0];
             const settings = audioTrack.getSettings();
-            
+
             if (audioTrack && window.Sentry) {
                 try {
-                    const settings = audioTrack.getSettings();
                     Sentry.configureScope((scope) => {
                         scope.setContext("mic_settings", {
                             autoGainControl: settings?.autoGainControl,
@@ -200,12 +295,8 @@ class SpeechProcessor {
             }
             console.log('Selected microphone settings:', settings);
 
-            // Store the actual sample rate for creating a matching audio context
             this.deviceSampleRate = settings.sampleRate;
 
-            // Record the actual device id and label from the acquired track so the
-            // UI reflects the microphone that is actually in use (fixes cases
-            // where enumerateDevices/UI guessed the active device incorrectly).
             try {
                 if (settings && settings.deviceId) {
                     this.selectedDeviceId = settings.deviceId;
@@ -215,30 +306,27 @@ class SpeechProcessor {
                 const isHeadphone = this._isHeadphoneMic(trackLabel);
                 this._updateDeviceUI(this.currentDeviceName, isHeadphone);
             } catch (e) {
-                // Non-fatal: some browsers don't expose deviceId/label even with permission
                 console.warn('Could not determine active device id/label:', e);
             }
 
             return this.audioStream;
         } catch (error) {
             console.error('Error accessing microphone:', error);
+            // Re-throw so initializeAudio can classify and display the right message
             throw error;
         }
     }
 
     _createAudioContext() {
         const contextOptions = {
-            latencyHint: 0, // Request absolute minimum (was 'interactive' ~50ms)
+            latencyHint: 0,
         };
         if (this.deviceSampleRate && Number.isFinite(this.deviceSampleRate)) {
             contextOptions.sampleRate = this.deviceSampleRate;
         }
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)(contextOptions);
-        // Single statechange listener — handler will log running latency and handle resumes
         this.audioContext.addEventListener('statechange', this._handleAudioContextStateChange.bind(this));
     }
-
-    // _logAudioContextInfo removed: statechange handler logs after context is running
 
     _createAudioNodes() {
         const ctx = this.audioContext;
@@ -250,24 +338,15 @@ class SpeechProcessor {
         const minDelay = 0.000001;
         nodes.delayNode = ctx.createDelay(0.5);
         nodes.delayNode.delayTime.value = Math.max(minDelay, this.config.delayTime / 1000);
-
-        // Removed: channelSplitter, channelMerger — browser handles mono→stereo upmix automatically
     }
-
-    // _configureAudioNodes removed: initial node creation already applies configured values
 
     _connectAudioNodes() {
         const nodes = this.audioNodes;
-
-        // Before: source → delay → splitter → merger → gain → destination (4 hops)
-        // After:  source → delay → gain → destination (2 hops)
         nodes.source.connect(nodes.delayNode);
         nodes.delayNode.connect(nodes.gainNode);
         nodes.gainNode.connect(this.audioContext.destination);
-
         this.directModeEnabled = true;
     }
-
 
     _disconnectAllNodes() {
         Object.values(this.audioNodes).forEach(node => {
@@ -279,7 +358,6 @@ class SpeechProcessor {
 
     _stopAudioStream() {
         if (this.audioStream) {
-            // Ensure all tracks are properly stopped to fully release the microphone
             this.audioStream.getTracks().forEach(track => {
                 track.stop();
                 track.enabled = false;
@@ -291,24 +369,16 @@ class SpeechProcessor {
 
     async _closeAudioContext() {
         if (this.audioContext) {
-            // First disconnect all nodes
             this._disconnectAllNodes();
-
             try {
-                // Check if context is not already closed
                 if (this.audioContext.state !== 'closed') {
                     await this.audioContext.close();
                     console.log('Audio context closed successfully');
-                } else {
-                    console.log('Audio context already closed, skipping close operation');
                 }
             } catch (error) {
                 console.error('Error closing audio context:', error);
             }
-
-            // Always set to null to prevent reuse of a closed context
             this.audioContext = null;
-            // Stop analytics heartbeat when the audio context is closed
             try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
         }
     }
@@ -319,22 +389,18 @@ class SpeechProcessor {
         Object.keys(this.audioNodes).forEach(key => {
             this.audioNodes[key] = null;
         });
-
         this.isAudioRunning = false;
         this.audioSuspendedByBackground = false;
         this.resumeAttempts = 0;
-        // Ensure analytics heartbeat is stopped whenever we fully reset audio state
         try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
     }
 
     // EVENT HANDLERS
 
     _setupEventListeners() {
-        // Setup visibility change handler (store bound handlers so we can remove them later)
         this._onVisibilityChange = this._handleVisibilityChange.bind(this);
         document.addEventListener('visibilitychange', this._onVisibilityChange);
 
-        // Setup freeze/resume handlers if supported
         if ('onfreeze' in document) {
             this._onFreeze = this._handleFreeze.bind(this);
             document.addEventListener('freeze', this._onFreeze);
@@ -344,27 +410,20 @@ class SpeechProcessor {
             this._onResume = this._handleResume.bind(this);
             document.addEventListener('resume', this._onResume);
         }
-
-        // Service worker message handling removed — no-op placeholder omitted
     }
 
     _handleAudioContextStateChange() {
         if (!this.audioContext) return;
 
-        // Log latency floor once the context is running (more accurate than logging on creation)
         if (this.audioContext.state === 'running') {
             try {
                 const outputMs = ((this.audioContext.baseLatency ?? 0) + (this.audioContext.outputLatency ?? 0)) * 1000;
-
-                // Estimate input latency from the acquired track settings when available
                 let inputMs = 0;
                 try {
                     const track = this.audioStream?.getAudioTracks?.()[0];
                     const settings = track?.getSettings?.();
-                    if (settings?.latency) inputMs = settings.latency * 1000; // spec: seconds
-                } catch (e) {
-                    // ignore per-browser differences
-                }
+                    if (settings?.latency) inputMs = settings.latency * 1000;
+                } catch (e) { /* ignore */ }
 
                 const totalMs = (inputMs || 0) + (outputMs || 0);
                 this.measuredFloorMs = totalMs;
@@ -378,14 +437,11 @@ class SpeechProcessor {
                 if (totalMs > 25) {
                     console.warn(`Round-trip floor ${totalMs.toFixed(1)}ms exceeds 25ms threshold — slap-back likely at low delay settings`);
                 }
-            } catch (e) {
-                // Ignore logging failures
-            }
+            } catch (e) { /* ignore */ }
         }
 
         this._notifyServiceWorker('AUDIO_STATE', this.audioContext.state);
 
-        // If returning from suspension and app is visible, attempt to resume
         if (this.audioContext.state === 'suspended' && this.isAppVisible && this.isAudioRunning) {
             this._attemptResumeAudio();
         }
@@ -402,25 +458,20 @@ class SpeechProcessor {
             });
         }
 
-        // Notify service worker about visibility change
         this._notifyServiceWorker('VISIBILITY_CHANGE', { isVisible });
 
         if (isVisible) {
-            // Page is now visible
             if (this.isAudioRunning && this.audioContext && this.audioContext.state === 'suspended') {
                 this._attemptResumeAudio();
             }
         } else {
-            // Page is now hidden
             if (this.audioContext && this.audioContext.state === 'running') {
-                // Keep a record that we were running when backgrounded
                 this.audioSuspendedByBackground = true;
             }
         }
     }
 
     _handleFreeze() {
-        // Save state for when the page unfreezes
         if (this.audioContext && this.audioContext.state === 'running') {
             this.audioSuspendedByBackground = true;
         }
@@ -431,8 +482,6 @@ class SpeechProcessor {
             this._attemptResumeAudio();
         }
     }
-
-    // Service worker message handler removed (no-op branches were present).
 
     // AUDIO CONTROL METHODS
 
@@ -448,21 +497,17 @@ class SpeechProcessor {
             this.resumeAttempts = 0;
             return true;
         } catch (error) {
-            if (this.resumeAttempts > 1) {
-                if (window.Sentry) {
-                    Sentry.captureMessage("Audio resumed after multiple attempts", {
-                        level: "warning",
-                        extra: { attempts: this.resumeAttempts }
-                    });
-                }
+            if (this.resumeAttempts > 1 && window.Sentry) {
+                Sentry.captureMessage("Audio resumed after multiple attempts", {
+                    level: "warning",
+                    extra: { attempts: this.resumeAttempts }
+                });
             }
-            // Try again with exponential backoff if we have attempts left
             if (this.resumeAttempts < this.maxResumeAttempts) {
                 const delay = Math.pow(2, this.resumeAttempts) * 100;
                 setTimeout(() => this._attemptResumeAudio(), delay);
             } else {
-                this._updateStatus('Tap to resume audio', 'error');
-                // If we couldn't resume audio after retries, stop heartbeat
+                this._updateStatus('Audio paused — tap to resume', 'error');
                 try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
                 return false;
             }
@@ -471,10 +516,7 @@ class SpeechProcessor {
 
     _notifyServiceWorker(type, data) {
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({
-                type: type,
-                ...data
-            });
+            navigator.serviceWorker.controller.postMessage({ type, ...data });
         }
     }
 
@@ -485,17 +527,14 @@ class SpeechProcessor {
 
         if (!this.audioContext || !this.audioNodes.delayNode) return;
 
-        // Use minimum possible delay value when setting to zero
-        const minDelay = 0.000001; // 1 microsecond, effectively zero
+        const minDelay = 0.000001;
         const actualDelay = value <= 0 ? minDelay : value / 1000;
 
-        // Set delay time immediately with no ramp for lowest latency
         this.audioNodes.delayNode.delayTime.setValueAtTime(
             actualDelay,
             this.audioContext.currentTime
         );
 
-        // Show effective total when floor is known
         const floor = this.measuredFloorMs ?? 0;
         if (floor > 5) {
             const effective = Math.round(value + floor);
@@ -515,11 +554,9 @@ class SpeechProcessor {
             this.audioContext.currentTime
         );
 
-        // Update the UI element used in the page: `inputGainValue`
         this._updateUIDisplay('inputGainValue', `${value}x`);
     }
 
-    // For backward compatibility with existing UI controls
     updateInputGain(value) {
         this.updateGain(value);
     }
@@ -532,7 +569,6 @@ class SpeechProcessor {
 
         statusElement.textContent = message;
 
-        // Normalize classes via a small map for maintainability
         statusElement.classList.remove('status-success', 'status-error', 'status-warning', 'status-default', 'status-loading');
         const classMap = {
             success: 'status-success',
@@ -545,9 +581,7 @@ class SpeechProcessor {
 
     _updateUIDisplay(elementId, value) {
         const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = value;
-        }
+        if (element) element.textContent = value;
     }
 
     _updateUIControls(isActive) {
@@ -564,76 +598,55 @@ class SpeechProcessor {
         const timerElement = document.getElementById('dafTimer');
         if (!timerElement) return;
 
-        // Reset and show timer (use class-based visibility to avoid layout jumps)
         this.startTime = Date.now();
         this.elapsedTime = 0;
         timerElement.textContent = '00:00';
         timerElement.classList.add('timer-running');
 
-        // Update timer every second
         this.timerInterval = setInterval(() => {
             this.elapsedTime = Date.now() - this.startTime;
             const seconds = Math.floor(this.elapsedTime / 1000);
             const minutes = Math.floor(seconds / 60);
             const displaySeconds = String(seconds % 60).padStart(2, '0');
             const displayMinutes = String(minutes).padStart(2, '0');
-
             timerElement.textContent = `${displayMinutes}:${displaySeconds}`;
         }, 1000);
     }
 
     _stopTimer() {
-        // Clear timer interval
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
         }
-
-        // Keep timer in layout but mark it not running (no display:none to avoid jumps)
         const timerElement = document.getElementById('dafTimer');
-        if (timerElement) {
-            timerElement.classList.remove('timer-running');
-        }
+        if (timerElement) timerElement.classList.remove('timer-running');
     }
 
     // ANALYTICS HEARTBEAT METHODS
 
     _startAnalyticsHeartbeat() {
-        // Avoid duplicate intervals
         if (this.analyticsIntervalId) return;
-
-        // Only start if DAF is active
         if (!this.isAudioRunning) return;
 
         const sendEvent = () => {
             try {
-                // Only send heartbeat when audio is actively running and audible
                 if (!this.isAudioRunning) return;
                 if (!this.audioContext || this.audioContext.state !== 'running') return;
+                if (!this.audioNodes || !this.audioStream) return;
 
-                // If we don't have audio nodes or a stream, don't send heartbeats
-                if (!this.audioNodes) return;
-                if (!this.audioStream) return;
-
-                // If we have a gain node, treat gain === 0 as muted
-                if (this.audioNodes && this.audioNodes.gainNode && this.audioNodes.gainNode.gain) {
+                if (this.audioNodes.gainNode?.gain) {
                     const gainVal = this.audioNodes.gainNode.gain.value;
                     if (typeof gainVal === 'number' && gainVal <= 0) return;
                 }
 
-                // Removed tab-mute defensive check (not applicable to this app)
-
-                // If microphone tracks exist, ensure at least one is enabled
-                if (this.audioStream && this.audioStream.getAudioTracks) {
+                if (this.audioStream?.getAudioTracks) {
                     const anyEnabled = this.audioStream.getAudioTracks().some(t => t.enabled !== false);
                     if (!anyEnabled) return;
                 }
 
                 const elapsedSeconds = Math.floor(this.elapsedTime / 1000);
 
-                // Send heartbeat via canonical analytics API
                 if (typeof window.sendAnalyticsEvent === 'function') {
-                    // console.log('Sending DAF heartbeat analytics event at time elapsed:', elapsedSeconds, 'seconds');
                     window.sendAnalyticsEvent('daf_active', {
                         event_category: 'DAF',
                         event_label: 'heartbeat',
@@ -641,13 +654,10 @@ class SpeechProcessor {
                     });
                 }
             } catch (e) {
-                // swallow analytics errors
                 console.warn('Analytics heartbeat failed:', e);
             }
         };
 
-        // Send first event immediately if we've already been running for >=60s
-        // otherwise wait for the first interval tick
         this.analyticsIntervalId = setInterval(sendEvent, this.analyticsIntervalMs);
     }
 
@@ -660,84 +670,53 @@ class SpeechProcessor {
 
     // DEVICE SELECTION METHODS
 
-    /**
-     * Enumerate all available audio input devices
-     * @returns {Promise<Array>} List of audio input devices
-     */
     async enumerateAudioDevices() {
         try {
-            // First ensure we have permission to access media devices.
-            // Some browsers require an active getUserMedia call to expose device labels.
-            // Use a temporary stream and stop it immediately to avoid leaving the mic active.
             let tempStream = null;
             if (!this.micAccessGranted) {
                 try {
                     tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 } catch (permErr) {
-                    // If permission denied or not available, proceed to enumerateDevices which
-                    // may still return limited information.
                     console.warn('Temporary getUserMedia failed during device enumeration:', permErr);
                 }
             }
 
-            // Get all media devices
             const devices = await navigator.mediaDevices.enumerateDevices();
 
-            // Immediately stop the temporary stream to release the microphone
             if (tempStream) {
                 try {
-                    tempStream.getTracks().forEach(t => {
-                        try { t.stop(); } catch (e) { /* ignore */ }
-                    });
-                } catch (stopErr) {
-                    console.warn('Failed to stop temporary device enumeration stream:', stopErr);
-                }
+                    tempStream.getTracks().forEach(t => { try { t.stop(); } catch (e) { /* ignore */ } });
+                } catch (e) { /* ignore */ }
                 tempStream = null;
             }
 
-            // Filter to only audio input devices
             this.availableDevices = devices.filter(device => device.kind === 'audioinput');
-
             console.log('Available audio input devices:', this.availableDevices);
 
-            // Look for likely wired headset/headphone mics (skip Bluetooth/airpods)
             const headphoneMic = this.availableDevices.find(device => {
                 const label = (device.label || '').toLowerCase();
                 const isBluetooth = label.includes('bluetooth') || label.includes('airpod');
-                if (isBluetooth) return false; // don't auto-select Bluetooth devices
+                if (isBluetooth) return false;
                 return label.includes('headphone') || label.includes('headset') || label.includes('earphone');
             });
 
-            // Auto-select headphone mic if available and not already selected
             if (headphoneMic && (!this.selectedDeviceId || this.selectedDeviceId !== headphoneMic.deviceId)) {
                 this.selectedDeviceId = headphoneMic.deviceId;
                 console.log('Auto-selected headphone microphone:', headphoneMic.label);
-
-                // Update UI to reflect the headphone mic selection
                 this._updateDeviceUI(headphoneMic.label, true);
-
-                // If already running, restart with new device
-                if (this.isAudioRunning) {
-                    await this.restartWithNewDevice();
-                }
+                if (this.isAudioRunning) await this.restartWithNewDevice();
             } else if (this.selectedDeviceId) {
-                // Find the currently selected device to update UI
-                const selectedDevice = this.availableDevices.find(device => device.deviceId === this.selectedDeviceId);
+                const selectedDevice = this.availableDevices.find(d => d.deviceId === this.selectedDeviceId);
                 if (selectedDevice) {
-                    const isHeadphoneMic = this._isHeadphoneMic(selectedDevice.label);
-                    this._updateDeviceUI(selectedDevice.label, isHeadphoneMic);
+                    this._updateDeviceUI(selectedDevice.label, this._isHeadphoneMic(selectedDevice.label));
                 }
             } else {
-                // No specific device selected, likely using default
-                const defaultDevice = this.availableDevices.find(device => device.deviceId === 'default' || device.deviceId === '');
+                const defaultDevice = this.availableDevices.find(d => d.deviceId === 'default' || d.deviceId === '');
                 if (defaultDevice) {
-                    const isHeadphoneMic = this._isHeadphoneMic(defaultDevice.label);
-                    this._updateDeviceUI(defaultDevice.label, isHeadphoneMic);
+                    this._updateDeviceUI(defaultDevice.label, this._isHeadphoneMic(defaultDevice.label));
                 } else if (this.availableDevices.length > 0) {
-                    // Just use the first available device if no default is identified
                     const firstDevice = this.availableDevices[0];
-                    const isHeadphoneMic = this._isHeadphoneMic(firstDevice.label);
-                    this._updateDeviceUI(firstDevice.label, isHeadphoneMic);
+                    this._updateDeviceUI(firstDevice.label, this._isHeadphoneMic(firstDevice.label));
                 } else {
                     this._updateDeviceUI('Default microphone', false);
                 }
@@ -747,30 +726,18 @@ class SpeechProcessor {
         } catch (error) {
             console.error('Error enumerating audio devices:', error);
             this._updateDeviceUI('Default microphone', false);
-            // If device enumeration fails while DAF isn't running, ensure heartbeat is stopped
             try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
             return [];
         }
     }
 
-    /**
-     * Check if device label indicates it's a headphone microphone
-     * @param {string} label - Device label to check
-     * @returns {boolean} - True if it appears to be a headphone mic
-     */
     _isHeadphoneMic(label) {
         if (!label) return false;
         const l = label.toLowerCase();
-        // Treat Bluetooth/airpod devices as not suitable for low-latency DAF
         if (l.includes('bluetooth') || l.includes('airpod')) return false;
         return l.includes('headphone') || l.includes('headset') || l.includes('earphone');
     }
 
-    /**
-     * Update the device UI to show which microphone is being used
-     * @param {string} deviceName - Name of the device to display
-     * @param {boolean} isHeadphoneMic - Whether this is a headphone microphone
-     */
     _updateDeviceUI(deviceName, isHeadphoneMic) {
         const deviceNameEl = document.getElementById('deviceName');
         const deviceIconEl = document.getElementById('deviceIcon');
@@ -778,15 +745,10 @@ class SpeechProcessor {
 
         if (!deviceNameEl || !deviceIconEl || !deviceStatusEl) return;
 
-        // Simplify the device name for display
         const raw = deviceName || 'Default microphone';
-        const displayName = raw.length > 55 ? raw.slice(0, 55) + '...' : raw;
-
-        // Update the name and icon
-        deviceNameEl.textContent = displayName;
+        deviceNameEl.textContent = raw.length > 55 ? raw.slice(0, 55) + '…' : raw;
         deviceIconEl.textContent = isHeadphoneMic ? '🎧' : '🎙️';
 
-        // Update the status class
         if (isHeadphoneMic) {
             deviceStatusEl.classList.add('headphone-mic');
         } else {
@@ -794,19 +756,11 @@ class SpeechProcessor {
         }
     }
 
-    /**
-     * Select a specific audio input device by ID
-     * @param {string} deviceId - The ID of the device to select
-     * @returns {Promise<boolean>} - Success or failure
-     */
     async selectAudioDevice(deviceId) {
         if (!deviceId) return false;
 
-        // Store previous device ID for logging
         const previousDeviceId = this.selectedDeviceId;
 
-        // If already running, try to pre-acquire the new device stream
-        // during the user gesture, so the UA won't block getUserMedia.
         if (this.isAudioRunning) {
             console.log(`Switching from device ${previousDeviceId} to ${deviceId}`);
             try {
@@ -820,79 +774,46 @@ class SpeechProcessor {
                     }
                 };
 
-                // Call getUserMedia immediately (inside the click handler callstack)
                 const preAcquiredStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-                // Pass the pre-acquired stream into the restart flow so we don't
-                // trigger another getUserMedia after async awaits (which may be blocked).
                 const restarted = await this.restartWithNewDevice(preAcquiredStream);
+
                 if (restarted) {
-                    // Only set as selected if restart succeeded
                     this.selectedDeviceId = deviceId;
                 } else {
-                    // revert selectedDeviceId on failure
                     this.selectedDeviceId = previousDeviceId;
                 }
                 return restarted;
             } catch (err) {
                 console.error('Failed to acquire selected device stream:', err);
-                // Give the user actionable feedback
-                if (err && err.name === 'NotAllowedError') {
-                    this._updateStatus('Microphone permission denied for that device', 'error');
-                } else {
-                    this._updateStatus('Could not switch microphone', 'error');
-                }
-                // revert selectedDeviceId on failure
+                const { message } = this._classifyMicError(err);
+                this._updateStatus(message, 'error');
                 this.selectedDeviceId = previousDeviceId;
                 try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
                 return false;
             }
         }
 
-        // If not running, simply update selectedDeviceId
         this.selectedDeviceId = deviceId;
         return true;
     }
 
-    /**
-    * Restart the audio processing with a new input device.
-     * If `preAcquiredStream` is provided it will be used instead of calling
-     * getUserMedia again (useful to keep the call inside a user gesture).
-     * @returns {Promise<boolean>}
-     */
     async restartWithNewDevice(preAcquiredStream = null) {
         try {
-            // Save current configuration
             const currentConfig = { ...this.config };
-
-            // Stop current processing and release previous microphone, but preserve the
-            // visible session timer so device switches don't reset the timer display.
             await this.stop(true);
-
-
-            // Small delay to ensure clean shutdown and release of previous mic
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            // Restore configuration
             this.config = currentConfig;
 
-            // If a pre-acquired stream was provided, set it so initializeAudio
-            // will reuse it instead of requesting permission again.
             if (preAcquiredStream) {
                 this.audioStream = preAcquiredStream;
                 this.micAccessGranted = true;
             }
 
-            // Start with (possibly pre-acquired) new device
             await this.start();
 
-            // Restart services that app.js normally starts when DAF is first enabled
-            try {
-                this._startAnalyticsHeartbeat();
-            } catch (e) { /* ignore */ }
+            try { this._startAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
 
-            // Resume timer counting without resetting the visible display.
-            // Do not call _startTimer() because that resets elapsedTime.
             try {
                 const timerEl = document.getElementById('dafTimer');
                 if (timerEl) {
@@ -911,27 +832,18 @@ class SpeechProcessor {
             return true;
         } catch (error) {
             console.error('Error restarting with new device:', error);
-            // Ensure heartbeat is stopped when a restart attempt fails
             try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
             return false;
         }
     }
 
-    /**
-     * Initialize device detection and handling for headphones
-     */
     async initializeDeviceDetection() {
-        // Make this idempotent so repeated start/stop cycles don't attach duplicate listeners
         if (this._deviceDetectionInitialized) return;
 
-        // First enumeration
         await this.enumerateAudioDevices();
 
-        // Set up device change listener
         this._onDeviceChange = async () => {
-            console.log('Audio devices changed, re-enumerating...');
-
-            // Only react to device changes if DAF is active
+            console.log('Audio devices changed, re-enumerating…');
             if (this.isAudioRunning) {
                 await this.enumerateAudioDevices();
             } else {
@@ -942,24 +854,17 @@ class SpeechProcessor {
         try {
             navigator.mediaDevices.addEventListener('devicechange', this._onDeviceChange);
         } catch (e) {
-            // Some browsers may not support addEventListener on mediaDevices
             console.warn('Could not attach devicechange listener:', e);
             this._onDeviceChange = null;
         }
 
-        // Monitor headphone connection events when supported
         if ('onheadphoneschange' in navigator) {
             this._onHeadphonesChange = async () => {
                 console.log('Headphone connection state changed');
-
-                // Only react to headphone changes if DAF is active
                 if (this.isAudioRunning) {
                     await this.enumerateAudioDevices();
-                } else {
-                    console.log('DAF not active, ignoring headphone change');
                 }
             };
-
             try {
                 navigator.onheadphoneschange = this._onHeadphonesChange;
             } catch (e) {
@@ -967,35 +872,25 @@ class SpeechProcessor {
             }
         }
 
-        // Device status click handler is registered in app.js to keep UI logic centralized.
-
         this._deviceDetectionInitialized = true;
     }
 
-    /**
-     * Cycle to the next available audio device in the list
-     */
     async cycleToNextAudioDevice() {
         if (!this.micAccessGranted) {
-            // If no microphone access yet, show a message
             this._updateStatus('Please start DAF first to access microphones', 'warning');
             return false;
         }
 
         if (this.availableDevices.length <= 1) {
-            // If only one device is available, nothing to cycle through
             this._updateStatus('Only one microphone available', 'info');
             return false;
         }
 
-        // Find current device index
         let currentIndex = -1;
         if (this.selectedDeviceId) {
-            currentIndex = this.availableDevices.findIndex(device =>
-                device.deviceId === this.selectedDeviceId);
+            currentIndex = this.availableDevices.findIndex(d => d.deviceId === this.selectedDeviceId);
         }
 
-        // Get next device (or first if at end or not found)
         const nextIndex = currentIndex === -1 || currentIndex >= this.availableDevices.length - 1
             ? 0
             : currentIndex + 1;
@@ -1003,8 +898,8 @@ class SpeechProcessor {
         const nextDevice = this.availableDevices[nextIndex];
         const previousDevice = currentIndex >= 0 ? this.availableDevices[currentIndex] : null;
 
-        console.log(`Switching from device ${previousDevice ? previousDevice.label : 'default'} to ${nextDevice.label}`);
-        // Analytics: record device switches if analytics helper is present
+        console.log(`Switching from ${previousDevice?.label ?? 'default'} to ${nextDevice.label}`);
+
         try {
             if (typeof window.sendAnalyticsEvent === 'function') {
                 window.sendAnalyticsEvent('device_switch', {
@@ -1012,77 +907,49 @@ class SpeechProcessor {
                     to_device_name: nextDevice.label
                 });
             }
-        } catch (e) {
-            // ignore analytics failures
-        }
+        } catch (e) { /* ignore */ }
 
-        // Try to select the device. If selection fails, don't overwrite UI.
         const switched = await this.selectAudioDevice(nextDevice.deviceId);
         if (switched) {
-            const isHeadphoneMic = this._isHeadphoneMic(nextDevice.label);
-            this._updateDeviceUI(nextDevice.label, isHeadphoneMic);
-
-            // Show feedback to the user
+            this._updateDeviceUI(nextDevice.label, this._isHeadphoneMic(nextDevice.label));
             this._updateStatus(`Switched to: ${nextDevice.label}`, 'success');
-
             return true;
         } else {
-            // Selection failed; inform the user and keep previous UI state
-            this._updateStatus(`Failed to switch to: ${nextDevice.label}`, 'error');
+            // selectAudioDevice already showed the classified error message
             return false;
         }
     }
 
-    /**
-     * Destroy the SpeechProcessor instance: stop audio, remove event listeners,
-     * stop timers and analytics, and clear internal references so the instance
-     * can be GC'd.
-     */
     async destroy() {
-        // mark destroyed to avoid spurious reactions
         this._destroyed = true;
 
-        try {
-            await this.stop();
-        } catch (e) {
-            // ignore stop errors but ensure we continue cleanup
-        }
+        try { await this.stop(); } catch (e) { /* ignore */ }
 
-        // Remove document-level handlers
         try { if (this._onVisibilityChange) document.removeEventListener('visibilitychange', this._onVisibilityChange); } catch (e) { /* ignore */ }
         try { if (this._onFreeze) document.removeEventListener('freeze', this._onFreeze); } catch (e) { /* ignore */ }
         try { if (this._onResume) document.removeEventListener('resume', this._onResume); } catch (e) { /* ignore */ }
 
-        // Service worker cleanup removed (no message handler was attached)
-
-        // Media devices
         try {
-            if (this._onDeviceChange && navigator.mediaDevices && typeof navigator.mediaDevices.removeEventListener === 'function') {
+            if (this._onDeviceChange && navigator.mediaDevices?.removeEventListener) {
                 navigator.mediaDevices.removeEventListener('devicechange', this._onDeviceChange);
             }
         } catch (e) { /* ignore */ }
 
-        // Headphones change
         try {
             if ('onheadphoneschange' in navigator && this._onHeadphonesChange) {
                 if (navigator.onheadphoneschange === this._onHeadphonesChange) navigator.onheadphoneschange = null;
             }
         } catch (e) { /* ignore */ }
 
-        // UI element click handler cleanup removed; app.js owns the handler.
-
-        // Stop timers and analytics redundantly
         try { this._stopTimer(); } catch (e) { /* ignore */ }
         try { this._stopAnalyticsHeartbeat(); } catch (e) { /* ignore */ }
 
-        // Clear stored handler references
         this._onVisibilityChange = null;
         this._onFreeze = null;
         this._onResume = null;
         this._onDeviceChange = null;
         this._onHeadphonesChange = null;
 
-        // Clear device detection state
         this._deviceDetectionInitialized = false;
         this.availableDevices = [];
         this.selectedDeviceId = null;
